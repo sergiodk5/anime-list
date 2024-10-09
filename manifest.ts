@@ -17,6 +17,16 @@ const manifest: chrome.runtime.ManifestBase = {
         default_popup: "src/popup/index.html",
         default_icon: ICONS,
     },
+    background: {
+        service_worker: "src/background/index.js",
+    },
+    content_scripts: [
+        {
+            js: ["src/content/index.js"],
+            matches: ["<all_urls>"],
+        },
+    ],
+    permissions: ["activeTab"],
     web_accessible_resources: [
         {
             resources: ["assets/images/*"],
