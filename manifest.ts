@@ -3,6 +3,7 @@ const DESCRIPTION = "Your Anime Tool";
 const VERSION = "1.0.0";
 const ICONS = {
     16: "assets/images/darkness_16x16.png",
+    32: "assets/images/darkness_32x32.png",
     48: "assets/images/darkness_48x48.png",
     128: "assets/images/darkness_128x128.png",
 };
