@@ -19,7 +19,7 @@ const manifest: chrome.runtime.ManifestBase = {
     },
     web_accessible_resources: [
         {
-            resources: ["dist/assets/images/*"],
+            resources: ["assets/images/*"],
             matches: ["<all_urls>"],
         },
     ],
