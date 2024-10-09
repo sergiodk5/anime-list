@@ -6,7 +6,7 @@ import { createPinia } from "pinia";
 import App from "@/App.vue";
 import router from "@/router";
 
-const rootContainer = document.getElementById("app");
+const rootContainer = document.getElementById("myAnimeListPopup");
 if (!rootContainer) {
     throw new Error("Root container not found");
 }
