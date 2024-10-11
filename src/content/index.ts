@@ -33,7 +33,23 @@ const actionButtons = () => {
     const wrapper = createWrapper();
 
     const buttonAdd = createButton("Add", "green", () => {
-        console.log("Add", buttonAdd.parentElement?.parentElement);
+        const link = buttonAdd.parentElement?.parentElement?.querySelector(".film-name a") as HTMLAnchorElement;
+        if (!link) return;
+
+        // save the link to local storage
+        chrome.storage.local.get("links", (data) => {
+            const links = data.links || [];
+            const title = {
+                name: link.textContent,
+                url: link.href,
+            };
+            if (!links.includes(title)) {
+                links.push(title);
+                chrome.storage.local.set({ links }, () => {
+                    console.log("Link added to storage:", title);
+                });
+            }
+        });
     });
     wrapper.appendChild(buttonAdd);
 
@@ -74,6 +90,16 @@ const getAllTitles = (): Promise<string[]> => {
     });
 };
 
+// This function now returns a Promise that resolves with the links
+const getAllLinks = (): Promise<{ name: string; url: string }[]> => {
+    return new Promise((resolve) => {
+        chrome.storage.local.get("links", (data) => {
+            const links = data.links || [];
+            resolve(links);
+        });
+    });
+};
+
 const init = async () => {
     const wrapper = document.querySelector(".film_list-wrap");
     if (!wrapper) return;
@@ -89,6 +115,9 @@ const init = async () => {
 
     // Wait for the removed titles to load from storage
     const removedTitles = await getAllTitles();
+    const savedLinks = await getAllLinks();
+
+    console.log("watch list:", savedLinks);
 
     films.forEach((item) => {
         const movie = item as HTMLElement;
