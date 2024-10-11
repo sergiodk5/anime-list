@@ -90,16 +90,6 @@ const getAllTitles = (): Promise<string[]> => {
     });
 };
 
-// This function now returns a Promise that resolves with the links
-const getAllLinks = (): Promise<{ name: string; url: string }[]> => {
-    return new Promise((resolve) => {
-        chrome.storage.local.get("links", (data) => {
-            const links = data.links || [];
-            resolve(links);
-        });
-    });
-};
-
 const init = async () => {
     const wrapper = document.querySelector(".film_list-wrap");
     if (!wrapper) return;
@@ -115,9 +105,6 @@ const init = async () => {
 
     // Wait for the removed titles to load from storage
     const removedTitles = await getAllTitles();
-    const savedLinks = await getAllLinks();
-
-    console.log("watch list:", savedLinks);
 
     films.forEach((item) => {
         const movie = item as HTMLElement;
