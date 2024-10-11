@@ -26,7 +26,7 @@ const manifest: chrome.runtime.ManifestBase = {
             matches: ["<all_urls>"],
         },
     ],
-    permissions: ["activeTab"],
+    permissions: ["activeTab", "storage"],
     web_accessible_resources: [
         {
             resources: ["assets/images/*"],
