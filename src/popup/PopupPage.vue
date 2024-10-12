@@ -2,7 +2,7 @@
     <div class="flex w-[336px] flex-col gap-4 overflow-hidden bg-white">
         <h1 class="px-4 py-2 text-xl font-bold text-gray-800">Watch List</h1>
         <button
-            class="px-4 text-lg text-blue-500"
+            class="w-[95px] px-4 text-left text-lg text-blue-500"
             @click="openOptions"
         >
             Options

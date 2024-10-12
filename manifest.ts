@@ -26,6 +26,10 @@ const manifest: chrome.runtime.ManifestBase = {
             matches: ["<all_urls>"],
         },
     ],
+    options_ui: {
+        page: "src/options/index.html",
+        open_in_tab: true,
+    },
     permissions: ["activeTab", "storage"],
     web_accessible_resources: [
         {
