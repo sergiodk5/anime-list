@@ -47,7 +47,12 @@ const watchList = ref<Link[]>([]);
 const getAllLinks = (): Promise<Link[]> => {
     return new Promise((resolve) => {
         chrome.storage.local.get("links", (data) => {
-            const links = data.links || [];
+            if (!data.links) {
+                resolve([]);
+            }
+
+            const dataLinks = data.links as Link[];
+            const links = Object.values(dataLinks) || [];
             resolve(links);
         });
     });

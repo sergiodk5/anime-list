@@ -22,7 +22,7 @@ const createWrapper = () => {
     wrapper.style.display = "flex";
     wrapper.style.justifyContent = "space-between";
     wrapper.style.alignItems = "center";
-    wrapper.style.zIndex = "1000";
+    wrapper.style.zIndex = "10";
     wrapper.style.backgroundColor = "rgba(0,0,0,0.5)";
     wrapper.style.padding = "10px";
 
