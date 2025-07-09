@@ -9,6 +9,26 @@ const router = createRouter({
             name: "home",
             component: HomeView,
         },
+        {
+            path: "/list",
+            name: "list",
+            component: () => import("@/options/views/WatchList.vue"),
+        },
+        {
+            path: "/list-item/:title/:url/:externalId?",
+            name: "list-item",
+            component: () => import("@/options/views/WatchItem.vue"),
+            props: (route) => ({
+                title: route.params.title as string,
+                url: route.params.url as string,
+                externalId: route.params.externalId ? Number(route.params.externalId) : undefined,
+            }),
+        },
+        {
+            path: "/watch-list",
+            name: "watch-list",
+            component: () => import("@/options/views/WatchLists.vue"),
+        },
     ],
 });
 

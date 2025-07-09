@@ -25,6 +25,16 @@ const createWrapper = () => {
     wrapper.style.zIndex = "10";
     wrapper.style.backgroundColor = "rgba(0,0,0,0.5)";
     wrapper.style.padding = "10px";
+    wrapper.style.opacity = "0";
+    wrapper.style.transition = "opacity 0.3s";
+    // on hover, show the buttons
+    wrapper.addEventListener("mouseenter", () => {
+        wrapper.style.opacity = "1";
+    });
+    // on leave, hide the buttons
+    wrapper.addEventListener("mouseleave", () => {
+        wrapper.style.opacity = "0";
+    });
 
     return wrapper;
 };

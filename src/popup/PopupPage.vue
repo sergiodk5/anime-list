@@ -2,7 +2,7 @@
     <div class="flex w-[336px] flex-col gap-4 overflow-hidden bg-white">
         <h1 class="px-4 py-2 text-xl font-bold text-gray-800">Watch List</h1>
         <button
-            class="w-[95px] px-4 text-left text-lg text-blue-500"
+            class="w-[95px] rounded-sm border border-blue-500 px-4 py-2 text-left text-lg text-blue-500 hover:bg-blue-500 hover:text-white"
             @click="openOptions"
         >
             Options
@@ -35,12 +35,8 @@
 </template>
 
 <script setup lang="ts">
+import type { Link } from "@/commons/models";
 import { onMounted, onUnmounted, ref } from "vue";
-
-interface Link {
-    name: string;
-    url: string;
-}
 
 const watchList = ref<Link[]>([]);
 
