@@ -1,10 +1,10 @@
 import "@/assets/main.css";
 
-import { createApp } from "vue";
 import { createPinia } from "pinia";
+import { createApp } from "vue";
 
 import OptionsPage from "@/options/OptionsPage.vue";
-import router from "@/router";
+import router from "@/options/router";
 
 const rootContainer = document.getElementById("myAnimeListOptions");
 if (!rootContainer) {
