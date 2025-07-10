@@ -4,6 +4,12 @@ export interface Link {
     malId?: string | number;
 }
 
+export enum StorageKeys {
+    EPISODE_PROGRESS = "episodeProgress",
+    PLAN_TO_WATCH = "planToWatch",
+    HIDDEN_ANIME = "hiddenAnime",
+}
+
 export interface EpisodeProgress {
     animeId: string;
     animeTitle: string;
@@ -12,4 +18,17 @@ export interface EpisodeProgress {
     episodeId: string;
     lastWatched: string;
     totalEpisodes?: number;
+}
+
+export interface PlanToWatch {
+    animeId: string;
+    animeTitle: string;
+    animeSlug: string;
+    addedAt: string;
+}
+
+export interface AnimeData {
+    animeId: string;
+    animeTitle: string;
+    animeSlug: string;
 }

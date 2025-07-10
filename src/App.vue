@@ -36,20 +36,20 @@
 
 <script setup lang="ts">
 import type { EpisodeProgress } from "@/commons/models";
-import { getAllEpisodeProgress, removeEpisodeProgress } from "@/commons/utils/linksUtil";
+import { EpisodeProgressUtil } from "@/commons/utils";
 import { onMounted, onUnmounted, ref } from "vue";
 
 const watchList = ref<EpisodeProgress[]>([]);
 
 const removeFromWatchList = async (animeId: string) => {
-    await removeEpisodeProgress(animeId);
-    watchList.value = await getAllEpisodeProgress();
+    await EpisodeProgressUtil.remove(animeId);
+    watchList.value = await EpisodeProgressUtil.getAllAsArray();
 };
 
 const checkForNewLinksListener = () => {
     chrome.storage.onChanged.addListener(async (changes) => {
         if (changes.episodeProgress) {
-            watchList.value = await getAllEpisodeProgress();
+            watchList.value = await EpisodeProgressUtil.getAllAsArray();
         }
     });
 };
@@ -59,7 +59,7 @@ const openOptions = () => {
 };
 
 onMounted(async () => {
-    watchList.value = await getAllEpisodeProgress();
+    watchList.value = await EpisodeProgressUtil.getAllAsArray();
     checkForNewLinksListener();
 });
 
