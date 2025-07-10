@@ -96,10 +96,11 @@ content/
 
 **Key characteristics**:
 
--   Small, focused UI
+-   Small, focused UI (320x240px)
 -   Quick access to main features
 -   Limited screen real estate
 -   Should load quickly
+-   Modern anime-themed design
 
 **Current structure**:
 
@@ -109,6 +110,14 @@ popup/
 ├── index.ts           # Popup entry point
 └── PopupPage.vue      # Main popup Vue component
 ```
+
+**📖 Detailed Guide**: See [POPUP_GUIDE.md](./POPUP_GUIDE.md) for comprehensive popup development documentation, including:
+
+-   Current architecture and features
+-   Future development roadmap
+-   Testing strategies and best practices
+-   API integration patterns
+-   Accessibility guidelines
 
 ### `options/` - Options/Settings Page
 

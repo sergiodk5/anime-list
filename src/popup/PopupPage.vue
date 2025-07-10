@@ -1,70 +1,135 @@
 <template>
-    <div class="flex w-[336px] flex-col gap-4 overflow-hidden bg-white">
-        <h1 class="px-4 py-2 text-xl font-bold text-gray-800">Watch List</h1>
-        <button
-            class="w-[95px] rounded-sm border border-blue-500 px-4 py-2 text-left text-lg text-blue-500 hover:bg-blue-500 hover:text-white"
-            @click="openOptions"
+    <div
+        data-testid="anime-popup"
+        class="relative h-60 w-80 overflow-hidden bg-gradient-to-br from-purple-600 via-purple-700 to-pink-600"
+    >
+        <!-- Animated background pattern -->
+        <div
+            data-testid="popup-background"
+            class="absolute inset-0 opacity-20"
         >
-            Options
-        </button>
+            <div class="absolute left-4 top-4 h-2 w-2 animate-pulse rounded-full bg-white"></div>
+            <div class="absolute right-6 top-8 h-1 w-1 animate-ping rounded-full bg-pink-300"></div>
+            <div class="absolute bottom-8 left-8 h-1.5 w-1.5 animate-bounce rounded-full bg-purple-300"></div>
+            <div class="absolute bottom-4 right-4 h-1 w-1 animate-pulse rounded-full bg-white delay-700"></div>
+        </div>
 
-        <ul class="max-h-60 overflow-y-auto px-4 py-2">
-            <li
-                v-for="anime in watchList"
-                :key="anime.animeId"
-                class="mb-2"
+        <!-- Main content -->
+        <div
+            data-testid="popup-content"
+            class="relative flex h-full flex-col justify-between p-6 text-white"
+        >
+            <!-- Header -->
+            <div
+                data-testid="popup-header"
+                class="mb-2 flex items-center gap-3"
             >
-                <div class="flex items-center justify-between gap-1">
-                    <a
-                        :href="`https://hianime.to/${anime.animeSlug}`"
-                        target="_blank"
-                        class="block w-full grow-0 rounded-sm bg-gray-100 px-2 py-1 text-gray-800 hover:bg-blue-500 hover:text-white"
+                <div
+                    data-testid="anime-icon"
+                    class="flex h-8 w-8 items-center justify-center rounded-lg border border-white/30 bg-white/20 backdrop-blur-sm"
+                >
+                    <svg
+                        class="h-5 w-5 text-white"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
                     >
-                        {{ anime.animeTitle }} - Ep {{ anime.currentEpisode }}
-                    </a>
-                    <button
-                        class="mt-1 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-red-500 px-2 py-1 text-sm text-white"
-                        @click="removeFromWatchList(anime.animeId)"
-                    >
-                        -
-                    </button>
+                        <path
+                            d="M12 2L13.09 7.26L18 8L13.09 8.74L12 14L10.91 8.74L6 8L10.91 7.26L12 2Z"
+                            fill="currentColor"
+                        />
+                        <path
+                            d="M19 15L19.74 17.74L22 18.5L19.74 19.26L19 22L18.26 19.26L16 18.5L18.26 17.74L19 15Z"
+                            fill="currentColor"
+                        />
+                        <path
+                            d="M5 9L5.74 11.74L8 12.5L5.74 13.26L5 16L4.26 13.26L2 12.5L4.26 11.74L5 9Z"
+                            fill="currentColor"
+                        />
+                    </svg>
                 </div>
-            </li>
-        </ul>
+                <h1
+                    data-testid="popup-title"
+                    class="text-xl font-bold tracking-tight text-white drop-shadow-md"
+                >
+                    AnimeList
+                </h1>
+            </div>
+
+            <!-- Description -->
+            <p
+                data-testid="popup-description"
+                class="mb-6 text-sm leading-relaxed text-white/90 drop-shadow-sm"
+            >
+                Manage your anime watch list and track your progress
+            </p>
+
+            <!-- CTA Button -->
+            <button
+                data-testid="options-button"
+                class="group relative flex w-full transform items-center justify-center gap-2 overflow-hidden rounded-xl border border-white/30 bg-white/15 px-5 py-3.5 text-sm font-semibold text-white backdrop-blur-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-white/50 hover:bg-white/25 hover:shadow-lg hover:shadow-black/20 active:translate-y-0 active:duration-75"
+                @click="openOptions"
+            >
+                <!-- Animated shine effect -->
+                <div
+                    data-testid="button-shine"
+                    class="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 ease-out group-hover:translate-x-full"
+                ></div>
+
+                <!-- Button content -->
+                <span
+                    data-testid="button-icon"
+                    class="text-base drop-shadow-sm"
+                    >⚙️</span
+                >
+                <span
+                    data-testid="button-text"
+                    class="font-semibold tracking-wide drop-shadow-sm"
+                    >Open Dashboard</span
+                >
+            </button>
+
+            <!-- Footer with animated dots -->
+            <div
+                data-testid="popup-footer"
+                class="mt-4 flex justify-center"
+            >
+                <div
+                    data-testid="decorative-dots"
+                    class="flex gap-2"
+                >
+                    <span
+                        data-testid="dot"
+                        class="h-1.5 w-1.5 animate-pulse rounded-full bg-white/40"
+                    ></span>
+                    <span
+                        data-testid="dot"
+                        class="h-1.5 w-1.5 animate-pulse rounded-full bg-white/40 delay-300"
+                    ></span>
+                    <span
+                        data-testid="dot"
+                        class="h-1.5 w-1.5 animate-pulse rounded-full bg-white/40 delay-700"
+                    ></span>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import type { EpisodeProgress } from "@/commons/models";
-import { EpisodeProgressUtil } from "@/commons/utils";
-import { onMounted, onUnmounted, ref } from "vue";
-
-const watchList = ref<EpisodeProgress[]>([]);
-
-const removeFromWatchList = async (animeId: string) => {
-    await EpisodeProgressUtil.remove(animeId);
-    watchList.value = await EpisodeProgressUtil.getAllAsArray();
-};
-
-const checkForNewLinksListener = () => {
-    chrome.storage.onChanged.addListener(async (changes) => {
-        if (changes.episodeProgress) {
-            watchList.value = await EpisodeProgressUtil.getAllAsArray();
-        }
-    });
-};
-
 const openOptions = () => {
-    chrome.runtime.openOptionsPage();
+    try {
+        if (typeof chrome !== "undefined" && chrome?.runtime?.openOptionsPage) {
+            chrome.runtime.openOptionsPage();
+        } else {
+            console.warn("Chrome extension API not available");
+        }
+    } catch (error) {
+        console.error("Failed to open options page:", error);
+    }
 };
-
-onMounted(async () => {
-    watchList.value = await EpisodeProgressUtil.getAllAsArray();
-
-    checkForNewLinksListener();
-});
-
-onUnmounted(() => {
-    chrome.storage.onChanged.removeListener(checkForNewLinksListener);
-});
 </script>
+
+<style scoped>
+/* Using Tailwind CSS classes - minimal custom styles needed */
+</style>

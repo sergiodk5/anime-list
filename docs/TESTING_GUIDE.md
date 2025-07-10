@@ -189,6 +189,73 @@ it("should handle malformed data", async () => {
 });
 ```
 
+#### 4. Vue Component Testing
+
+```typescript
+import { mount } from "@vue/test-utils";
+import PopupPage from "@/popup/PopupPage.vue";
+
+// Mock Chrome APIs for component tests
+const mockOpenOptionsPage = vi.fn();
+global.chrome = {
+    runtime: {
+        openOptionsPage: mockOpenOptionsPage,
+    },
+} as any;
+
+it("should render component correctly", () => {
+    const wrapper = mount(PopupPage);
+    expect(wrapper.exists()).toBe(true);
+    // Use data-testid attributes for robust element selection
+    expect(wrapper.find('[data-testid="anime-popup"]').exists()).toBe(true);
+});
+
+it("should handle user interactions", async () => {
+    const wrapper = mount(PopupPage);
+    // Use data-testid instead of CSS classes for test selectors
+    const button = wrapper.find('[data-testid="options-button"]');
+
+    await button.trigger("click");
+
+    expect(mockOpenOptionsPage).toHaveBeenCalledTimes(1);
+});
+
+it("should handle Chrome API errors gracefully", async () => {
+    mockOpenOptionsPage.mockImplementationOnce(() => {
+        throw new Error("Chrome API error");
+    });
+
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const wrapper = mount(PopupPage);
+    const button = wrapper.find('[data-testid="options-button"]');
+
+    await button.trigger("click");
+
+    expect(consoleSpy).toHaveBeenCalledWith("Failed to open options page:", expect.any(Error));
+    consoleSpy.mockRestore();
+});
+```
+
+### Vue Component Testing Best Practices
+
+-   **Use data-testid attributes**: Instead of CSS classes, use `data-testid` attributes for element selection in tests. This ensures tests remain stable even when styling changes.
+
+    ```vue
+    <!-- In component template -->
+    <button data-testid="submit-button" class="btn btn-primary">Submit</button>
+    ```
+
+    ```typescript
+    // In test file
+    const button = wrapper.find('[data-testid="submit-button"]');
+    ```
+
+-   **Test component structure**: Verify that all key elements are rendered correctly using data-testid selectors.
+-   **Test user interactions**: Simulate clicks, form submissions, and other user events.
+-   **Test error handling**: Ensure components handle API errors and edge cases gracefully.
+-   **Mock external dependencies**: Always mock Chrome APIs and other external services.
+-   **Maintain 100% coverage**: All Vue components should have comprehensive test coverage.
+
 ## Test Organization
 
 ### Describe Blocks
@@ -223,12 +290,18 @@ describe("StorageUtil", () => {
 
 ### Current Standards
 
-All utility functions must maintain:
+All utilities and components must maintain:
 
 -   **Statements**: 100%
 -   **Branches**: 100%
 -   **Functions**: 100%
 -   **Lines**: 100%
+
+**Coverage applies to:**
+
+-   All utility functions in `src/commons/utils/`
+-   Vue components in `src/popup/`, `src/options/`
+-   Business logic in `src/background/`, `src/content/`
 
 ### Coverage Reports
 

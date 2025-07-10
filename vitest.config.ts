@@ -29,9 +29,10 @@ export default mergeConfig(
                 enabled: false, // Enable via CLI flag --coverage
                 reporter: ["text", "json", "html"],
                 reportsDirectory: "./coverage",
-                include: ["src/commons/**/*.{js,ts}", "!src/**/*.d.ts"],
+                include: ["src/commons/**/*.{js,ts,vue}", "src/popup/**/*.{js,ts,vue}", "!src/**/*.d.ts"],
                 exclude: [
                     "src/commons/utils/index.ts", // Simple export file
+                    "src/popup/index.ts", // Simple entry point
                 ],
                 thresholds: {
                     // Set realistic thresholds for the utilities we're testing
