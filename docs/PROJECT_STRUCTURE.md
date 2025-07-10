@@ -18,11 +18,10 @@ Chrome extensions have several distinct components that run in different context
 ```
 src/
 ├── background/         # Background script files
-├── commons/           # Shared utilities and models
+├── commons/           # Shared utilities, models, and assets
 ├── content/           # Content script files
 ├── options/           # Options page files
 ├── popup/             # Extension popup files
-├── assets/            # Shared assets (CSS, images)
 ├── App.vue            # Main Vue application component
 └── main.ts            # Application entry point
 ```
@@ -159,6 +158,7 @@ options/
 -   Storage utilities
 -   Business logic utilities
 -   Shared constants and enums
+-   Static assets (CSS, images, fonts)
 
 **Key characteristics**:
 
@@ -171,6 +171,8 @@ options/
 
 ```
 commons/
+├── assets/            # Shared static assets
+│   └── main.css       # Global CSS styles
 ├── models/            # TypeScript interfaces and types
 │   └── index.ts       # Anime, episode, storage interfaces
 └── utils/             # Utility functions
@@ -180,24 +182,6 @@ commons/
     ├── planToWatchUtil.ts      # Plan to watch management
     ├── hiddenAnimeUtil.ts      # Hidden anime management
     └── animeUtil.ts   # High-level anime operations
-```
-
-### `assets/` - Static Assets
-
-**Purpose**: Contains shared static assets like CSS files, images, and other resources.
-
-**What it contains**:
-
--   Global stylesheets
--   Shared images and icons
--   Font files
--   Other static resources
-
-**Current structure**:
-
-```
-assets/
-└── main.css           # Global CSS styles
 ```
 
 ## Cross-Component Communication
