@@ -8,11 +8,12 @@ const ICONS = {
     128: "assets/images/darkness_128x128.png",
 };
 
-const manifest: chrome.runtime.ManifestBase = {
+const manifest: any = {
     manifest_version: 3,
     name: NAME,
     description: DESCRIPTION,
     version: VERSION,
+    icons: ICONS,
     action: {
         default_popup: "src/popup/index.html",
         default_icon: ICONS,

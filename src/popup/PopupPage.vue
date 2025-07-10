@@ -28,25 +28,11 @@
                     data-testid="anime-icon"
                     class="flex h-8 w-8 items-center justify-center rounded-lg border border-white/30 bg-white/20 backdrop-blur-sm"
                 >
-                    <svg
-                        class="h-5 w-5 text-white"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                    >
-                        <path
-                            d="M12 2L13.09 7.26L18 8L13.09 8.74L12 14L10.91 8.74L6 8L10.91 7.26L12 2Z"
-                            fill="currentColor"
-                        />
-                        <path
-                            d="M19 15L19.74 17.74L22 18.5L19.74 19.26L19 22L18.26 19.26L16 18.5L18.26 17.74L19 15Z"
-                            fill="currentColor"
-                        />
-                        <path
-                            d="M5 9L5.74 11.74L8 12.5L5.74 13.26L5 16L4.26 13.26L2 12.5L4.26 11.74L5 9Z"
-                            fill="currentColor"
-                        />
-                    </svg>
+                    <img
+                        src="/assets/images/darkness_32x32.png"
+                        alt="Darkness from KonoSuba"
+                        class="h-6 w-6 rounded"
+                    />
                 </div>
                 <h1
                     data-testid="popup-title"

@@ -48,9 +48,10 @@ describe("PopupPage", () => {
             const iconContainer = wrapper.find('[data-testid="anime-icon"]');
             expect(iconContainer.exists()).toBe(true);
 
-            const svg = iconContainer.find("svg");
-            expect(svg.exists()).toBe(true);
-            expect(svg.attributes("viewBox")).toBe("0 0 24 24");
+            const img = iconContainer.find("img");
+            expect(img.exists()).toBe(true);
+            expect(img.attributes("src")).toBe("/assets/images/darkness_32x32.png");
+            expect(img.attributes("alt")).toBe("Darkness from KonoSuba");
         });
 
         it("should render the correct title", () => {
@@ -60,21 +61,16 @@ describe("PopupPage", () => {
             expect(title.text()).toBe("AnimeList");
         });
 
-        it("should render the anime icon with correct SVG paths", () => {
+        it("should render the Darkness icon with correct attributes", () => {
             const wrapper = mount(PopupPage);
-            const svg = wrapper.find('[data-testid="anime-icon"] svg');
-            const paths = svg.findAll("path");
+            const img = wrapper.find('[data-testid="anime-icon"] img');
 
-            expect(paths).toHaveLength(3);
-            expect(paths[0].attributes("d")).toBe(
-                "M12 2L13.09 7.26L18 8L13.09 8.74L12 14L10.91 8.74L6 8L10.91 7.26L12 2Z",
-            );
-            expect(paths[1].attributes("d")).toBe(
-                "M19 15L19.74 17.74L22 18.5L19.74 19.26L19 22L18.26 19.26L16 18.5L18.26 17.74L19 15Z",
-            );
-            expect(paths[2].attributes("d")).toBe(
-                "M5 9L5.74 11.74L8 12.5L5.74 13.26L5 16L4.26 13.26L2 12.5L4.26 11.74L5 9Z",
-            );
+            expect(img.exists()).toBe(true);
+            expect(img.attributes("src")).toBe("/assets/images/darkness_32x32.png");
+            expect(img.attributes("alt")).toBe("Darkness from KonoSuba");
+            expect(img.classes()).toContain("h-6");
+            expect(img.classes()).toContain("w-6");
+            expect(img.classes()).toContain("rounded");
         });
     });
 
