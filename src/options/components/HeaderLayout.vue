@@ -1,41 +1,56 @@
 <template>
-    <header class="flex h-16 items-center justify-between bg-white px-4 shadow">
+    <header
+        data-testid="header"
+        class="flex h-16 items-center justify-between border-b border-white/20 bg-black/30 px-6 backdrop-blur-sm"
+    >
         <!-- Breadcrumbs -->
         <nav
+            data-testid="breadcrumbs"
             aria-label="Breadcrumb"
-            class="flex space-x-4"
+            class="flex items-center space-x-3"
         >
             <template
                 v-for="(crumb, index) in breadcrumbs"
                 :key="crumb.path"
             >
                 <RouterLink
+                    :data-testid="`breadcrumb-${index}`"
                     :to="crumb.path"
-                    class="text-gray-600 hover:text-gray-800"
+                    class="rounded-lg px-3 py-1.5 text-sm font-medium text-white/80 transition-all duration-200 hover:bg-white/10 hover:text-white hover:shadow-sm hover:shadow-black/20"
                 >
                     {{ crumb.name }}
                 </RouterLink>
                 <span
                     v-if="index < breadcrumbs.length - 1"
-                    class="text-gray-500"
-                    >/</span
+                    data-testid="breadcrumb-separator"
+                    class="text-white/40"
+                    >›</span
                 >
             </template>
         </nav>
+
         <!-- User Menu -->
-        <div class="flex items-center space-x-4">
-            <button class="text-gray-600 hover:text-gray-800">
-                <svg
-                    class="h-6 w-6"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
+        <div
+            data-testid="user-menu"
+            class="flex items-center space-x-4"
+        >
+            <button
+                data-testid="user-button"
+                class="group flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-white/90 backdrop-blur-sm transition-all duration-200 hover:border-white/30 hover:bg-white/20 hover:text-white hover:shadow-md hover:shadow-black/20 active:scale-95"
+            >
+                <span
+                    data-testid="user-avatar"
+                    class="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-purple-400 to-pink-400 text-xs font-bold text-white shadow-sm"
                 >
-                    <path
-                        d="M12 12c2.67 0 8 1.34 8 4v2H4v-2c0-2.66 5.33-4 8-4zm0-2c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm0 4c-1.66 0-5.33.84-6 2h12c-.67-1.16-4.34-2-6-2z"
-                    />
-                </svg>
+                    👤
+                </span>
+                <span
+                    data-testid="user-label"
+                    class="drop-shadow-sm"
+                >
+                    Account
+                </span>
             </button>
-            <span class="text-gray-600">User Account</span>
         </div>
     </header>
 </template>
