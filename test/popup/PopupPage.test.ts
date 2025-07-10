@@ -70,7 +70,7 @@ describe("PopupPage", () => {
             expect(img.attributes("alt")).toBe("Darkness from KonoSuba");
             expect(img.classes()).toContain("h-6");
             expect(img.classes()).toContain("w-6");
-            expect(img.classes()).toContain("rounded");
+            expect(img.classes()).toContain("rounded-xs");
         });
     });
 

@@ -11,9 +11,9 @@
             <div class="flex items-center gap-4">
                 <div
                     data-testid="page-icon"
-                    class="flex h-12 w-12 items-center justify-center rounded-xl border border-white/30 bg-white/20 backdrop-blur-sm"
+                    class="flex h-12 w-12 items-center justify-center rounded-xl border border-white/30 bg-white/20 backdrop-blur-xs"
                 >
-                    <span class="text-2xl drop-shadow-sm">📺</span>
+                    <span class="text-2xl drop-shadow-xs">📺</span>
                 </div>
                 <div>
                     <h1
@@ -24,7 +24,7 @@
                     </h1>
                     <p
                         data-testid="page-subtitle"
-                        class="text-lg text-white/80 drop-shadow-sm"
+                        class="text-lg text-white/80 drop-shadow-xs"
                     >
                         Manage your anime collections
                     </p>
@@ -33,14 +33,14 @@
 
             <button
                 data-testid="add-list-button"
-                class="group flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm transition-all duration-200 hover:border-white/30 hover:bg-white/20 hover:shadow-md hover:shadow-black/20 active:scale-95"
+                class="group flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-xs transition-all duration-200 hover:border-white/30 hover:bg-white/20 hover:shadow-md hover:shadow-black/20 active:scale-95"
             >
                 <span
                     data-testid="add-icon"
-                    class="text-base drop-shadow-sm"
+                    class="text-base drop-shadow-xs"
                     >➕</span
                 >
-                <span class="drop-shadow-sm">New List</span>
+                <span class="drop-shadow-xs">New List</span>
             </button>
         </div>
 
@@ -52,24 +52,24 @@
             <!-- Currently Watching List -->
             <div
                 data-testid="list-currently-watching"
-                class="group rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-sm transition-all duration-300 hover:border-white/30 hover:bg-white/15 hover:shadow-lg hover:shadow-black/20"
+                class="group rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-xs transition-all duration-300 hover:border-white/30 hover:bg-white/15 hover:shadow-lg hover:shadow-black/20"
             >
                 <div class="mb-4 flex items-center gap-3">
                     <span
                         data-testid="watching-icon"
-                        class="text-2xl drop-shadow-sm"
+                        class="text-2xl drop-shadow-xs"
                         >▶️</span
                     >
                     <h3
                         data-testid="watching-title"
-                        class="text-xl font-bold text-white drop-shadow-sm"
+                        class="text-xl font-bold text-white drop-shadow-xs"
                     >
                         Currently Watching
                     </h3>
                 </div>
                 <p
                     data-testid="watching-description"
-                    class="mb-4 text-white/80 drop-shadow-sm"
+                    class="mb-4 text-white/80 drop-shadow-xs"
                 >
                     Anime you're actively following
                 </p>
@@ -79,7 +79,7 @@
                 >
                     <span
                         data-testid="watching-count"
-                        class="text-2xl font-bold text-purple-200 drop-shadow-sm"
+                        class="text-2xl font-bold text-purple-200 drop-shadow-xs"
                     >
                         12 series
                     </span>
@@ -95,24 +95,24 @@
             <!-- Completed List -->
             <div
                 data-testid="list-completed"
-                class="group rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-sm transition-all duration-300 hover:border-white/30 hover:bg-white/15 hover:shadow-lg hover:shadow-black/20"
+                class="group rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-xs transition-all duration-300 hover:border-white/30 hover:bg-white/15 hover:shadow-lg hover:shadow-black/20"
             >
                 <div class="mb-4 flex items-center gap-3">
                     <span
                         data-testid="completed-icon"
-                        class="text-2xl drop-shadow-sm"
+                        class="text-2xl drop-shadow-xs"
                         >✅</span
                     >
                     <h3
                         data-testid="completed-title"
-                        class="text-xl font-bold text-white drop-shadow-sm"
+                        class="text-xl font-bold text-white drop-shadow-xs"
                     >
                         Completed
                     </h3>
                 </div>
                 <p
                     data-testid="completed-description"
-                    class="mb-4 text-white/80 drop-shadow-sm"
+                    class="mb-4 text-white/80 drop-shadow-xs"
                 >
                     Anime you've finished watching
                 </p>
@@ -122,7 +122,7 @@
                 >
                     <span
                         data-testid="completed-count"
-                        class="text-2xl font-bold text-green-200 drop-shadow-sm"
+                        class="text-2xl font-bold text-green-200 drop-shadow-xs"
                     >
                         87 series
                     </span>
@@ -138,24 +138,24 @@
             <!-- Plan to Watch List -->
             <div
                 data-testid="list-planned"
-                class="group rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-sm transition-all duration-300 hover:border-white/30 hover:bg-white/15 hover:shadow-lg hover:shadow-black/20"
+                class="group rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-xs transition-all duration-300 hover:border-white/30 hover:bg-white/15 hover:shadow-lg hover:shadow-black/20"
             >
                 <div class="mb-4 flex items-center gap-3">
                     <span
                         data-testid="planned-icon"
-                        class="text-2xl drop-shadow-sm"
+                        class="text-2xl drop-shadow-xs"
                         >📋</span
                     >
                     <h3
                         data-testid="planned-title"
-                        class="text-xl font-bold text-white drop-shadow-sm"
+                        class="text-xl font-bold text-white drop-shadow-xs"
                     >
                         Plan to Watch
                     </h3>
                 </div>
                 <p
                     data-testid="planned-description"
-                    class="mb-4 text-white/80 drop-shadow-sm"
+                    class="mb-4 text-white/80 drop-shadow-xs"
                 >
                     Anime on your watchlist
                 </p>
@@ -165,7 +165,7 @@
                 >
                     <span
                         data-testid="planned-count"
-                        class="text-2xl font-bold text-blue-200 drop-shadow-sm"
+                        class="text-2xl font-bold text-blue-200 drop-shadow-xs"
                     >
                         34 series
                     </span>
@@ -181,24 +181,24 @@
             <!-- On Hold List -->
             <div
                 data-testid="list-on-hold"
-                class="group rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-sm transition-all duration-300 hover:border-white/30 hover:bg-white/15 hover:shadow-lg hover:shadow-black/20"
+                class="group rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-xs transition-all duration-300 hover:border-white/30 hover:bg-white/15 hover:shadow-lg hover:shadow-black/20"
             >
                 <div class="mb-4 flex items-center gap-3">
                     <span
                         data-testid="on-hold-icon"
-                        class="text-2xl drop-shadow-sm"
+                        class="text-2xl drop-shadow-xs"
                         >⏸️</span
                     >
                     <h3
                         data-testid="on-hold-title"
-                        class="text-xl font-bold text-white drop-shadow-sm"
+                        class="text-xl font-bold text-white drop-shadow-xs"
                     >
                         On Hold
                     </h3>
                 </div>
                 <p
                     data-testid="on-hold-description"
-                    class="mb-4 text-white/80 drop-shadow-sm"
+                    class="mb-4 text-white/80 drop-shadow-xs"
                 >
                     Anime you've paused watching
                 </p>
@@ -208,7 +208,7 @@
                 >
                     <span
                         data-testid="on-hold-count"
-                        class="text-2xl font-bold text-yellow-200 drop-shadow-sm"
+                        class="text-2xl font-bold text-yellow-200 drop-shadow-xs"
                     >
                         5 series
                     </span>
@@ -224,24 +224,24 @@
             <!-- Dropped List -->
             <div
                 data-testid="list-dropped"
-                class="group rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-sm transition-all duration-300 hover:border-white/30 hover:bg-white/15 hover:shadow-lg hover:shadow-black/20"
+                class="group rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-xs transition-all duration-300 hover:border-white/30 hover:bg-white/15 hover:shadow-lg hover:shadow-black/20"
             >
                 <div class="mb-4 flex items-center gap-3">
                     <span
                         data-testid="dropped-icon"
-                        class="text-2xl drop-shadow-sm"
+                        class="text-2xl drop-shadow-xs"
                         >❌</span
                     >
                     <h3
                         data-testid="dropped-title"
-                        class="text-xl font-bold text-white drop-shadow-sm"
+                        class="text-xl font-bold text-white drop-shadow-xs"
                     >
                         Dropped
                     </h3>
                 </div>
                 <p
                     data-testid="dropped-description"
-                    class="mb-4 text-white/80 drop-shadow-sm"
+                    class="mb-4 text-white/80 drop-shadow-xs"
                 >
                     Anime you've stopped watching
                 </p>
@@ -251,7 +251,7 @@
                 >
                     <span
                         data-testid="dropped-count"
-                        class="text-2xl font-bold text-red-200 drop-shadow-sm"
+                        class="text-2xl font-bold text-red-200 drop-shadow-xs"
                     >
                         8 series
                     </span>
@@ -267,7 +267,7 @@
             <!-- Custom Lists Placeholder -->
             <div
                 data-testid="list-custom"
-                class="group rounded-2xl border border-dashed border-white/30 bg-white/5 p-6 backdrop-blur-sm transition-all duration-300 hover:border-white/40 hover:bg-white/10"
+                class="group rounded-2xl border border-dashed border-white/30 bg-white/5 p-6 backdrop-blur-xs transition-all duration-300 hover:border-white/40 hover:bg-white/10"
             >
                 <div class="flex h-full flex-col items-center justify-center text-center">
                     <span
@@ -277,13 +277,13 @@
                     >
                     <h3
                         data-testid="custom-title"
-                        class="mb-2 text-lg font-semibold text-white/80 drop-shadow-sm"
+                        class="mb-2 text-lg font-semibold text-white/80 drop-shadow-xs"
                     >
                         Create Custom List
                     </h3>
                     <p
                         data-testid="custom-description"
-                        class="text-sm text-white/60 drop-shadow-sm"
+                        class="text-sm text-white/60 drop-shadow-xs"
                     >
                         Add your own categories
                     </p>

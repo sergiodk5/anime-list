@@ -92,7 +92,7 @@ src/options/
 
 ```vue
 <template>
-    <div class="flex h-screen bg-gradient-to-br from-purple-600 via-purple-700 to-pink-600">
+    <div class="flex h-screen bg-linear-to-br from-purple-600 via-purple-700 to-pink-600">
         <!-- Animated background pattern -->
         <div class="fixed inset-0 opacity-10">
             <!-- Decorative animated elements -->
@@ -124,17 +124,17 @@ src/options/
 
 ```vue
 <template>
-    <aside class="flex w-64 flex-col border-r border-white/20 bg-black/30 text-white backdrop-blur-sm">
+    <aside class="flex w-64 flex-col border-r border-white/20 bg-black/30 text-white backdrop-blur-xs">
         <!-- Logo/Brand Section -->
         <div class="flex h-16 items-center justify-center border-b border-white/20 bg-black/40">
             <div class="flex items-center gap-3">
                 <div
-                    class="flex h-8 w-8 items-center justify-center rounded-lg border border-white/30 bg-white/20 backdrop-blur-sm"
+                    class="flex h-8 w-8 items-center justify-center rounded-lg border border-white/30 bg-white/20 backdrop-blur-xs"
                 >
                     <img
                         src="/assets/images/darkness_32x32.png"
                         alt="Darkness from KonoSuba"
-                        class="h-6 w-6 rounded"
+                        class="h-6 w-6 rounded-sm"
                     />
                 </div>
                 <span class="text-lg font-bold tracking-tight text-white drop-shadow-md">AnimeList</span>
@@ -177,7 +177,7 @@ src/options/
 
 ```vue
 <template>
-    <header class="border-b border-white/20 bg-black/20 px-6 py-4 backdrop-blur-sm">
+    <header class="border-b border-white/20 bg-black/20 px-6 py-4 backdrop-blur-xs">
         <div class="flex items-center justify-between">
             <!-- Breadcrumb Navigation -->
             <nav class="flex items-center space-x-2 text-sm text-white/80">
@@ -225,14 +225,14 @@ src/options/
 <template>
     <div class="space-y-8">
         <!-- Welcome Section -->
-        <div class="rounded-2xl border border-white/20 bg-white/10 p-8 backdrop-blur-sm">
+        <div class="rounded-2xl border border-white/20 bg-white/10 p-8 backdrop-blur-xs">
             <div class="mb-6 flex items-center gap-4">
                 <div class="brand-icon-large">
                     <span>🎌</span>
                 </div>
                 <div>
                     <h1 class="text-3xl font-bold text-white drop-shadow-md">Welcome to AnimeList</h1>
-                    <p class="text-lg text-white/80 drop-shadow-sm">Your ultimate anime tracking companion</p>
+                    <p class="text-lg text-white/80 drop-shadow-xs">Your ultimate anime tracking companion</p>
                 </div>
             </div>
         </div>
@@ -272,14 +272,14 @@ src/options/
 <template>
     <div class="space-y-8">
         <!-- Page Header -->
-        <div class="rounded-2xl border border-white/20 bg-white/10 p-8 backdrop-blur-sm">
+        <div class="rounded-2xl border border-white/20 bg-white/10 p-8 backdrop-blur-xs">
             <div class="flex items-center gap-4">
                 <div class="brand-icon-large">
                     <span>📺</span>
                 </div>
                 <div>
                     <h1 class="text-3xl font-bold text-white drop-shadow-md">All Watch Lists</h1>
-                    <p class="text-lg text-white/80 drop-shadow-sm">Manage your anime collections</p>
+                    <p class="text-lg text-white/80 drop-shadow-xs">Manage your anime collections</p>
                 </div>
             </div>
         </div>
@@ -362,7 +362,7 @@ const router = createRouter({
 ```css
 /* Background gradients */
 .anime-gradient {
-    @apply bg-gradient-to-br from-purple-600 via-purple-700 to-pink-600;
+    @apply bg-linear-to-br from-purple-600 via-purple-700 to-pink-600;
 }
 
 /* Text hierarchy */

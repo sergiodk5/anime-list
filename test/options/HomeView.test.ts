@@ -25,7 +25,7 @@ describe("HomeView", () => {
             expect(welcomeSection.classes()).toContain("border");
             expect(welcomeSection.classes()).toContain("border-white/20");
             expect(welcomeSection.classes()).toContain("bg-white/10");
-            expect(welcomeSection.classes()).toContain("backdrop-blur-sm");
+            expect(welcomeSection.classes()).toContain("backdrop-blur-xs");
         });
     });
 
@@ -38,7 +38,7 @@ describe("HomeView", () => {
             expect(welcomeIcon.text()).toBe("🎌");
             expect(welcomeIcon.classes()).toContain("rounded-xl");
             expect(welcomeIcon.classes()).toContain("bg-white/20");
-            expect(welcomeIcon.classes()).toContain("backdrop-blur-sm");
+            expect(welcomeIcon.classes()).toContain("backdrop-blur-xs");
         });
 
         it("should render welcome title", () => {
@@ -209,13 +209,13 @@ describe("HomeView", () => {
             expect(welcomeSection.classes()).toContain("border");
             expect(welcomeSection.classes()).toContain("border-white/20");
             expect(welcomeSection.classes()).toContain("bg-white/10");
-            expect(welcomeSection.classes()).toContain("backdrop-blur-sm");
+            expect(welcomeSection.classes()).toContain("backdrop-blur-xs");
 
             expect(actionsSection.classes()).toContain("rounded-2xl");
             expect(actionsSection.classes()).toContain("border");
             expect(actionsSection.classes()).toContain("border-white/20");
             expect(actionsSection.classes()).toContain("bg-white/10");
-            expect(actionsSection.classes()).toContain("backdrop-blur-sm");
+            expect(actionsSection.classes()).toContain("backdrop-blur-xs");
         });
 
         it("should have responsive grid layouts", () => {
@@ -226,13 +226,13 @@ describe("HomeView", () => {
             expect(statsSection.classes()).toContain("md:grid-cols-3");
         });
 
-        it("should have drop shadow effects on text", () => {
+        it("should have drop shadow-sm effects on text", () => {
             const wrapper = createWrapper();
             const welcomeTitle = wrapper.find('[data-testid="welcome-title"]');
             const welcomeIcon = wrapper.find('[data-testid="welcome-icon"]');
 
             expect(welcomeTitle.classes()).toContain("drop-shadow-md");
-            expect(welcomeIcon.classes()).toContain("backdrop-blur-sm");
+            expect(welcomeIcon.classes()).toContain("backdrop-blur-xs");
         });
 
         it("should have transition effects", () => {

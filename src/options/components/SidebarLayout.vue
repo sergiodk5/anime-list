@@ -1,7 +1,7 @@
 <template>
     <aside
         data-testid="sidebar"
-        class="flex w-64 flex-col border-r border-white/20 bg-black/30 text-white backdrop-blur-sm"
+        class="flex w-64 flex-col border-r border-white/20 bg-black/30 text-white backdrop-blur-xs"
     >
         <!-- Logo/Brand Section -->
         <div
@@ -14,12 +14,12 @@
             >
                 <div
                     data-testid="sidebar-icon"
-                    class="flex h-8 w-8 items-center justify-center rounded-lg border border-white/30 bg-white/20 backdrop-blur-sm"
+                    class="flex h-8 w-8 items-center justify-center rounded-lg border border-white/30 bg-white/20 backdrop-blur-xs"
                 >
                     <img
                         src="/assets/images/darkness_32x32.png"
                         alt="Darkness from KonoSuba"
-                        class="h-6 w-6 rounded"
+                        class="h-6 w-6 rounded-xs"
                     />
                 </div>
                 <span
@@ -45,10 +45,10 @@
             >
                 <span
                     data-testid="home-icon"
-                    class="text-lg drop-shadow-sm"
+                    class="text-lg drop-shadow-xs"
                     >🏠</span
                 >
-                <span class="drop-shadow-sm">Home</span>
+                <span class="drop-shadow-xs">Home</span>
             </RouterLink>
 
             <RouterLink
@@ -61,10 +61,10 @@
             >
                 <span
                     data-testid="watchlist-icon"
-                    class="text-lg drop-shadow-sm"
+                    class="text-lg drop-shadow-xs"
                     >📺</span
                 >
-                <span class="drop-shadow-sm">Watch Lists</span>
+                <span class="drop-shadow-xs">Watch Lists</span>
             </RouterLink>
 
             <a
@@ -74,10 +74,10 @@
             >
                 <span
                     data-testid="favorites-icon"
-                    class="text-lg drop-shadow-sm"
+                    class="text-lg drop-shadow-xs"
                     >⭐</span
                 >
-                <span class="drop-shadow-sm">Favorites</span>
+                <span class="drop-shadow-xs">Favorites</span>
             </a>
         </nav>
 
@@ -92,7 +92,7 @@
                 class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-white/60 transition-colors duration-200 hover:text-white/90"
             >
                 <span class="text-base">🔗</span>
-                <span class="drop-shadow-sm">Reference Link</span>
+                <span class="drop-shadow-xs">Reference Link</span>
             </a>
         </div>
     </aside>

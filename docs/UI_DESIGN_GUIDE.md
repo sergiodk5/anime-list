@@ -25,12 +25,12 @@ Our UI follows a **modern anime-themed aesthetic** with:
 
 ```vue
 <!-- Full-screen gradient for options pages -->
-<div class="bg-gradient-to-br from-purple-600 via-purple-700 to-pink-600">
+<div class="bg-linear-to-br from-purple-600 via-purple-700 to-pink-600">
   <!-- Content -->
 </div>
 
 <!-- Popup-specific gradient (smaller) -->
-<div class="bg-gradient-to-br from-purple-600 via-purple-700 to-pink-600">
+<div class="bg-linear-to-br from-purple-600 via-purple-700 to-pink-600">
   <!-- Popup content -->
 </div>
 ```
@@ -55,12 +55,12 @@ Our UI follows a **modern anime-themed aesthetic** with:
 
 ```vue
 <!-- Main content cards -->
-<div class="rounded-2xl border border-white/20 bg-white/10 p-8 backdrop-blur-sm">
+<div class="rounded-2xl border border-white/20 bg-white/10 p-8 backdrop-blur-xs">
   <!-- Card content -->
 </div>
 
 <!-- Smaller glass cards -->
-<div class="rounded-xl border border-white/20 bg-white/10 p-6 backdrop-blur-sm">
+<div class="rounded-xl border border-white/20 bg-white/10 p-6 backdrop-blur-xs">
   <!-- Card content -->
 </div>
 ```
@@ -70,7 +70,7 @@ Our UI follows a **modern anime-themed aesthetic** with:
 ```vue
 <!-- Hoverable glass cards -->
 <div
-    class="group rounded-xl border border-white/20 bg-white/10 p-6 backdrop-blur-sm transition-all duration-300 hover:border-white/30 hover:bg-white/15 hover:shadow-lg hover:shadow-black/20"
+    class="group rounded-xl border border-white/20 bg-white/10 p-6 backdrop-blur-xs transition-all duration-300 hover:border-white/30 hover:bg-white/15 hover:shadow-lg hover:shadow-black/20"
 >
   <!-- Interactive content -->
 </div>
@@ -89,17 +89,17 @@ Our UI follows a **modern anime-themed aesthetic** with:
 
 ```vue
 <!-- Primary brand icon (options/popup header) -->
-<div class="flex h-8 w-8 items-center justify-center rounded-lg border border-white/30 bg-white/20 backdrop-blur-sm">
+<div class="flex h-8 w-8 items-center justify-center rounded-lg border border-white/30 bg-white/20 backdrop-blur-xs">
   <img
     src="/assets/images/darkness_32x32.png"
     alt="Darkness from KonoSuba"
-    class="h-6 w-6 rounded"
+    class="h-6 w-6 rounded-sm"
   />
 </div>
 
 <!-- Larger brand icon (welcome sections) -->
-<div class="flex h-12 w-12 items-center justify-center rounded-xl border border-white/30 bg-white/20 backdrop-blur-sm">
-  <span class="text-2xl drop-shadow-sm">🎌</span> <!-- or Darkness icon -->
+<div class="flex h-12 w-12 items-center justify-center rounded-xl border border-white/30 bg-white/20 backdrop-blur-xs">
+  <span class="text-2xl drop-shadow-xs">🎌</span> <!-- or Darkness icon -->
 </div>
 ```
 
@@ -107,23 +107,23 @@ Our UI follows a **modern anime-themed aesthetic** with:
 
 ```vue
 <!-- Navigation icons -->
-<span class="text-lg drop-shadow-sm">🏠</span>
+<span class="text-lg drop-shadow-xs">🏠</span>
 <!-- Home -->
-<span class="text-lg drop-shadow-sm">📺</span>
+<span class="text-lg drop-shadow-xs">📺</span>
 <!-- Watch Lists -->
-<span class="text-lg drop-shadow-sm">⭐</span>
+<span class="text-lg drop-shadow-xs">⭐</span>
 <!-- Favorites -->
-<span class="text-lg drop-shadow-sm">⚙️</span>
+<span class="text-lg drop-shadow-xs">⚙️</span>
 <!-- Settings -->
 
 <!-- Stat/feature icons -->
-<span class="text-2xl drop-shadow-sm">▶️</span>
+<span class="text-2xl drop-shadow-xs">▶️</span>
 <!-- Currently Watching -->
-<span class="text-2xl drop-shadow-sm">✅</span>
+<span class="text-2xl drop-shadow-xs">✅</span>
 <!-- Completed -->
-<span class="text-2xl drop-shadow-sm">📝</span>
+<span class="text-2xl drop-shadow-xs">📝</span>
 <!-- Plan to Watch -->
-<span class="text-2xl drop-shadow-sm">🎌</span>
+<span class="text-2xl drop-shadow-xs">🎌</span>
 <!-- Welcome/Anime -->
 ```
 
@@ -139,7 +139,7 @@ Our UI follows a **modern anime-themed aesthetic** with:
 <h2 class="text-2xl font-bold text-white drop-shadow-md">Section Title</h2>
 
 <!-- Card titles -->
-<h3 class="text-lg font-semibold text-white drop-shadow-sm">Card Title</h3>
+<h3 class="text-lg font-semibold text-white drop-shadow-xs">Card Title</h3>
 
 <!-- Brand title -->
 <span class="text-lg font-bold tracking-tight text-white drop-shadow-md">AnimeList</span>
@@ -149,22 +149,22 @@ Our UI follows a **modern anime-themed aesthetic** with:
 
 ```vue
 <!-- Primary description text -->
-<p class="leading-relaxed text-white/90 drop-shadow-sm">Description text</p>
+<p class="leading-relaxed text-white/90 drop-shadow-xs">Description text</p>
 
 <!-- Secondary/subtitle text -->
-<p class="text-lg text-white/80 drop-shadow-sm">Subtitle text</p>
+<p class="text-lg text-white/80 drop-shadow-xs">Subtitle text</p>
 
 <!-- Navigation/button text -->
-<span class="text-sm font-medium text-white/90 drop-shadow-sm">Nav text</span>
+<span class="text-sm font-medium text-white/90 drop-shadow-xs">Nav text</span>
 ```
 
 #### Stats/Numbers
 
 ```vue
 <!-- Large stat numbers -->
-<p class="text-2xl font-bold text-purple-200 drop-shadow-sm">12</p>
-<p class="text-2xl font-bold text-green-200 drop-shadow-sm">87</p>
-<p class="text-2xl font-bold text-blue-200 drop-shadow-sm">25</p>
+<p class="text-2xl font-bold text-purple-200 drop-shadow-xs">12</p>
+<p class="text-2xl font-bold text-green-200 drop-shadow-xs">87</p>
+<p class="text-2xl font-bold text-blue-200 drop-shadow-xs">25</p>
 ```
 
 ### 5. **Layout Patterns**
@@ -173,7 +173,7 @@ Our UI follows a **modern anime-themed aesthetic** with:
 
 ```vue
 <!-- Fixed sidebar for options pages -->
-<aside class="flex w-64 flex-col border-r border-white/20 bg-black/30 text-white backdrop-blur-sm">
+<aside class="flex w-64 flex-col border-r border-white/20 bg-black/30 text-white backdrop-blur-xs">
   <!-- Sidebar header -->
   <div class="flex h-16 items-center justify-center border-b border-white/20 bg-black/40">
     <!-- Brand -->
@@ -190,7 +190,7 @@ Our UI follows a **modern anime-themed aesthetic** with:
 
 ```vue
 <!-- Page header with breadcrumbs -->
-<header class="border-b border-white/20 bg-black/20 px-6 py-4 backdrop-blur-sm">
+<header class="border-b border-white/20 bg-black/20 px-6 py-4 backdrop-blur-xs">
   <div class="flex items-center justify-between">
     <!-- Breadcrumbs -->
     <nav class="flex items-center space-x-2 text-sm text-white/80">
@@ -231,14 +231,14 @@ Our UI follows a **modern anime-themed aesthetic** with:
 ```vue
 <!-- Primary glass button -->
 <button
-    class="rounded-xl border border-white/30 bg-white/20 px-6 py-3 font-medium text-white backdrop-blur-sm transition-all duration-200 hover:border-white/40 hover:bg-white/30 hover:shadow-lg hover:shadow-black/20 active:scale-95"
+    class="rounded-xl border border-white/30 bg-white/20 px-6 py-3 font-medium text-white backdrop-blur-xs transition-all duration-200 hover:border-white/40 hover:bg-white/30 hover:shadow-lg hover:shadow-black/20 active:scale-95"
 >
   Button Text
 </button>
 
 <!-- Secondary button -->
 <button
-    class="rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-white/90 backdrop-blur-sm transition-all duration-200 hover:bg-white/20 active:scale-95"
+    class="rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-white/90 backdrop-blur-xs transition-all duration-200 hover:bg-white/20 active:scale-95"
 >
   Secondary Action
 </button>
@@ -329,9 +329,9 @@ Always include `data-testid` attributes for:
 
 ### Shadow & Effects
 
-- **Drop Shadow**: `drop-shadow-sm`, `drop-shadow-md`
+- **Drop Shadow**: `drop-shadow-xs`, `drop-shadow-md`
 - **Box Shadow**: `shadow-lg shadow-black/20`
-- **Backdrop Blur**: `backdrop-blur-sm`
+- **Backdrop Blur**: `backdrop-blur-xs`
 
 ---
 
@@ -342,7 +342,7 @@ When creating new UI components:
 - [ ] Apply base gradient background
 - [ ] Add glass-morphism effects with proper backdrop blur
 - [ ] Include Darkness brand icon where appropriate
-- [ ] Use consistent typography with drop-shadow
+- [ ] Use consistent typography with drop-shadow-sm
 - [ ] Add hover/interaction animations
 - [ ] Include comprehensive `data-testid` attributes
 - [ ] Ensure responsive design with mobile-first approach

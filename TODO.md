@@ -1,4 +1,16 @@
-# 📋### 🔧 **Quick Wins** (Can be completed ### 🎯 **Critical Path Items** (Blocking other features)
+# 📋### 🔧 **Quick Wins** (Can b- [ ] **Replace Static Statistics**
+
+    - [ ] Update `HomeView.vue` to use `EpisodeProgressUtil.getAllAsArray().length` for "Currently Watching"
+    - [ ] Update `AllWatchLists.vue` counts to use real data from storage utilities
+    - [ ] Add loading skeleton while data loads
+
+- [x] **✅ COMPLETED: Tailwind CSS v4 Upgrade**
+    - [x] Successfully upgraded from Tailwind CSS v3.4.17 to v4.1.11
+    - [x] Migrated configuration from JavaScript config to CSS-based @import
+    - [x] Updated Vite configuration to use @tailwindcss/vite plugin for optimal performance
+    - [x] Updated utility classes (rounded-sm → rounded-xs)
+    - [x] Maintained backward compatibility with v3 border behavior
+    - [x] All tests passing ✅ | Build successful ✅ | Dev server working ✅mpleted ### 🎯 **Critical Path Items** (Blocking other features)
 
 - [ ] **Storage Integration Architecture**
     - [ ] Decide on state management approach (Pinia vs composables)

@@ -18,7 +18,7 @@
                     <a
                         :href="`https://hianime.to/${anime.animeSlug}`"
                         target="_blank"
-                        class="block w-full grow-0 rounded-sm bg-gray-100 px-2 py-1 text-gray-800 hover:bg-blue-500 hover:text-white"
+                        class="block w-full grow-0 rounded-xs bg-gray-100 px-2 py-1 text-gray-800 hover:bg-blue-500 hover:text-white"
                     >
                         {{ anime.animeTitle }} - Ep {{ anime.currentEpisode }}
                     </a>

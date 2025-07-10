@@ -32,7 +32,7 @@ describe("SidebarLayout", () => {
             expect(sidebar.classes()).toContain("flex-col");
             expect(sidebar.classes()).toContain("bg-black/30");
             expect(sidebar.classes()).toContain("text-white");
-            expect(sidebar.classes()).toContain("backdrop-blur-sm");
+            expect(sidebar.classes()).toContain("backdrop-blur-xs");
         });
 
         it("should render the sidebar header with brand", () => {
@@ -198,7 +198,7 @@ describe("SidebarLayout", () => {
             expect(homeLink.classes()).toContain("active:scale-95");
         });
 
-        it("should have shadow effects", () => {
+        it("should have shadow-sm effects", () => {
             const wrapper = createWrapper();
             const homeLink = wrapper.find('[data-testid="nav-home"]');
 
@@ -220,11 +220,11 @@ describe("SidebarLayout", () => {
             expect(favoritesIcon.text()).toBe("⭐");
         });
 
-        it("should have drop shadow on icons", () => {
+        it("should have drop shadow-sm on icons", () => {
             const wrapper = createWrapper();
             const homeIcon = wrapper.find('[data-testid="home-icon"]');
 
-            expect(homeIcon.classes()).toContain("drop-shadow-sm");
+            expect(homeIcon.classes()).toContain("drop-shadow-xs");
         });
     });
 });

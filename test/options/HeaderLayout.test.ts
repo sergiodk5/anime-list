@@ -32,7 +32,7 @@ describe("HeaderLayout", () => {
             expect(header.classes()).toContain("border-b");
             expect(header.classes()).toContain("border-white/20");
             expect(header.classes()).toContain("bg-black/30");
-            expect(header.classes()).toContain("backdrop-blur-sm");
+            expect(header.classes()).toContain("backdrop-blur-xs");
         });
 
         it("should render breadcrumbs navigation", () => {
@@ -127,7 +127,7 @@ describe("HeaderLayout", () => {
             expect(userAvatar.exists()).toBe(true);
             expect(userAvatar.text()).toBe("👤");
             expect(userAvatar.classes()).toContain("rounded-full");
-            expect(userAvatar.classes()).toContain("bg-gradient-to-br");
+            expect(userAvatar.classes()).toContain("bg-linear-to-br");
             expect(userAvatar.classes()).toContain("from-purple-400");
             expect(userAvatar.classes()).toContain("to-pink-400");
         });
@@ -138,7 +138,7 @@ describe("HeaderLayout", () => {
 
             expect(userLabel.exists()).toBe(true);
             expect(userLabel.text()).toBe("Account");
-            expect(userLabel.classes()).toContain("drop-shadow-sm");
+            expect(userLabel.classes()).toContain("drop-shadow-xs");
         });
 
         it("should have proper button styling", () => {
@@ -150,7 +150,7 @@ describe("HeaderLayout", () => {
             expect(userButton.classes()).toContain("border");
             expect(userButton.classes()).toContain("border-white/20");
             expect(userButton.classes()).toContain("bg-white/10");
-            expect(userButton.classes()).toContain("backdrop-blur-sm");
+            expect(userButton.classes()).toContain("backdrop-blur-xs");
         });
     });
 
@@ -161,7 +161,7 @@ describe("HeaderLayout", () => {
 
             expect(breadcrumb.classes()).toContain("hover:bg-white/10");
             expect(breadcrumb.classes()).toContain("hover:text-white");
-            expect(breadcrumb.classes()).toContain("hover:shadow-sm");
+            expect(breadcrumb.classes()).toContain("hover:shadow-xs");
             expect(breadcrumb.classes()).toContain("hover:shadow-black/20");
         });
 

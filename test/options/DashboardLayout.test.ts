@@ -37,7 +37,7 @@ describe("DashboardLayout", () => {
 
             expect(dashboard.exists()).toBe(true);
             expect(dashboard.classes()).toContain("h-screen");
-            expect(dashboard.classes()).toContain("bg-gradient-to-br");
+            expect(dashboard.classes()).toContain("bg-linear-to-br");
             expect(dashboard.classes()).toContain("from-purple-600");
         });
 

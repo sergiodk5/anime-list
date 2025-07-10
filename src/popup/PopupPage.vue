@@ -1,17 +1,17 @@
 <template>
     <div
         data-testid="anime-popup"
-        class="relative h-60 w-80 overflow-hidden bg-gradient-to-br from-purple-600 via-purple-700 to-pink-600"
+        class="relative h-60 w-80 overflow-hidden bg-linear-to-br from-purple-600 via-purple-700 to-pink-600"
     >
         <!-- Animated background pattern -->
         <div
             data-testid="popup-background"
             class="absolute inset-0 opacity-20"
         >
-            <div class="absolute left-4 top-4 h-2 w-2 animate-pulse rounded-full bg-white"></div>
-            <div class="absolute right-6 top-8 h-1 w-1 animate-ping rounded-full bg-pink-300"></div>
+            <div class="absolute top-4 left-4 h-2 w-2 animate-pulse rounded-full bg-white"></div>
+            <div class="absolute top-8 right-6 h-1 w-1 animate-ping rounded-full bg-pink-300"></div>
             <div class="absolute bottom-8 left-8 h-1.5 w-1.5 animate-bounce rounded-full bg-purple-300"></div>
-            <div class="absolute bottom-4 right-4 h-1 w-1 animate-pulse rounded-full bg-white delay-700"></div>
+            <div class="absolute right-4 bottom-4 h-1 w-1 animate-pulse rounded-full bg-white delay-700"></div>
         </div>
 
         <!-- Main content -->
@@ -26,12 +26,12 @@
             >
                 <div
                     data-testid="anime-icon"
-                    class="flex h-8 w-8 items-center justify-center rounded-lg border border-white/30 bg-white/20 backdrop-blur-sm"
+                    class="flex h-8 w-8 items-center justify-center rounded-lg border border-white/30 bg-white/20 backdrop-blur-xs"
                 >
                     <img
                         src="/assets/images/darkness_32x32.png"
                         alt="Darkness from KonoSuba"
-                        class="h-6 w-6 rounded"
+                        class="h-6 w-6 rounded-xs"
                     />
                 </div>
                 <h1
@@ -45,7 +45,7 @@
             <!-- Description -->
             <p
                 data-testid="popup-description"
-                class="mb-6 text-sm leading-relaxed text-white/90 drop-shadow-sm"
+                class="mb-6 text-sm leading-relaxed text-white/90 drop-shadow-xs"
             >
                 Manage your anime watch list and track your progress
             </p>
@@ -53,24 +53,24 @@
             <!-- CTA Button -->
             <button
                 data-testid="options-button"
-                class="group relative flex w-full transform items-center justify-center gap-2 overflow-hidden rounded-xl border border-white/30 bg-white/15 px-5 py-3.5 text-sm font-semibold text-white backdrop-blur-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-white/50 hover:bg-white/25 hover:shadow-lg hover:shadow-black/20 active:translate-y-0 active:duration-75"
+                class="group relative flex w-full transform items-center justify-center gap-2 overflow-hidden rounded-xl border border-white/30 bg-white/15 px-5 py-3.5 text-sm font-semibold text-white backdrop-blur-xs transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-white/50 hover:bg-white/25 hover:shadow-lg hover:shadow-black/20 active:translate-y-0 active:duration-75"
                 @click="openOptions"
             >
                 <!-- Animated shine effect -->
                 <div
                     data-testid="button-shine"
-                    class="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 ease-out group-hover:translate-x-full"
+                    class="absolute inset-0 -translate-x-full bg-linear-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 ease-out group-hover:translate-x-full"
                 ></div>
 
                 <!-- Button content -->
                 <span
                     data-testid="button-icon"
-                    class="text-base drop-shadow-sm"
+                    class="text-base drop-shadow-xs"
                     >⚙️</span
                 >
                 <span
                     data-testid="button-text"
-                    class="font-semibold tracking-wide drop-shadow-sm"
+                    class="font-semibold tracking-wide drop-shadow-xs"
                     >Open Dashboard</span
                 >
             </button>

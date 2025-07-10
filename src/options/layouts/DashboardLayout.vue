@@ -2,7 +2,7 @@
 <template>
     <div
         data-testid="dashboard-layout"
-        class="flex h-screen bg-gradient-to-br from-purple-600 via-purple-700 to-pink-600"
+        class="flex h-screen bg-linear-to-br from-purple-600 via-purple-700 to-pink-600"
     >
         <!-- Animated background pattern -->
         <div

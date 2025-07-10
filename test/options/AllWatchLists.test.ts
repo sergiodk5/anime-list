@@ -36,7 +36,7 @@ describe("AllWatchLists", () => {
             expect(pageIcon.text()).toBe("📺");
             expect(pageIcon.classes()).toContain("rounded-xl");
             expect(pageIcon.classes()).toContain("bg-white/20");
-            expect(pageIcon.classes()).toContain("backdrop-blur-sm");
+            expect(pageIcon.classes()).toContain("backdrop-blur-xs");
         });
 
         it("should render page title", () => {
@@ -202,7 +202,7 @@ describe("AllWatchLists", () => {
             expect(watchingCard.classes()).toContain("border");
             expect(watchingCard.classes()).toContain("border-white/20");
             expect(watchingCard.classes()).toContain("bg-white/10");
-            expect(watchingCard.classes()).toContain("backdrop-blur-sm");
+            expect(watchingCard.classes()).toContain("backdrop-blur-xs");
         });
 
         it("should have hover effects on list cards", () => {
@@ -244,7 +244,7 @@ describe("AllWatchLists", () => {
             expect(addListButton.classes()).toContain("border");
             expect(addListButton.classes()).toContain("border-white/20");
             expect(addListButton.classes()).toContain("bg-white/10");
-            expect(addListButton.classes()).toContain("backdrop-blur-sm");
+            expect(addListButton.classes()).toContain("backdrop-blur-xs");
             expect(addListButton.classes()).toContain("active:scale-95");
         });
 
@@ -277,13 +277,13 @@ describe("AllWatchLists", () => {
             expect(droppedCount.classes()).toContain("text-red-200");
         });
 
-        it("should have drop shadow effects on text elements", () => {
+        it("should have drop shadow-sm effects on text elements", () => {
             const wrapper = createWrapper();
             const pageTitle = wrapper.find('[data-testid="page-title"]');
             const watchingTitle = wrapper.find('[data-testid="watching-title"]');
 
             expect(pageTitle.classes()).toContain("drop-shadow-md");
-            expect(watchingTitle.classes()).toContain("drop-shadow-sm");
+            expect(watchingTitle.classes()).toContain("drop-shadow-xs");
         });
     });
 
@@ -335,7 +335,7 @@ describe("AllWatchLists", () => {
                 expect(countElement.text()).toBe(expected);
                 expect(countElement.classes()).toContain("text-2xl");
                 expect(countElement.classes()).toContain("font-bold");
-                expect(countElement.classes()).toContain("drop-shadow-sm");
+                expect(countElement.classes()).toContain("drop-shadow-xs");
             });
         });
     });
