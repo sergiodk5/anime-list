@@ -1,28 +1,224 @@
-# 📋 AnimeList Development TODO
+# 📋### 🔧 **Quick Wins** (Can be completed ### 🎯 **Critical Path Items** (Blocking other features)
+
+- [ ] **Storage Integration Architecture**
+    - [ ] Decide on state management approach (Pinia vs composables)
+    - [ ] Create reactive data layer that updates UI when storage changes
+    - [ ] Implement proper TypeScript types for all storage operations
+
+- [ ] **Error Handling Strategy**
+    - [ ] Global error boundary for storage operation failures
+    - [ ] User-friendly error messages for common scenarios
+    - [ ] Fallback UI states when backend utilities fail
+
+- [ ] **Testing Strategy for Integration**
+    - [ ] Mock storage utilities in component tests
+    - [ ] Integration tests for composables
+    - [ ] E2E tests for complete user workflows
+
+- [ ] **Missing Navigation & Routing** (UI elements exist but routes/functionality missing)
+    - [ ] Create `/favorites` route and view component (sidebar links to it but doesn't exist)
+    - [ ] Add individual list detail routes (`/currently-watching`, `/completed`, `/plan-to-watch`, `/on-hold`, `/dropped`)
+    - [ ] Implement dynamic routing for custom lists (`/lists/:listId`)
+    - [ ] Add breadcrumb navigation for deep pages
+    - [ ] Create 404/fallback page for invalid routes
+
+- [ ] **UI Button Functionality** (Buttons exist but aren't connected)
+    - [ ] Connect "Add New Anime" button to actual anime creation form/modal
+    - [ ] Connect "View All Lists" button to proper navigation
+    - [ ] Implement "View →" buttons for each list type to navigate to detail pages
+    - [ ] Connect "New List" button to custom list creation modal/form
+    - [ ] Add functionality to "Create Custom List" placeholder card
+    - [ ] Implement "Reference Link" button functionality in sidebar footerh)
+
+- [ ] **Replace Static Statistics**
+    - [ ] Update `HomeView.vue` to use `EpisodeProgressUtil.getAllAsArray().length` for "Currently Watching"
+    - [ ] Update `AllWatchLists.vue` counts to use real data from storage utilities
+    - [ ] Add loading skeleton while data loads
+
+- [ ] **Create Vue Composables**
+    - [ ] `composables/useAnimeStorage.ts` - wrapper for AnimeUtil
+    - [ ] `composables/useEpisodeProgress.ts` - wrapper for EpisodeProgressUtil
+    - [ ] `composables/usePlanToWatch.ts` - wrapper for PlanToWatchUtil
+    - [ ] `composables/useHiddenAnime.ts` - wrapper for HiddenAnimeUtil
+
+- [ ] **Add Data-Driven Components**
+    - [ ] Create `AnimeCard.vue` component that displays real anime data
+    - [ ] Update list views to use AnimeCard with props from storage
+    - [ ] Add empty states when no data exists
+
+- [ ] **Missing UI Components & Views** (Identified from existing UI but not implemented)
+    - [ ] Create `/favorites` page (linked in sidebar but doesn't exist)
+    - [ ] Implement "New List" functionality (button exists in AllWatchLists)
+    - [ ] Create "Custom Lists" management system (placeholder exists)
+    - [ ] Implement "View →" buttons functionality for each list type
+    - [ ] Add router navigation for individual list detail pages
+    - [ ] Connect "Add New Anime" and "View All Lists" buttons in HomeViewDIATE ACTIONS\*\* - Next Development Steps
+
+### 🔧 **Quick Wins** (Can be completed in 1-2 hours each)
+
+- [ ] **Replace Static Statistics**
+    - [ ] Update `HomeView.vue` to use `EpisodeProgressUtil.getAllAsArray().length` for "Currently Watching"
+    - [ ] Update `AllWatchLists.vue` counts to use real data from storage utilities
+    - [ ] Add loading skeleton while data loads
+
+- [ ] **Create Vue Composables**
+    - [ ] `composables/useAnimeStorage.ts` - wrapper for AnimeUtil
+    - [ ] `composables/useEpisodeProgress.ts` - wrapper for EpisodeProgressUtil
+    - [ ] `composables/usePlanToWatch.ts` - wrapper for PlanToWatchUtil
+    - [ ] `composables/useHiddenAnime.ts` - wrapper for HiddenAnimeUtil
+
+- [ ] **Add Data-Driven Components**
+    - [ ] Create `AnimeCard.vue` component that displays real anime data
+    - [ ] Update list views to use AnimeCard with props from storage
+    - [ ] Add empty states when no data exists
+
+### 🎯 **Critical Path Items** (Blocking other features)
+
+- [ ] **Storage Integration Architecture**
+    - [ ] Decide on state management approach (Pinia vs composables)
+    - [ ] Create reactive data layer that updates UI when storage changes
+    - [ ] Implement proper TypeScript types for all storage operations
+
+- [ ] **Error Handling Strategy**
+    - [ ] Global error boundary for storage operation failures
+    - [ ] User-friendly error messages for common scenarios
+    - [ ] Fallback UI states when backend utilities fail
+
+- [ ] **Testing Strategy for Integration**
+    - [ ] Mock storage utilities in component tests
+    - [ ] Integration tests for composables
+    - [ ] E2E tests for complete user workflows
+
+---
+
+## 🔍 **CRITICAL ANALYSIS** - Backend/Frontend Integration GapsmeList Development TODO
 
 > **Priority-based roadmap for AnimeList Chrome Extension**  
 > Updated: July 10, 2025
 
 ---
 
-## 🚀 **HIGH PRIORITY** - Core Feature Gaps
+## � **CRITICAL ANALYSIS** - Backend/Frontend Integration Gaps
 
-### 📊 **Dynamic Statistics Integration**
+### 📋 **Functionality Gap Summary**
 
-**Current State**: Static numbers in dashboard  
-**Target**: Real-time data from storage APIs
+**Current State**: Backend utilities exist but are completely disconnected from the options UI  
+**Target**: Seamless integration between storage utilities and user interface
 
-- [ ] **HomeView Statistics**: Connect stats cards to real data
+**🆕 NEWLY IDENTIFIED GAPS** (Found in UI but not previously documented):
+
+1. **Broken Navigation**
+    - ❌ Sidebar links to `/favorites` page that doesn't exist
+    - ❌ "View →" buttons on all list cards don't navigate anywhere
+    - ❌ Missing individual list detail routes (`/currently-watching`, `/completed`, etc.)
+    - ❌ "Reference Link" button in sidebar footer has no functionality
+
+2. **Custom Lists System** (Major missing feature)
+    - ❌ "New List" button exists but no creation functionality
+    - ❌ "Create Custom List" placeholder card but no backend support
+    - ❌ No `CustomListUtil` or custom list data model
+    - ❌ No custom list management, editing, or deletion capabilities
+
+3. **Favorites System** (Complete missing implementation)
+    - ❌ Sidebar navigation to favorites but no `/favorites` route
+    - ❌ No `FavoritesUtil` or favorites backend functionality
+    - ❌ No way to mark anime as favorites throughout the app
+    - ❌ No favorites management interface
+
+4. **Button Functionality Gaps**
+    - ❌ "Add New Anime" button in HomeView has no connected functionality
+    - ❌ "View All Lists" button doesn't navigate properly
+    - ❌ All action buttons are styled but not functional
+
+#### **Major Disconnects Identified**
+
+1. **AnimeUtil → Options UI**
+    - ❌ HomeView shows static "Quick Actions" instead of real anime management
+    - ❌ AllWatchLists displays hardcoded data instead of real anime collections
+    - ❌ No anime detail pages despite having comprehensive anime data model
+    - ❌ Missing search functionality despite having anime storage utilities
+
+2. **EpisodeProgressUtil → Progress Tracking**
+    - ❌ Episode progress exists in storage but no UI to view/edit progress
+    - ❌ No episode-by-episode tracking interface
+    - ❌ Progress statistics in HomeView are static instead of calculated
+    - ❌ No visual progress indicators or completion percentages
+
+3. **PlanToWatchUtil → Planning Features**
+    - ❌ Plan to Watch count is hardcoded instead of using real data
+    - ❌ No interface to add/remove anime from plan
+    - ❌ No plan management or prioritization features
+    - ❌ Missing integration with "Add New Anime" functionality
+
+4. **HiddenAnimeUtil → Content Management**
+    - ❌ Hidden anime functionality exists but no UI to manage hidden items
+    - ❌ No unhide functionality in the interface
+    - ❌ No visibility of what's currently hidden
+
+#### **Integration Priority Matrix**
+
+| Backend Utility     | Frontend Gap                 | Integration Effort | User Impact |
+| ------------------- | ---------------------------- | ------------------ | ----------- |
+| AnimeUtil           | Complete anime management UI | HIGH               | CRITICAL    |
+| EpisodeProgressUtil | Progress tracking interface  | MEDIUM             | HIGH        |
+| PlanToWatchUtil     | Plan management features     | MEDIUM             | HIGH        |
+| HiddenAnimeUtil     | Hidden item management       | LOW                | MEDIUM      |
+
+---
+
+## �🚀 **HIGH PRIORITY** - Core Feature Gaps
+
+### 📊 **Backend-Frontend Integration**
+
+**Current State**: Utilities exist but UI shows static data  
+**Target**: Real-time data from storage APIs with proper error handling
+
+- [ ] **AnimeUtil Integration**
+    - [ ] Replace static anime cards with real `AnimeUtil.getAllAsArray()` data
+    - [ ] Implement anime detail modal/page using `AnimeUtil.get(id)`
+    - [ ] Add anime creation form using `AnimeUtil.add(anime)`
+    - [ ] Add remove functionality using `AnimeUtil.remove(id)`
+    - [ ] Implement search using `AnimeUtil.getAllAsArray().filter()`
+
+- [ ] **EpisodeProgressUtil Integration**
     - [ ] Replace hardcoded "12" with `EpisodeProgressUtil.getAllAsArray().length`
-    - [ ] Replace hardcoded "87" with completed anime count (requires completion status)
-    - [ ] Replace hardcoded "25" with `PlanToWatchUtil.getAllAsArray().length`
-    - [ ] Add error handling and loading states
+    - [ ] Create progress tracking UI using `EpisodeProgressUtil.get/update/add`
+    - [ ] Add episode-by-episode tracking interface
+    - [ ] Calculate completion percentages for progress bars
 
-- [ ] **AllWatchLists Counts**: Connect list counts to real data
-    - [ ] Currently Watching: Use actual episode progress data
-    - [ ] Completed: Implement completion status tracking
-    - [ ] Plan to Watch: Use actual plan data count
-    - [ ] On Hold/Dropped: Implement status categories
+- [ ] **PlanToWatchUtil Integration**
+    - [ ] Replace hardcoded "25" with `PlanToWatchUtil.getAllAsArray().length`
+    - [ ] Implement "Add to Plan" functionality
+    - [ ] Create plan management interface with priority ordering
+    - [ ] Add remove from plan functionality
+
+- [ ] **HiddenAnimeUtil Integration**
+    - [ ] Add "Hide Anime" functionality to anime management
+    - [ ] Create hidden items management page
+    - [ ] Implement unhide functionality
+    - [ ] Show hidden status indicators
+
+- [ ] **Status System Implementation**
+    - [ ] Extend AnimeUtil or create StatusUtil for completion tracking
+    - [ ] Replace hardcoded "87" with actual completed anime count
+    - [ ] Add "On Hold" and "Dropped" status management
+    - [ ] Create status change UI components
+
+- [ ] **Custom Lists System** (Major feature gap - UI exists but no backend)
+    - [ ] Create `CustomListUtil` for managing user-defined lists
+    - [ ] Design custom list data model (name, description, anime IDs, order)
+    - [ ] Implement custom list creation, editing, and deletion
+    - [ ] Add drag-and-drop anime management between custom lists
+    - [ ] Create custom list detail pages with full CRUD operations
+    - [ ] Add custom list import/export functionality
+
+- [ ] **Favorites System** (Navigation exists but no implementation)
+    - [ ] Create `FavoritesUtil` for managing favorite anime
+    - [ ] Design favorites data model and storage schema
+    - [ ] Create `/favorites` route and view component
+    - [ ] Add "Add to Favorites" functionality throughout the app
+    - [ ] Implement favorites sorting and filtering options
+    - [ ] Add bulk operations for favorites management
 
 ### 📱 **Content Script Enhancement**
 
@@ -56,6 +252,35 @@
     - [ ] Extend `EpisodeProgress` with status field
     - [ ] Migration script for existing data
     - [ ] New utility methods for status management
+
+### 🔗 **Critical Integration Plan**
+
+**Current State**: Complete disconnect between backend and frontend  
+**Target**: Seamless data flow from storage to UI
+
+- [ ] **Phase 1: Data Binding (Week 1)**
+    - [ ] Create Vue composables for each utility (useAnime, useProgress, usePlan, useHidden)
+    - [ ] Replace all static data in HomeView with reactive backend calls
+    - [ ] Add loading states and error boundaries for all data operations
+    - [ ] Implement reactive updates when storage changes
+
+- [ ] **Phase 2: Interactive Features (Week 2)**
+    - [ ] Add anime creation/editing forms
+    - [ ] Implement episode progress increment/decrement controls
+    - [ ] Add plan management (add/remove/reorder)
+    - [ ] Create anime list filtering and search
+
+- [ ] **Phase 3: Advanced Management (Week 3)**
+    - [ ] Build anime detail pages with full metadata
+    - [ ] Add bulk operations (multi-select, bulk status change)
+    - [ ] Implement hidden anime management interface
+    - [ ] Add data export/import functionality
+
+- [ ] **Phase 4: UX Polish (Week 4)**
+    - [ ] Add drag-and-drop for list reordering
+    - [ ] Implement optimistic UI updates
+    - [ ] Add confirmation dialogs for destructive actions
+    - [ ] Create keyboard shortcuts for power users
 
 ---
 
@@ -228,29 +453,81 @@
 
 ## 📅 **SPRINT PLANNING**
 
-### **Sprint 1** (Week 1-2): Core Data Integration
+> **Updated with Backend-Frontend Integration Priority**
 
-1. Dynamic statistics in HomeView and AllWatchLists
-2. Completion status system implementation
-3. Error handling in content scripts
+### **Sprint 1** (Week 1-2): Critical Backend Integration
 
-### **Sprint 2** (Week 3-4): List Functionality
+**Goal**: Connect existing utilities to the options UI and fix broken navigation
 
-1. Individual list detail pages
-2. Interactive anime management
-3. Quick actions implementation
+1. **Data Layer Integration**
+    - [ ] Create Vue composables for all storage utilities
+    - [ ] Replace static data in HomeView with real AnimeUtil/EpisodeProgressUtil data
+    - [ ] Fix AllWatchLists to show actual counts from storage
+    - [ ] Add loading states and error handling for all data operations
 
-### **Sprint 3** (Week 5-6): Popup Enhancement
+2. **Basic Navigation & Missing Routes**
+    - [ ] Create `/favorites` route and view component (currently broken link)
+    - [ ] Connect all existing buttons to proper functionality
+    - [ ] Add individual list detail routes for each list type
+    - [ ] Implement proper router navigation between views
 
-1. Current anime detection
-2. Mini episode tracker
-3. Recent activity features
+3. **Basic Anime Management**
+    - [ ] Implement anime list display with real data
+    - [ ] Add basic anime creation functionality
+    - [ ] Create episode progress tracking interface
+    - [ ] Add plan to watch management
+
+### **Sprint 2** (Week 3-4): Interactive Features & Missing Systems
+
+**Goal**: Make the UI fully functional and implement missing major features
+
+1. **Enhanced List Management**
+    - [ ] Anime detail pages with edit/remove functionality
+    - [ ] Episode-by-episode progress tracking
+    - [ ] Search and filter within anime lists
+    - [ ] Status change functionality (completed, on hold, dropped)
+
+2. **Custom Lists & Favorites Systems** (Major missing functionality)
+    - [ ] Create `CustomListUtil` and `FavoritesUtil` backend utilities
+    - [ ] Implement custom list creation, editing, and deletion
+    - [ ] Build favorites system with full CRUD operations
+    - [ ] Add drag-and-drop functionality between lists
+    - [ ] Create custom list and favorites detail pages
+
+3. **Plan Management**
+    - [ ] Priority ordering for plan to watch
+    - [ ] Bulk operations for multiple anime
+    - [ ] Hidden anime management interface
+
+### **Sprint 3** (Week 5-6): Content Script Enhancement
+
+**Goal**: Improve the browser extension experience
+
+1. **Content Script Integration**
+    - [ ] Better detection of anime pages
+    - [ ] Integration with backend utilities from content script
+    - [ ] Improved error handling and edge cases
+    - [ ] Mobile-responsive content script UI
+
+2. **Popup Enhancement**
+    - [ ] Current anime detection from active tab
+    - [ ] Mini episode tracker in popup
+    - [ ] Quick actions for current anime
 
 ### **Sprint 4** (Week 7-8): External Integration
 
-1. MyAnimeList API research and implementation
-2. Cover art integration
-3. Rich metadata system
+**Goal**: Add rich metadata and external API integration
+
+1. **API Integration**
+    - [ ] MyAnimeList API research and implementation
+    - [ ] Automatic cover art fetching
+    - [ ] Rich anime metadata system
+    - [ ] Episode count and air date information
+
+2. **Advanced Features**
+    - [ ] Data visualization for viewing habits
+    - [ ] Recommendations engine
+    - [ ] Import/export functionality
 
 ---
 
