@@ -94,6 +94,15 @@ Use `npm run build:ext` to create the final Chrome extension package. Always run
 
 Always run `npm run lint` and `npm run format` before committing. Code must pass all ESLint rules and be properly formatted with Prettier.
 
+### CI/CD Pipeline
+
+We use GitHub Actions for continuous integration and deployment:
+
+- **CI Workflow**: Runs tests, linting, formatting checks, type checking, and builds on every push/PR
+- **Release Workflow**: Creates tagged releases with packaged Chrome extension
+- Use `npm run lint:check` and `npm run format:check` for CI (non-modifying versions)
+- All checks must pass before code can be merged
+
 ## Chrome Extension Specifics
 
 We use Manifest V3 with service workers. All background scripts should be placed in `src/background/` and use modern Chrome extension APIs.

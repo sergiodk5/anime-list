@@ -1,0 +1,93 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release (e.g., v1.0.0)"
+        required: true
+        type: string
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm run test:unit:coverage
+
+      - name: Run type checking
+        run: npm run type-check
+
+      - name: Run linting
+        run: npm run lint:check
+
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Build extension
+        run: npm run build:ext
+
+      - name: Create release archive
+        run: |
+          cd dist
+          zip -r ../anime-list-extension.zip .
+          cd ..
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name || inputs.version }}
+          release_name: AnimeList Chrome Extension ${{ github.ref_name || inputs.version }}
+          body: |
+            ## Changes in this Release
+
+            - Chrome extension package ready for installation
+            - All tests passing
+            - Code quality checks passed
+
+            ## Installation
+
+            1. Download the `anime-list-extension.zip` file
+            2. Extract the contents
+            3. Open Chrome and go to `chrome://extensions/`
+            4. Enable "Developer mode"
+            5. Click "Load unpacked" and select the extracted folder
+
+            ## Features
+
+            - ✨ Episode progress tracking
+            - 📝 Plan to watch lists  
+            - 🙈 Hide unwanted anime
+            - 🎨 Beautiful anime-themed UI
+
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./anime-list-extension.zip
+          asset_name: anime-list-extension.zip
+          asset_content_type: application/zip

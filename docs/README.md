@@ -58,7 +58,16 @@ Guide to the custom GitHub Copilot instructions that enhance code generation for
 - 🎯 Project-specific conventions and architecture guidance
 - ✅ Usage examples and verification procedures
 - 🛠️ Benefits for development workflow and team onboarding
-- 🚀 Performance considerations and future expansion plans
+
+### [CI/CD Pipeline Guide](./CI_CD_GUIDE.md)
+
+Comprehensive guide to the GitHub Actions workflows for continuous integration and deployment. Covers:
+
+- 🔧 CI workflow with tests, linting, formatting, and type checking
+- 🚀 Release workflow for automated Chrome extension packaging
+- 📊 Code coverage reporting and quality gates
+- 🛠️ Package.json scripts for development and CI/CD
+- 🔧 Setup requirements and troubleshooting
 
 ### [Popup Guide](./POPUP_GUIDE.md)
 
