@@ -206,11 +206,12 @@ Content Script ↔ Chrome Storage ↔ Background Script
 
 ## 🤝 Contributing
 
-1. **📖 Read the Documentation**: Start with our comprehensive guides
-2. **🧪 Write Tests**: Maintain 100% coverage for new features
-3. **🎨 Follow Design Patterns**: Use established glass-morphism and anime theming
-4. **📝 Update Documentation**: Keep guides current with code changes
-5. **✅ Run All Checks**: Ensure tests, linting, and type checking pass
+1. **📖 Read the Documentation**: Start with our comprehensive guides in `docs/`
+2. **🤖 Use GitHub Copilot**: Custom instructions in `.github/copilot-instructions.md` provide project context
+3. **🧪 Write Tests**: Maintain 100% coverage for new features
+4. **🎨 Follow Design Patterns**: Use established glass-morphism and anime theming
+5. **📝 Update Documentation**: Keep guides current with code changes
+6. **✅ Run All Checks**: Ensure tests, linting, and type checking pass
 
 ## 📄 License
 

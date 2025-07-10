@@ -48,6 +48,16 @@ Comprehensive guide for developing and extending the Chrome extension options pa
 - 📊 Dashboard features and watch list management
 - 🎨 Glass-morphism styling and anime theming
 - 🧪 Testing strategies and data-testid guidelines
+
+### [GitHub Copilot Instructions](./COPILOT_INSTRUCTIONS.md)
+
+Guide to the custom GitHub Copilot instructions that enhance code generation for this project. Covers:
+
+- 📄 Repository-wide custom instructions for consistent code generation
+- 📁 Reusable prompt files for common development tasks
+- 🎯 Project-specific conventions and architecture guidance
+- ✅ Usage examples and verification procedures
+- 🛠️ Benefits for development workflow and team onboarding
 - 🚀 Performance considerations and future expansion plans
 
 ### [Popup Guide](./POPUP_GUIDE.md)
