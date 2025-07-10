@@ -108,8 +108,6 @@ src/
 
 ## 🚀 Development
 
-## 🚀 Development
-
 ```sh
 # Install dependencies
 npm install
