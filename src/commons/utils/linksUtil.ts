@@ -1,15 +1,30 @@
-import type { Link } from "@/commons/models";
+import type { EpisodeProgress } from "@/commons/models";
 
-export const getAllLinks = (): Promise<Link[]> => {
+export const getAllEpisodeProgress = (): Promise<EpisodeProgress[]> => {
     return new Promise((resolve) => {
-        chrome.storage.local.get("links", (data) => {
-            if (!data.links) {
+        chrome.storage.local.get("episodeProgress", (data) => {
+            if (!data.episodeProgress) {
                 resolve([]);
+                return;
             }
+            const progressData = data.episodeProgress as Record<string, EpisodeProgress>;
+            resolve(Object.values(progressData));
+        });
+    });
+};
 
-            const dataLinks = data.links as Link[];
-            const links = Object.values(dataLinks) || [];
-            resolve(links);
+export const removeEpisodeProgress = (animeId: string): Promise<void> => {
+    return new Promise((resolve) => {
+        chrome.storage.local.get("episodeProgress", (data) => {
+            if (!data.episodeProgress) {
+                resolve();
+                return;
+            }
+            const progressData = data.episodeProgress as Record<string, EpisodeProgress>;
+            delete progressData[animeId];
+            chrome.storage.local.set({ episodeProgress: progressData }, () => {
+                resolve();
+            });
         });
     });
 };
