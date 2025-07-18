@@ -14,16 +14,19 @@ A modern browser extension to enhance your anime viewing experience with beautif
 ## 🚦 Current Status
 
 **🟢 Working Features:**
+
 - ✅ Content script integration (Watch/Hide buttons on anime websites)
 - ✅ Chrome extension popup with dashboard navigation
 - ✅ Complete backend storage system with 100% test coverage
 - ✅ Beautiful glass-morphism UI design system
 
 **🟡 Partial Implementation:**
+
 - ⚠️ Dashboard shows static placeholder data instead of real anime data
 - ⚠️ Vue router has only 2 routes (home, watch-lists) of planned features
 
 **🔴 Missing Integration:**
+
 - ❌ Frontend-backend connection (utilities exist but UI doesn't use them)
 - ❌ Episode progress tracking interface
 - ❌ Functional buttons (Add Anime, View Lists, etc.)
@@ -43,17 +46,17 @@ A modern browser extension to enhance your anime viewing experience with beautif
 - **Clear Hidden Button**: Reset all hidden anime with one click
 - **Visual Feedback**: Success/error notifications with glass-morphism styling
 
-#### **Modern Dashboard (Options Page)** ⚠️ *Static UI Only*
+#### **Modern Dashboard (Options Page)** ⚠️ _Static UI Only_
 
 - **🏠 Home Dashboard**: Beautiful anime-themed welcome page with glass-morphism design
 - **📺 Watch Lists Overview**: Static view of anime list categories (Currently Watching, Completed, Plan to Watch, On Hold, Dropped)
-- **🎨 Glass-Morphism UI**: Modern design with Darkness (KonoSuba) branding and purple-pink gradients
+- **🎨 Glass-Morphism UI**: Modern design with anime-themed branding and purple-pink gradients
 - **📱 Responsive Design**: Mobile-first design that works across all screen sizes
 - **🧭 Vue Router Navigation**: Basic routing between Home and Watch Lists pages
 
 #### **Extension Popup** ✅
 
-- **🎌 Anime-Themed Branding**: Consistent Darkness icon and anime aesthetic
+- **🎌 Anime-Themed Branding**: Consistent anime icon and aesthetic
 - **⚙️ Quick Dashboard Access**: One-click navigation to full options page
 - **🎨 Modern Design**: Glass-morphism effects with animated background elements
 
@@ -84,12 +87,14 @@ A modern browser extension to enhance your anime viewing experience with beautif
 #### **Next Development Phase**
 
 The extension has a solid foundation with:
+
 - ✅ Complete backend storage system with 100% test coverage
 - ✅ Working content script for anime websites
 - ✅ Beautiful UI design system and components
 - ✅ Proper Chrome extension architecture
 
 **Immediate next steps:**
+
 1. **Connect UI to Backend**: Replace static data with storage utility calls
 2. **Add Missing Routes**: Create favorites page and individual list detail pages
 3. **Implement Button Functionality**: Connect all existing buttons to actual features
@@ -131,7 +136,6 @@ The extension has a solid foundation with:
 - **🏪 State**: Chrome Storage API with comprehensive utility wrappers
 - **🔌 Browser API**: Chrome Extension APIs (Manifest V3)
 - **🧪 Testing**: Vitest with V8 coverage (286 tests, 100% coverage)
-- **🎭 E2E Testing**: Playwright for end-to-end scenarios
 - **📏 Linting**: ESLint with Vue and TypeScript rules
 - **💅 Formatting**: Prettier with Tailwind class sorting
 
@@ -178,9 +182,6 @@ npm run test:unit:coverage
 # Run tests in watch mode (development)
 npm run test:unit:watch
 
-# Run end-to-end tests
-npm run test:e2e
-
 # Type checking
 npm run type-check
 
@@ -215,8 +216,9 @@ npm run test:unit:coverage:ui
 ```
 
 **Test Coverage Breakdown:**
+
 - ✅ **Storage Utilities**: 100% coverage (90 tests)
-- ✅ **Content Script**: 100% coverage (51 tests) 
+- ✅ **Content Script**: 100% coverage (51 tests)
 - ✅ **Vue Components**: 100% coverage (125 tests)
 - ✅ **Edge Cases**: Complete error handling and boundary testing
 
@@ -235,7 +237,7 @@ Comprehensive guides are available in the `docs/` folder:
 Our extension features a consistent **anime-themed design** with:
 
 - **🌈 Glass-morphism Effects**: Backdrop blur and translucent surfaces
-- **🎌 Darkness Branding**: KonoSuba's Darkness character as our mascot
+- **🎌 Anime Branding**: Japanese animation inspired visual identity
 - **💜 Purple-Pink Gradients**: Anime-inspired color palette
 - **✨ Micro-Animations**: Subtle hover effects and transitions
 - **📱 Mobile-First**: Responsive design across all screen sizes
@@ -261,7 +263,7 @@ Content Script ↔ Chrome Storage ↔ Background Script
 
 - **📊 Episode Progress**: Complete backend API (not connected to UI)
 - **📝 Plan to Watch**: Working content script integration
-- **🙈 Hidden Anime**: Working content script integration  
+- **🙈 Hidden Anime**: Working content script integration
 - **📈 Statistics**: Backend ready (UI shows placeholder data)
 
 ## 🤝 Contributing
@@ -276,11 +278,13 @@ Content Script ↔ Chrome Storage ↔ Background Script
 ### 🎯 Priority Development Areas
 
 **High Priority:**
+
 - Connect dashboard UI to storage utilities
-- Add missing route implementations 
+- Add missing route implementations
 - Implement episode progress tracking interface
 
 **Medium Priority:**
+
 - Add anime management features (add/edit/delete)
 - Implement search and filtering
 - Add data export/import capabilities
@@ -291,4 +295,4 @@ This project is open-source and available under the MIT License.
 
 ---
 
-_Built with ❤️ for the anime community! Featuring Darkness from KonoSuba._ ✨
+_Built with ❤️ for the anime community!_ ✨
