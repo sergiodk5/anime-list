@@ -33,6 +33,7 @@ export default mergeConfig(
                     "src/commons/**/*.{js,ts,vue}",
                     "src/popup/**/*.{js,ts,vue}",
                     "src/options/**/*.{js,ts,vue}",
+                    "src/content/**/*.{js,ts,vue}",
                     "!src/**/*.d.ts",
                 ],
                 exclude: [

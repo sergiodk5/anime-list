@@ -1,619 +1,568 @@
-console.log("Hello from content script!");
+import type { AnimeData } from "@/commons/models";
+import { HiddenAnimeUtil, PlanToWatchUtil } from "@/commons/utils";
 
-// -------------------
-// DEBUGGING UTILITIES
-// -------------------
+/**
+ * Content script for anime website integration
+ * Adds Watch and Hide controls to anime cards with glass-morphism styling
+ */
 
-const getLogContainer = (): HTMLElement => {
-    let container = document.getElementById("content-script-log-container");
-    if (!container) {
-        container = document.createElement("div");
-        container.id = "content-script-log-container";
-        container.style.position = "fixed";
-        container.style.bottom = "10px";
-        container.style.left = "10px";
-        container.style.width = "300px";
-        container.style.height = "400px";
-        container.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
-        container.style.color = "white";
-        container.style.border = "1px solid #ccc";
-        container.style.borderRadius = "5px";
-        container.style.padding = "10px";
-        container.style.overflowY = "scroll";
-        container.style.zIndex = "999999";
-        container.style.fontSize = "12px";
-        container.style.fontFamily = "monospace";
-        document.body.appendChild(container);
-    }
-    return container;
-};
+// Initialize the content script
+console.log("AnimeList content script loaded");
 
-const logToDOM = (...args: any[]) => {
-    // Also log to console as a fallback
-    console.log(...args);
+// Constants for DOM selectors based on the requirements
+const SELECTORS = {
+    CONTAINER: ".film_list-wrap",
+    ITEM: ".flw-item",
+    POSTER: ".film-poster",
+    TITLE_LINK: ".film-name a",
+} as const;
 
-    const container = getLogContainer();
-    const message = args
-        .map((arg) => {
-            if (typeof arg === "object" && arg !== null) {
-                try {
-                    return JSON.stringify(arg, null, 2);
-                } catch (e) {
-                    return "[Unserializable Object]";
-                }
-            }
-            return String(arg);
-        })
-        .join(" ");
+// Cache for anime data extracted from DOM
+const animeDataCache = new Map<string, AnimeData>();
 
-    const logEntry = document.createElement("pre");
-    logEntry.textContent = message;
-    logEntry.style.margin = "0";
-    logEntry.style.padding = "2px 0";
-    logEntry.style.borderBottom = "1px solid #444";
-    logEntry.style.whiteSpace = "pre-wrap"; // Wrap long lines
-    logEntry.style.wordBreak = "break-all";
+/**
+ * Extract anime data from a DOM element
+ */
+export function extractAnimeData(element: Element): AnimeData | null {
+    try {
+        const titleLink = element.querySelector(SELECTORS.TITLE_LINK) as HTMLAnchorElement;
+        if (!titleLink) return null;
 
-    container.appendChild(logEntry);
-    // Scroll to the bottom
-    container.scrollTop = container.scrollHeight;
-};
+        const href = titleLink.getAttribute("href") || "";
+        const title = titleLink.getAttribute("title") || titleLink.textContent?.trim() || "";
 
-// -------------------
-// INTERFACES & TYPES
-// -------------------
-interface EpisodeProgress {
-    animeId: string;
-    animeTitle: string;
-    animeSlug: string;
-    currentEpisode: number;
-    episodeId: string;
-    lastWatched: string;
-    totalEpisodes?: number;
-}
+        // Extract anime ID from href (e.g., "/watch/anime-name-12345" -> "12345")
+        const idMatch = href.match(/\/(?:watch\/)?([^/]+)$/);
+        if (!idMatch) return null;
 
-interface PlanToWatch {
-    animeId: string;
-    animeTitle: string;
-    animeSlug: string;
-    addedAt: string;
-}
+        const slug = idMatch[1];
+        // Extract numeric ID from slug if present, otherwise use the full slug
+        const numericIdMatch = slug.match(/-(\d+)$/);
+        const animeId = numericIdMatch ? numericIdMatch[1] : slug;
 
-interface AnimeData {
-    animeId: string;
-    animeTitle: string;
-    animeSlug: string;
-}
-
-// -------------------
-// STORAGE UTILITIES
-// -------------------
-
-const getStorageData = <T>(key: string): Promise<T> => {
-    return new Promise((resolve, reject) => {
-        chrome.storage.local.get(key, (result) => {
-            if (chrome.runtime.lastError) {
-                return reject(chrome.runtime.lastError);
-            }
-            resolve(result[key] as T);
-        });
-    });
-};
-
-const setStorageData = (key: string, value: any): Promise<void> => {
-    return new Promise((resolve, reject) => {
-        chrome.storage.local.set({ [key]: value }, () => {
-            if (chrome.runtime.lastError) {
-                return reject(chrome.runtime.lastError);
-            }
-            resolve();
-        });
-    });
-};
-
-// -- Episode Progress --
-const getAllEpisodeProgress = async (): Promise<Record<string, EpisodeProgress>> => {
-    return (await getStorageData<Record<string, EpisodeProgress>>("episodeProgress")) || {};
-};
-
-const saveEpisodeProgress = async (progress: EpisodeProgress): Promise<void> => {
-    const allProgress = await getAllEpisodeProgress();
-    allProgress[progress.animeId] = progress;
-    await setStorageData("episodeProgress", allProgress);
-    logToDOM("Saved episode progress for:", progress.animeTitle);
-};
-
-// -- Plan to Watch --
-const getAllPlanToWatch = async (): Promise<Record<string, PlanToWatch>> => {
-    return (await getStorageData<Record<string, PlanToWatch>>("planToWatch")) || {};
-};
-
-const savePlanToWatch = async (plan: PlanToWatch): Promise<void> => {
-    const allPlans = await getAllPlanToWatch();
-    allPlans[plan.animeId] = plan;
-    await setStorageData("planToWatch", allPlans);
-    logToDOM("Saved plan to watch for:", plan.animeTitle);
-};
-
-const removePlanToWatch = async (animeId: string): Promise<void> => {
-    const allPlans = await getAllPlanToWatch();
-    delete allPlans[animeId];
-    await setStorageData("planToWatch", allPlans);
-    logToDOM("Removed plan to watch for animeId:", animeId);
-};
-
-// -- Hidden Anime --
-const getHiddenAnime = async (): Promise<string[]> => {
-    return (await getStorageData<string[]>("hiddenAnime")) || [];
-};
-
-const addHiddenAnime = async (animeId: string): Promise<void> => {
-    const hiddenList = await getHiddenAnime();
-    if (!hiddenList.includes(animeId)) {
-        hiddenList.push(animeId);
-        await setStorageData("hiddenAnime", hiddenList);
-        logToDOM("Added animeId to hidden list:", animeId);
-    }
-};
-
-const clearHiddenAnime = async (): Promise<void> => {
-    await setStorageData("hiddenAnime", []);
-    logToDOM("Hidden anime list cleared.");
-};
-
-// -------------------
-// DOM MANIPULATION & UI
-// -------------------
-
-const createButton = (text: string, color: string, callback: (e: MouseEvent) => void) => {
-    const button = document.createElement("button");
-    button.textContent = text;
-    button.style.backgroundColor = color;
-    button.style.color = "white";
-    button.style.border = "none";
-    button.style.padding = "5px";
-    button.style.cursor = "pointer";
-    button.addEventListener("click", callback);
-
-    return button;
-};
-
-const createWrapper = (parentPoster: HTMLElement) => {
-    const wrapper = document.createElement("div");
-    wrapper.style.width = "100%";
-    wrapper.style.position = "absolute";
-    wrapper.style.top = "0";
-    wrapper.style.right = "0";
-    wrapper.style.display = "flex";
-    wrapper.style.justifyContent = "center"; // Center buttons
-    wrapper.style.alignItems = "center";
-    wrapper.style.gap = "4px"; // Add a gap between buttons
-    wrapper.style.zIndex = "10";
-    wrapper.style.backgroundColor = "rgba(0,0,0,0.5)";
-    wrapper.style.padding = "10px";
-    wrapper.style.opacity = "0";
-    wrapper.style.transition = "opacity 0.3s";
-    wrapper.style.pointerEvents = "none"; // Allow clicks to go through to the link
-
-    parentPoster.addEventListener("mouseenter", () => {
-        wrapper.style.opacity = "1";
-        wrapper.style.pointerEvents = "auto"; // Enable clicks on the button
-    });
-    parentPoster.addEventListener("mouseleave", () => {
-        wrapper.style.opacity = "0";
-        wrapper.style.pointerEvents = "none";
-    });
-
-    return wrapper;
-};
-
-const parseAnimeItem = (item: HTMLElement): AnimeData | null => {
-    const anchor = item.querySelector(".film-name a") as HTMLAnchorElement;
-    if (!anchor || !anchor.href || !anchor.textContent) return null;
-
-    const url = new URL(anchor.href);
-    const pathParts = url.pathname.split("/");
-    const animeSlug = pathParts[pathParts.length - 1];
-    const animeIdMatch = animeSlug.match(/-(\d+)$/);
-    const animeId = animeIdMatch ? animeIdMatch[1] : null;
-
-    if (!animeId) {
-        console.warn("Could not parse anime ID from slug:", animeSlug);
-        return null;
-    }
-
-    return {
-        animeId,
-        animeTitle: anchor.textContent.trim(),
-        animeSlug,
-    };
-};
-
-const updateButtonState = (
-    buttonWrapper: HTMLElement,
-    animeData: AnimeData,
-    isPlanned: boolean,
-    isTracked: boolean,
-) => {
-    buttonWrapper.innerHTML = ""; // Clear existing button
-
-    let button;
-    if (isTracked) {
-        button = createButton("Tracked", "#6a0dad", (e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            const watchUrl = `/watch/${animeData.animeSlug}`;
-            window.location.href = watchUrl;
-        });
-    } else if (isPlanned) {
-        button = createButton("Planned", "#ffA500", async (e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            await removePlanToWatch(animeData.animeId);
-            updateButtonState(buttonWrapper, animeData, false, false);
-        });
-    } else {
-        button = createButton("Plan", "#4CAF50", async (e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            await savePlanToWatch({ ...animeData, addedAt: new Date().toISOString() });
-            updateButtonState(buttonWrapper, animeData, true, false);
-        });
-    }
-
-    if (button) {
-        button.style.flex = "1"; // Make buttons share space equally
-        buttonWrapper.appendChild(button);
-    }
-
-    // The "Hide" button should appear for all states (Plan, Planned, Tracked)
-    const hideButton = createButton("Hide", "#f44336", async (e) => {
-        e.stopPropagation();
-        e.preventDefault();
-        await addHiddenAnime(animeData.animeId);
-        const item = buttonWrapper.closest(".flw-item") as HTMLElement;
-        if (item) {
-            item.style.display = "none";
-        }
-    });
-    hideButton.style.flex = "1"; // Make buttons share space equally
-    buttonWrapper.appendChild(hideButton);
-};
-
-const createClearHiddenButton = () => {
-    const button = createButton("Show Hidden Anime", "#1E90FF", async () => {
-        if (confirm("Are you sure you want to show all hidden anime?")) {
-            await clearHiddenAnime();
-            location.reload(); // Reload the page to show the items
-        }
-    });
-
-    button.id = "clear-hidden-button";
-    button.style.position = "fixed";
-    button.style.bottom = "20px";
-    button.style.right = "20px";
-    button.style.zIndex = "100000";
-    button.style.width = "auto";
-    button.style.padding = "10px 15px";
-    button.style.borderRadius = "5px";
-    button.style.boxShadow = "0 4px 8px rgba(0,0,0,0.2)";
-
-    return button;
-};
-
-const createStartWatchingButton = (animeData: AnimeData, episodeId: string | null) => {
-    logToDOM("createStartWatchingButton called with:", animeData);
-    const buttonContainer = document.createElement("div");
-    buttonContainer.style.position = "fixed";
-    buttonContainer.style.top = "100px";
-    buttonContainer.style.right = "20px";
-    buttonContainer.style.zIndex = "99999";
-    buttonContainer.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
-    buttonContainer.style.padding = "15px";
-    buttonContainer.style.borderRadius = "8px";
-    buttonContainer.style.textAlign = "center";
-
-    const title = document.createElement("h3");
-    title.textContent = `Start tracking "${animeData.animeTitle}"?`;
-    title.style.color = "white";
-    title.style.marginBottom = "10px";
-    buttonContainer.appendChild(title);
-
-    const startButton = createButton("Start Watching", "#4CAF50", async () => {
-        // 1. Remove from plan to watch
-        await removePlanToWatch(animeData.animeId);
-
-        // 2. Add to episode progress (starting at episode 1)
-        await saveEpisodeProgress({
-            ...animeData,
-            currentEpisode: 1, // Default to episode 1
-            episodeId: episodeId || "",
-            lastWatched: new Date().toISOString(),
-        });
-
-        // 3. Remove this button and initialize the real tracker
-        buttonContainer.remove();
-        initWatchPage(); // Re-run to show the tracker
-    });
-    buttonContainer.appendChild(startButton);
-
-    logToDOM("createStartWatchingButton: Returning button container element:", buttonContainer);
-    return buttonContainer;
-};
-
-const createEpisodeTrackerUI = (progress: EpisodeProgress) => {
-    const container = document.createElement("div");
-    container.id = "episode-tracker-container";
-    container.style.position = "fixed";
-    container.style.top = "100px";
-    container.style.right = "20px";
-    container.style.zIndex = "99999";
-    container.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
-    container.style.padding = "15px";
-    container.style.borderRadius = "8px";
-    container.style.textAlign = "center";
-    container.style.color = "white";
-    container.style.fontFamily = "sans-serif";
-
-    const title = document.createElement("h4");
-    title.textContent = "Episode Tracker";
-    title.style.margin = "0 0 5px 0";
-    container.appendChild(title);
-
-    const animeTitle = document.createElement("p");
-    animeTitle.textContent = progress.animeTitle;
-    animeTitle.style.margin = "0 0 10px 0";
-    animeTitle.style.fontSize = "14px";
-    animeTitle.style.fontWeight = "bold";
-    container.appendChild(animeTitle);
-
-    const controls = document.createElement("div");
-    controls.style.display = "flex";
-    controls.style.alignItems = "center";
-    controls.style.justifyContent = "center";
-    controls.style.gap = "10px";
-
-    const episodeDisplay = document.createElement("span");
-    episodeDisplay.id = "current-episode-display";
-    episodeDisplay.textContent = String(progress.currentEpisode);
-    episodeDisplay.style.fontSize = "18px";
-    episodeDisplay.style.minWidth = "30px";
-
-    const updateEpisode = async (newEpisode: number) => {
-        if (newEpisode < 1) return; // Can't go below episode 1
-
-        // Update local state first for responsiveness
-        episodeDisplay.textContent = String(newEpisode);
-
-        // Create a new progress object with the updated episode
-        const newProgress: EpisodeProgress = {
-            ...progress,
-            currentEpisode: newEpisode,
-            lastWatched: new Date().toISOString(),
+        const animeData: AnimeData = {
+            animeId,
+            animeTitle: title,
+            animeSlug: slug,
         };
 
-        // Save to storage
-        await saveEpisodeProgress(newProgress);
-    };
+        // Cache the data
+        animeDataCache.set(animeId, animeData);
 
-    const decrementButton = createButton("-", "#ffA500", () => {
-        const current = parseInt(episodeDisplay.textContent || "1", 10);
-        updateEpisode(current - 1);
-    });
-    decrementButton.style.width = "30px";
-    decrementButton.style.height = "30px";
-    decrementButton.style.borderRadius = "50%";
-    decrementButton.style.lineHeight = "30px";
-    decrementButton.style.padding = "0";
-
-    const incrementButton = createButton("+", "#4CAF50", () => {
-        const current = parseInt(episodeDisplay.textContent || "0", 10);
-        updateEpisode(current + 1);
-    });
-    incrementButton.style.width = "30px";
-    incrementButton.style.height = "30px";
-    incrementButton.style.borderRadius = "50%";
-    incrementButton.style.lineHeight = "30px";
-    incrementButton.style.padding = "0";
-
-    controls.appendChild(decrementButton);
-    controls.appendChild(episodeDisplay);
-    controls.appendChild(incrementButton);
-    container.appendChild(controls);
-
-    return container;
-};
-
-// -------------------
-// PAGE DETECTORS
-// -------------------
-const isWatchPage = (): boolean => {
-    // Rule 2: If the url has path `/watch`
-    return window.location.pathname.includes("/watch/");
-};
-
-const isListingPage = (): boolean => {
-    // Rule 1: If the DOM has element with css class `.film_list-wrap`
-    return !!document.querySelector(".film_list-wrap");
-};
-
-// -------------------
-// PARSERS
-// -------------------
-const parseWatchUrl = (): (AnimeData & { episodeId: string | null }) | null => {
-    const url = new URL(window.location.href);
-    const pathParts = url.pathname.split("/");
-    const animeSlug = pathParts[pathParts.length - 1];
-    const animeIdMatch = animeSlug.match(/-(\d+)$/);
-    let animeId = animeIdMatch ? animeIdMatch[1] : null;
-
-    // Fallback to data-id attribute on the page
-    if (!animeId) {
-        const wrapperElement = document.querySelector("#wrapper[data-id]");
-        if (wrapperElement) {
-            animeId = wrapperElement.getAttribute("data-id");
-        }
-    }
-
-    if (!animeId) {
-        logToDOM("Could not determine anime ID from URL or page data.");
+        return animeData;
+    } catch (error) {
+        console.error("Error extracting anime data:", error);
         return null;
     }
+}
 
-    const animeTitle =
-        document.querySelector(".film-name")?.textContent?.trim() || animeSlug.replace(/-\d+$/, "").replace(/-/g, " ");
+/**
+ * Create Watch button with glass-morphism styling
+ */
+export function createWatchButton(animeData: AnimeData): HTMLButtonElement {
+    const button = document.createElement("button");
+    button.className = "anime-list-watch-btn";
+    button.setAttribute("data-testid", "anime-watch-button");
+    button.setAttribute("data-anime-id", animeData.animeId);
+    button.setAttribute("title", `Add "${animeData.animeTitle}" to watchlist`);
+    button.innerHTML = `
+        <span class="button-icon">📝</span>
+        <span class="button-text">Watch</span>
+    `;
 
-    return {
-        animeId,
-        animeTitle,
-        animeSlug,
-        episodeId: url.searchParams.get("ep"),
-    };
-};
+    // Add click handler
+    button.addEventListener("click", async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        await handleWatchClick(animeData, button);
+    });
 
-// -------------------
-// MAIN EXECUTION
-// -------------------
+    return button;
+}
 
-const initListingPage = async () => {
-    const wrapper = document.querySelector(".film_list-wrap");
-    if (!wrapper) return;
+/**
+ * Create Hide button with glass-morphism styling
+ */
+export function createHideButton(animeData: AnimeData): HTMLButtonElement {
+    const button = document.createElement("button");
+    button.className = "anime-list-hide-btn";
+    button.setAttribute("data-testid", "anime-hide-button");
+    button.setAttribute("data-anime-id", animeData.animeId);
+    button.setAttribute("title", `Hide "${animeData.animeTitle}" from listings`);
+    button.innerHTML = `
+        <span class="button-icon">👁️</span>
+        <span class="button-text">Hide</span>
+    `;
 
-    logToDOM("Initializing listing page...");
+    // Add click handler
+    button.addEventListener("click", async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        await handleHideClick(animeData, button);
+    });
 
-    // Add the clear hidden button if it doesn't exist
-    if (!document.querySelector("#clear-hidden-button")) {
-        document.body.appendChild(createClearHiddenButton());
+    return button;
+}
+
+/**
+ * Create Clear Hidden button with glass-morphism styling
+ */
+export function createClearHiddenButton(): HTMLButtonElement {
+    const button = document.createElement("button");
+    button.className = "anime-list-clear-hidden-btn";
+    button.setAttribute("data-testid", "anime-clear-hidden-button");
+    button.setAttribute("title", "Show all previously hidden anime");
+    button.innerHTML = `
+        <span class="button-icon">🔄</span>
+        <span class="button-text">Clear Hidden</span>
+    `;
+
+    // Add click handler
+    button.addEventListener("click", async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        await handleClearHiddenClick(button);
+    });
+
+    return button;
+}
+
+/**
+ * Handle Watch button click
+ */
+export async function handleWatchClick(animeData: AnimeData, button: HTMLButtonElement): Promise<void> {
+    try {
+        const isAlreadyPlanned = await PlanToWatchUtil.isPlanned(animeData.animeId);
+
+        if (isAlreadyPlanned) {
+            // Remove from watchlist
+            await PlanToWatchUtil.remove(animeData.animeId);
+            button.classList.remove("active");
+            button.setAttribute("title", `Add "${animeData.animeTitle}" to watchlist`);
+            showFeedback(button, "Removed from watchlist", "success");
+        } else {
+            // Add to watchlist
+            const planData = {
+                ...animeData,
+                addedAt: new Date().toISOString(),
+            };
+            await PlanToWatchUtil.add(planData);
+            button.classList.add("active");
+            button.setAttribute("title", `Remove "${animeData.animeTitle}" from watchlist`);
+            showFeedback(button, "Added to watchlist", "success");
+        }
+    } catch (error) {
+        console.error("Error handling watch click:", error);
+        showFeedback(button, "Error occurred", "error");
     }
+}
 
-    const films = wrapper.querySelectorAll(".flw-item");
-    const allProgress = await getAllEpisodeProgress();
-    const allPlans = await getAllPlanToWatch();
-    const allHidden = await getHiddenAnime();
+/**
+ * Handle Hide button click
+ */
+export async function handleHideClick(animeData: AnimeData, button: HTMLButtonElement): Promise<void> {
+    try {
+        // Add to hidden list
+        await HiddenAnimeUtil.add(animeData.animeId);
 
-    films.forEach((item) => {
-        const movie = item as HTMLElement;
-        const poster = movie.querySelector(".film-poster") as HTMLElement;
-        if (!poster) return;
-        poster.style.position = "relative";
+        // Find the parent anime item and hide it
+        const animeItem = button.closest(SELECTORS.ITEM);
+        if (animeItem) {
+            animeItem.classList.add("anime-hidden");
+            // Use CSS transition for smooth hiding
+            setTimeout(() => {
+                (animeItem as HTMLElement).style.display = "none";
+            }, 300);
+        }
 
-        const animeData = parseAnimeItem(movie);
-        if (!animeData) return;
+        showFeedback(button, "Anime hidden", "success");
+    } catch (error) {
+        console.error("Error handling hide click:", error);
+        showFeedback(button, "Error occurred", "error");
+    }
+}
 
-        // Hide the item if it's in the hidden list
-        if (allHidden.includes(animeData.animeId)) {
-            movie.style.display = "none";
+/**
+ * Handle Clear Hidden button click
+ */
+export async function handleClearHiddenClick(button: HTMLButtonElement): Promise<void> {
+    try {
+        // Clear all hidden anime
+        await HiddenAnimeUtil.clear();
+
+        // Show all previously hidden items
+        const hiddenItems = document.querySelectorAll(".anime-hidden");
+        hiddenItems.forEach((item) => {
+            item.classList.remove("anime-hidden");
+            (item as HTMLElement).style.display = "";
+        });
+
+        showFeedback(button, "All hidden anime restored", "success");
+    } catch (error) {
+        console.error("Error handling clear hidden click:", error);
+        showFeedback(button, "Error occurred", "error");
+    }
+}
+
+/**
+ * Show feedback message near button
+ */
+function showFeedback(button: HTMLButtonElement, message: string, type: "success" | "error"): void {
+    const feedback = document.createElement("div");
+    feedback.className = `anime-list-feedback anime-list-feedback-${type}`;
+    feedback.textContent = message;
+    feedback.setAttribute("data-testid", "anime-feedback");
+
+    // Position feedback near the button
+    const rect = button.getBoundingClientRect();
+    feedback.style.position = "fixed";
+    feedback.style.top = `${rect.bottom + 5}px`;
+    feedback.style.left = `${rect.left}px`;
+    feedback.style.zIndex = "10000";
+
+    document.body.appendChild(feedback);
+
+    // Remove feedback after 2 seconds
+    setTimeout(() => {
+        feedback.remove();
+    }, 2000);
+}
+
+/**
+ * Add controls to an anime item
+ */
+async function addControlsToItem(element: Element): Promise<void> {
+    try {
+        // Check if controls already exist
+        if (element.querySelector(".anime-list-controls")) {
             return;
         }
 
-        // Check if a wrapper already exists
-        if (movie.querySelector(".action-wrapper")) return;
+        const animeData = extractAnimeData(element);
+        if (!animeData) return;
 
-        const buttonWrapper = createWrapper(poster);
-        buttonWrapper.className = "action-wrapper"; // Add class for checking
-        poster.appendChild(buttonWrapper);
+        // Check if this anime is hidden
+        const isHidden = await HiddenAnimeUtil.isHidden(animeData.animeId);
+        if (isHidden) {
+            element.classList.add("anime-hidden");
+            (element as HTMLElement).style.display = "none";
+            return;
+        }
 
-        const isTracked = !!allProgress[animeData.animeId];
-        const isPlanned = !!allPlans[animeData.animeId];
+        // Create controls container
+        const controlsContainer = document.createElement("div");
+        controlsContainer.className = "anime-list-controls";
+        controlsContainer.setAttribute("data-testid", "anime-controls");
 
-        updateButtonState(buttonWrapper, animeData, isPlanned, isTracked);
-    });
-};
+        // Create buttons
+        const watchButton = createWatchButton(animeData);
+        const hideButton = createHideButton(animeData);
 
-const initWatchPage = async () => {
-    logToDOM("Initializing watch page...");
-    const animeInfo = parseWatchUrl();
-    logToDOM("Watch Page - Anime Info:", animeInfo);
-    if (!animeInfo) {
-        logToDOM("Watch Page: Could not parse anime info. Aborting.");
+        // Check if already in watchlist and update button state
+        const isPlanned = await PlanToWatchUtil.isPlanned(animeData.animeId);
+        if (isPlanned) {
+            watchButton.classList.add("active");
+            watchButton.setAttribute("title", `Remove "${animeData.animeTitle}" from watchlist`);
+        }
+
+        // Add buttons to container
+        controlsContainer.appendChild(watchButton);
+        controlsContainer.appendChild(hideButton);
+
+        // Find the poster element and add controls
+        const poster = element.querySelector(SELECTORS.POSTER);
+        if (poster) {
+            poster.appendChild(controlsContainer);
+        }
+    } catch (error) {
+        console.error("Error adding controls to item:", error);
+    }
+}
+
+/**
+ * Add Clear Hidden button to the list container
+ */
+export function addClearHiddenButton(): void {
+    const container = document.querySelector(SELECTORS.CONTAINER);
+    if (!container) return;
+
+    // Check if button already exists
+    if (container.querySelector(".anime-list-clear-hidden-btn")) {
         return;
     }
 
-    const allProgress = await getAllEpisodeProgress();
-    const allPlans = await getAllPlanToWatch();
-    logToDOM("Watch Page - All Progress:", allProgress);
-    logToDOM("Watch Page - All Plans:", allPlans);
+    const clearButton = createClearHiddenButton();
 
-    const isTracked = !!allProgress[animeInfo.animeId];
-    const isPlanned = !!allPlans[animeInfo.animeId];
-    logToDOM("Watch Page - isPlanned:", isPlanned, "isTracked:", isTracked, "for animeId:", animeInfo.animeId);
+    // Create wrapper for better positioning
+    const wrapper = document.createElement("div");
+    wrapper.className = "anime-list-clear-hidden-wrapper";
+    wrapper.setAttribute("data-testid", "clear-hidden-wrapper");
+    wrapper.appendChild(clearButton);
 
-    // Clean up any existing UI before adding new ones
-    document.querySelector("#start-watching-container")?.remove();
-    document.querySelector("#episode-tracker-container")?.remove();
-    document.querySelector("#plan-to-watch-container")?.remove();
+    // Add to the end of the container
+    container.appendChild(wrapper);
+}
 
-    // If it's in "Plan to Watch" but not tracked yet, show the "Start Watching" button.
-    if (isPlanned && !isTracked) {
-        logToDOM("Watch Page: Condition met - Show 'Start Watching' button.");
-        const startButton = createStartWatchingButton(animeInfo, animeInfo.episodeId);
-        startButton.id = "start-watching-container";
-        document.body.appendChild(startButton);
-    } else if (isTracked) {
-        logToDOM("Watch Page: Condition met - Show episode tracker.");
-        const progress = allProgress[animeInfo.animeId];
-        const trackerUI = createEpisodeTrackerUI(progress);
-        document.body.appendChild(trackerUI);
-    } else {
-        logToDOM("Watch Page: Condition met - Show 'Plan to Watch' button.");
-        // If not planned and not tracked, show a "Plan to Watch" button
-        const planButtonContainer = document.createElement("div");
-        planButtonContainer.id = "plan-to-watch-container";
-        planButtonContainer.style.position = "fixed";
-        planButtonContainer.style.top = "100px";
-        planButtonContainer.style.right = "20px";
-        planButtonContainer.style.zIndex = "99999";
-        planButtonContainer.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
-        planButtonContainer.style.padding = "15px";
-        planButtonContainer.style.borderRadius = "8px";
-        planButtonContainer.style.textAlign = "center";
+/**
+ * Initialize controls for all anime items
+ */
+export async function initializeControls(): Promise<void> {
+    try {
+        const container = document.querySelector(SELECTORS.CONTAINER);
+        if (!container) {
+            console.log("Anime list container not found");
+            return;
+        }
 
-        const planButton = createButton("Plan to Watch", "#4CAF50", async () => {
-            await savePlanToWatch({ ...animeInfo, addedAt: new Date().toISOString() });
-            planButtonContainer.remove(); // Remove this button
-            initWatchPage(); // Re-run to show the "Start Watching" button
-        });
-        planButtonContainer.appendChild(planButton);
-        document.body.appendChild(planButtonContainer);
+        const items = container.querySelectorAll(SELECTORS.ITEM);
+        console.log(`Found ${items.length} anime items`);
+
+        // Add controls to each item
+        for (const item of items) {
+            await addControlsToItem(item);
+        }
+
+        // Add clear hidden button
+        addClearHiddenButton();
+
+        console.log("AnimeList controls initialized successfully");
+    } catch (error) {
+        console.error("Error initializing controls:", error);
     }
-};
+}
 
-const runCurrentPageLogic = () => {
-    const onWatchPage = isWatchPage();
-    const onListingPage = isListingPage();
+/**
+ * Observe DOM changes and add controls to new items
+ */
+export function setupObserver(): void {
+    const observer = new MutationObserver((mutations) => {
+        for (const mutation of mutations) {
+            if (mutation.type === "childList") {
+                mutation.addedNodes.forEach((node) => {
+                    if (node.nodeType === Node.ELEMENT_NODE) {
+                        const element = node as Element;
 
-    logToDOM(`Page check: isWatchPage=${onWatchPage}, isListingPage=${onListingPage}`);
+                        // Check if the added node is an anime item
+                        if (element.matches(SELECTORS.ITEM)) {
+                            addControlsToItem(element);
+                        }
 
-    if (onWatchPage) {
-        // On watch page, we don't want the clear button
-        logToDOM("Running watch page logic.");
-        document.querySelector("#clear-hidden-button")?.remove();
-        initWatchPage();
-    } else if (onListingPage) {
-        logToDOM("Running listing page logic.");
-        initListingPage();
-    } else {
-        // If we are on neither a listing nor a watch page, ensure the clear button is removed.
-        logToDOM("Running cleanup logic for other pages.");
-        document.querySelector("#clear-hidden-button")?.remove();
-    }
-};
-
-const init = () => {
-    // Use MutationObserver to handle dynamic page loads (SPA behavior)
-    const observer = new MutationObserver(() => {
-        // No need for complex checks, just re-run the logic.
-        // The functions are idempotent, so it's safe to call them multiple times.
-        runCurrentPageLogic();
+                        // Check if the added node contains anime items
+                        const items = element.querySelectorAll?.(SELECTORS.ITEM);
+                        if (items) {
+                            items.forEach(addControlsToItem);
+                        }
+                    }
+                });
+            }
+        }
     });
 
+    // Start observing
     observer.observe(document.body, {
         childList: true,
         subtree: true,
     });
+}
 
-    // Initial run in case the content is already there
-    runCurrentPageLogic();
-};
+/**
+ * Inject CSS styles for the controls
+ */
+function injectStyles(): void {
+    const style = document.createElement("style");
+    style.setAttribute("data-testid", "anime-list-styles");
+    style.textContent = `
+        /* AnimeList Chrome Extension Styles */
+        .anime-list-controls {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            display: flex;
+            gap: 6px;
+            z-index: 10;
+        }
 
-// init();
+        .anime-list-watch-btn,
+        .anime-list-hide-btn {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(8px);
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .anime-list-watch-btn:hover,
+        .anime-list-hide-btn:hover {
+            border-color: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .anime-list-watch-btn:active,
+        .anime-list-hide-btn:active {
+            transform: scale(0.95);
+        }
+
+        .anime-list-watch-btn.active {
+            background: rgba(147, 51, 234, 0.3);
+            border-color: rgba(147, 51, 234, 0.5);
+            color: rgb(196, 181, 253);
+        }
+
+        .anime-list-watch-btn.active:hover {
+            background: rgba(147, 51, 234, 0.4);
+            border-color: rgba(147, 51, 234, 0.6);
+        }
+
+        .anime-list-clear-hidden-wrapper {
+            display: flex;
+            justify-content: center;
+            margin-top: 24px;
+            padding: 16px;
+        }
+
+        .anime-list-clear-hidden-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(8px);
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .anime-list-clear-hidden-btn:hover {
+            border-color: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .anime-list-clear-hidden-btn:active {
+            transform: scale(0.95);
+        }
+
+        .button-icon {
+            font-size: 14px;
+            filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+        }
+
+        .button-text {
+            font-family: inherit;
+            filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+        }
+
+        .anime-hidden {
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 0.3s ease;
+        }
+
+        .anime-list-feedback {
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            backdrop-filter: blur(8px);
+            animation: anime-list-feedback-appear 0.3s ease;
+            pointer-events: none;
+        }
+
+        .anime-list-feedback-success {
+            background: rgba(34, 197, 94, 0.2);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: rgb(134, 239, 172);
+        }
+
+        .anime-list-feedback-error {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: rgb(252, 165, 165);
+        }
+
+        @keyframes anime-list-feedback-appear {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .anime-list-controls {
+                top: 4px;
+                right: 4px;
+                gap: 4px;
+            }
+
+            .anime-list-watch-btn,
+            .anime-list-hide-btn {
+                padding: 4px 8px;
+                font-size: 11px;
+            }
+
+            .button-icon {
+                font-size: 12px;
+            }
+
+            .anime-list-clear-hidden-btn {
+                padding: 10px 20px;
+                font-size: 13px;
+            }
+        }
+    `;
+
+    document.head.appendChild(style);
+}
+
+/**
+ * Main initialization function
+ */
+export async function init(): Promise<void> {
+    try {
+        // Wait for DOM to be ready
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", init);
+            return;
+        }
+
+        // Inject styles
+        injectStyles();
+
+        // Initialize controls
+        await initializeControls();
+
+        // Setup observer for dynamic content
+        setupObserver();
+    } catch (error) {
+        console.error("Error initializing AnimeList content script:", error);
+    }
+}
+
+// Only auto-initialize if not in test environment
+if (typeof window !== "undefined" && typeof document !== "undefined" && (globalThis as any).window?.location) {
+    init();
+}
