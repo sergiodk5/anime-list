@@ -170,6 +170,13 @@ export class AnimeUtil {
     }
 
     /**
+     * Clear all hidden anime
+     */
+    static async clearHidden(): Promise<void> {
+        await HiddenAnimeUtil.clear();
+    }
+
+    /**
      * Export all anime data
      */
     static async exportData(): Promise<{

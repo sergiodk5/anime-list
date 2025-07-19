@@ -292,6 +292,19 @@ describe("AnimeUtil", () => {
         });
     });
 
+    describe("clearHidden", () => {
+        it("should clear only hidden anime data", async () => {
+            mockHiddenAnimeUtil.clear.mockResolvedValue(undefined);
+
+            await AnimeUtil.clearHidden();
+
+            expect(mockHiddenAnimeUtil.clear).toHaveBeenCalled();
+            // Ensure other utilities are not called
+            expect(mockEpisodeProgressUtil.clear).not.toHaveBeenCalled();
+            expect(mockPlanToWatchUtil.clear).not.toHaveBeenCalled();
+        });
+    });
+
     describe("exportData", () => {
         it("should export all data with timestamp", async () => {
             const mockEpisodeProgressData = { "123": mockEpisodeProgress };

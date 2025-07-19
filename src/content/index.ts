@@ -1,5 +1,5 @@
 import type { AnimeData } from "@/commons/models";
-import { HiddenAnimeUtil, PlanToWatchUtil } from "@/commons/utils";
+import { AnimeUtil } from "@/commons/utils";
 
 /**
  * Content script for anime website integration
@@ -132,21 +132,17 @@ export function createClearHiddenButton(): HTMLButtonElement {
  */
 export async function handlePlanClick(animeData: AnimeData, button: HTMLButtonElement): Promise<void> {
     try {
-        const isAlreadyPlanned = await PlanToWatchUtil.isPlanned(animeData.animeId);
+        const status = await AnimeUtil.getAnimeStatus(animeData.animeId);
 
-        if (isAlreadyPlanned) {
+        if (status.isPlanned) {
             // Remove from plan-to-watch list
-            await PlanToWatchUtil.remove(animeData.animeId);
+            await AnimeUtil.stopTracking(animeData.animeId);
             button.classList.remove("active");
             button.setAttribute("title", `Add "${animeData.animeTitle}" to plan-to-watch list`);
             showFeedback(button, "Removed from plan-to-watch list", "success");
         } else {
             // Add to plan-to-watch list
-            const planData = {
-                ...animeData,
-                addedAt: new Date().toISOString(),
-            };
-            await PlanToWatchUtil.add(planData);
+            await AnimeUtil.addToPlan(animeData);
             button.classList.add("active");
             button.setAttribute("title", `Remove "${animeData.animeTitle}" from plan-to-watch list`);
             showFeedback(button, "Added to plan-to-watch list", "success");
@@ -163,7 +159,7 @@ export async function handlePlanClick(animeData: AnimeData, button: HTMLButtonEl
 export async function handleHideClick(animeData: AnimeData, button: HTMLButtonElement): Promise<void> {
     try {
         // Add to hidden list
-        await HiddenAnimeUtil.add(animeData.animeId);
+        await AnimeUtil.hide(animeData.animeId);
 
         // Find the parent anime item and hide it
         const animeItem = button.closest(SELECTORS.ITEM);
@@ -188,7 +184,7 @@ export async function handleHideClick(animeData: AnimeData, button: HTMLButtonEl
 export async function handleClearHiddenClick(button: HTMLButtonElement): Promise<void> {
     try {
         // Clear all hidden anime
-        await HiddenAnimeUtil.clear();
+        await AnimeUtil.clearHidden();
 
         // Show all previously hidden items
         const hiddenItems = document.querySelectorAll(".anime-hidden");
@@ -241,9 +237,11 @@ async function addControlsToItem(element: Element): Promise<void> {
         const animeData = extractAnimeData(element);
         if (!animeData) return;
 
+        // Get unified anime status
+        const status = await AnimeUtil.getAnimeStatus(animeData.animeId);
+
         // Check if this anime is hidden
-        const isHidden = await HiddenAnimeUtil.isHidden(animeData.animeId);
-        if (isHidden) {
+        if (status.isHidden) {
             element.classList.add("anime-hidden");
             (element as HTMLElement).style.display = "none";
             return;
@@ -259,8 +257,7 @@ async function addControlsToItem(element: Element): Promise<void> {
         const hideButton = createHideButton(animeData);
 
         // Check if already in plan-to-watch list and update button state
-        const isPlanned = await PlanToWatchUtil.isPlanned(animeData.animeId);
-        if (isPlanned) {
+        if (status.isPlanned) {
             planButton.classList.add("active");
             planButton.setAttribute("title", `Remove "${animeData.animeTitle}" from plan-to-watch list`);
         }
