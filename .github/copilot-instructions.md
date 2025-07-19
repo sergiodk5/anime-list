@@ -92,7 +92,25 @@ Use `npm run dev` for development with hot-reload. Run `npm run test:unit:covera
 
 Use `npm run build:ext` to create the final Chrome extension package. Always run this and test the built extension before releases.
 
-Always run `npm run lint` and `npm run format` before committing. Code must pass all ESLint rules and be properly formatted with Prettier.
+#### Pre-Commit Requirements
+
+**ALWAYS** run these commands before committing:
+
+1. **Format code**: `npm run format` - Ensures consistent code formatting with Prettier
+2. **Lint code**: `npm run lint` - Fixes ESLint issues and enforces code quality rules  
+3. **Run tests**: `npm run test:unit` - Verifies all tests pass before commit
+
+Code must pass all ESLint rules and be properly formatted with Prettier before any commit.
+
+#### Commit Message Guidelines
+
+- **Maximum length**: 72 characters for the commit title
+- **Format**: Use conventional commits format: `type: description`
+- **Examples**:
+  - `feat: add episode progress tracking to dashboard`
+  - `fix: resolve content script injection timing issue` 
+  - `docs: update AnimeUtil API documentation`
+  - `test: add coverage for episode progress workflows`
 
 ### CI/CD Pipeline
 
