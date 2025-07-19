@@ -1,9 +1,15 @@
 # AnimeList Chrome Extension
 
-[![CI](https://github.com/sergiodk5/anime-list/actions/workflows/ci.yml/badge.svg)](https://github.com/sergiodk5/anime-list/actions/workflows/ci.yml)
-[![Vue.js](https://img.shields.io/badge/Vue.js-4FC08D?logo=vue.js&logoColor=white)](https://vuejs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![CI](https://github.com/se#### **Unified Storage System** ✅
+
+- **🏗️ Service Architecture**: Clean service-repository pattern for all anime operations
+- **🏪 Local-First Storage**: All data stored securely in browser's local storage
+- **📊 Comprehensive APIs**: Full CRUD operations via AnimeService
+- **🔄 Storage Layers**: `AnimeService`, `Repositories`, `StorageAdapter`
+- **📈 Data Models**: Complete TypeScript interfaces for all anime data structures/anime-list/actions/workflows/ci.yml/badge.svg)](https://github.com/sergiodk5/anime-list/actions/workflows/ci.yml)
+  [![Vue.js](https://img.shields.io/badge/Vue.js-4FC08D?logo=vue.js&logoColor=white)](https://vuejs.org/)
+  [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+  [![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 
 A modern browser extension to enhance your anime viewing experience with beautiful glass-morphism UI and comprehensive tracking features. Take control of your watch lists, track progress, and customize what you see.
 
@@ -13,7 +19,7 @@ A modern browser extension to enhance your anime viewing experience with beautif
 
 - ✅ Content script integration with Watch/Hide buttons on anime websites
 - ✅ Chrome extension popup with dashboard navigation
-- ✅ Unified AnimeUtil backend architecture with 100% test coverage (287 tests)
+- ✅ Clean service-repository architecture with 100% test coverage (461 tests)
 - ✅ Beautiful glass-morphism UI design system
 - ✅ Complete storage system with all CRUD operations
 
@@ -66,18 +72,18 @@ A modern browser extension to enhance your anime viewing experience with beautif
 
 #### **Enterprise-Grade Testing** ✅
 
-- **🧪 100% Test Coverage**: Comprehensive unit tests for all components and utilities (287 tests)
+- **🧪 100% Test Coverage**: Comprehensive unit tests for all components and services (461 tests)
 - **🛡️ Type Safety**: Full TypeScript implementation with strict type checking
 - **📝 Data-TestId System**: Robust testing infrastructure for UI components
 - **⚡ Performance Testing**: Optimized for Chrome extension environment
 
 ### 🔄 Architecture Overview
 
-The extension has a **unified architecture** where:
+The extension has a **clean service architecture** where:
 
-- **Content Script**: Uses `AnimeUtil` for all anime operations (Watch/Hide buttons)
-- **Dashboard UI**: Ready for integration with the same `AnimeUtil` backend
-- **Storage Layer**: Centralized through `AnimeUtil` with underlying specialized utilities
+- **Content Script**: Uses `AnimeService` for all anime operations (Watch/Hide buttons)
+- **Dashboard UI**: Ready for integration with the same `AnimeService` backend
+- **Storage Layer**: Centralized through service-repository pattern with `StorageAdapter`
 - **Testing**: Complete coverage ensuring reliability across all components
 
 ### 📋 Integration Status
@@ -86,7 +92,7 @@ The extension has a **unified architecture** where:
 
 The extension has excellent architecture with complete backend implementation, but needs frontend integration:
 
-- **❌ Static Data**: Dashboard displays hardcoded numbers instead of using `AnimeUtil.getStatistics()`
+- **❌ Static Data**: Dashboard displays hardcoded numbers instead of using `AnimeService.getStatistics()`
 - **❌ Missing Routes**: Links to `/favorites` and list detail pages don't exist
 - **❌ Button Functionality**: "Add New Anime" and navigation buttons need connection to backend
 - **❌ Episode Progress UI**: No interface for the fully-implemented episode tracking system
@@ -95,14 +101,14 @@ The extension has excellent architecture with complete backend implementation, b
 
 The extension is production-ready with a solid foundation:
 
-- ✅ Unified AnimeUtil backend architecture with 100% test coverage
+- ✅ Clean service-repository architecture with 100% test coverage
 - ✅ Working content script for anime websites
 - ✅ Beautiful UI design system and components
 - ✅ Proper Chrome extension architecture
 
 **Immediate next steps:**
 
-1. **Connect UI to Backend**: Replace static data with `AnimeUtil` calls
+1. **Connect UI to Backend**: Replace static data with `AnimeService` calls
 2. **Add Missing Routes**: Create favorites page and individual list detail pages
 3. **Implement Button Functionality**: Connect all existing buttons to actual features
 4. **Add Episode Progress UI**: Create interface for tracking episode progress
@@ -111,7 +117,7 @@ The extension is production-ready with a solid foundation:
 
 #### **Backend-Frontend Integration** (Next Phase)
 
-- **Vue Composables**: Create reactive wrappers for `AnimeUtil`
+- **Vue Composables**: Create reactive wrappers for `AnimeService`
 - **Real-Time Data**: Replace static numbers with live data from storage
 - **Interactive Features**: Add anime creation, editing, and management
 - **Episode Progress UI**: Visual episode tracking interface
@@ -160,7 +166,9 @@ src/
 │   └── router/         # Vue Router configuration
 ├── commons/            # Shared utilities and models
 │   ├── models/         # TypeScript interfaces and types
-│   └── utils/          # Storage utilities and business logic
+│   ├── services/       # Business logic services
+│   ├── repositories/   # Data access layer
+│   └── adapters/       # External API adapters
 └── assets/            # Styling and static assets
 ```
 

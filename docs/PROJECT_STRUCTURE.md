@@ -8,10 +8,10 @@ This guide explains the architecture and organization of the Anime List Chrome E
 
 Chrome extensions have several distinct components that run in different contexts:
 
--   **Background Script**: Runs persistently in the background
--   **Content Script**: Injected into web pages
--   **Popup**: The UI that appears when clicking the extension icon
--   **Options Page**: Settings and configuration interface
+- **Background Script**: Runs persistently in the background
+- **Content Script**: Injected into web pages
+- **Popup**: The UI that appears when clicking the extension icon
+- **Options Page**: Settings and configuration interface
 
 ## Source Directory Structure
 
@@ -34,17 +34,17 @@ src/
 
 **What it contains**:
 
--   Background script logic
--   Event listeners for extension lifecycle events
--   Cross-tab communication handlers
--   Background data processing
+- Background script logic
+- Event listeners for extension lifecycle events
+- Cross-tab communication handlers
+- Background data processing
 
 **Key characteristics**:
 
--   Runs persistently in the background
--   No direct UI components
--   Handles extension-wide events and state
--   Communicates with content scripts and popup
+- Runs persistently in the background
+- No direct UI components
+- Handles extension-wide events and state
+- Communicates with content scripts and popup
 
 **Example files**:
 
@@ -61,17 +61,17 @@ background/
 
 **What it contains**:
 
--   Page manipulation logic
--   DOM interaction code
--   Data extraction from anime websites
--   Communication with background script
+- Page manipulation logic
+- DOM interaction code
+- Data extraction from anime websites
+- Communication with background script
 
 **Key characteristics**:
 
--   Runs in the context of web pages
--   Can access and modify page DOM
--   Limited access to Chrome APIs
--   Communicates via message passing
+- Runs in the context of web pages
+- Can access and modify page DOM
+- Limited access to Chrome APIs
+- Communicates via message passing
 
 **Example files**:
 
@@ -89,18 +89,18 @@ content/
 
 **What it contains**:
 
--   Vue components for popup interface
--   Popup-specific styling
--   Quick actions and controls
--   Display of current page anime information
+- Vue components for popup interface
+- Popup-specific styling
+- Quick actions and controls
+- Display of current page anime information
 
 **Key characteristics**:
 
--   Small, focused UI (320x240px)
--   Quick access to main features
--   Limited screen real estate
--   Should load quickly
--   Modern anime-themed design
+- Small, focused UI (320x240px)
+- Quick access to main features
+- Limited screen real estate
+- Should load quickly
+- Modern anime-themed design
 
 **Current structure**:
 
@@ -113,11 +113,11 @@ popup/
 
 **📖 Detailed Guide**: See [POPUP_GUIDE.md](./POPUP_GUIDE.md) for comprehensive popup development documentation, including:
 
--   Current architecture and features
--   Future development roadmap
--   Testing strategies and best practices
--   API integration patterns
--   Accessibility guidelines
+- Current architecture and features
+- Future development roadmap
+- Testing strategies and best practices
+- API integration patterns
+- Accessibility guidelines
 
 ### `options/` - Options/Settings Page
 
@@ -125,17 +125,17 @@ popup/
 
 **What it contains**:
 
--   Settings UI components
--   Configuration forms
--   User preferences management
--   Advanced features interface
+- Settings UI components
+- Configuration forms
+- User preferences management
+- Advanced features interface
 
 **Key characteristics**:
 
--   Full-page interface
--   Comprehensive settings
--   More complex UI than popup
--   Persistent user configurations
+- Full-page interface
+- Comprehensive settings
+- More complex UI than popup
+- Persistent user configurations
 
 **Current structure**:
 
@@ -163,18 +163,18 @@ options/
 
 **What it contains**:
 
--   TypeScript interfaces and types
--   Storage utilities
--   Business logic utilities
--   Shared constants and enums
--   Static assets (CSS, images, fonts)
+- TypeScript interfaces and types
+- Storage utilities
+- Business logic utilities
+- Shared constants and enums
+- Static assets (CSS, images, fonts)
 
 **Key characteristics**:
 
--   Framework-agnostic code
--   Reusable across all contexts
--   Well-tested utilities
--   No UI components
+- Framework-agnostic code
+- Reusable across all contexts
+- Well-tested utilities
+- No UI components
 
 **Current structure**:
 
@@ -184,13 +184,14 @@ commons/
 │   └── main.css       # Global CSS styles
 ├── models/            # TypeScript interfaces and types
 │   └── index.ts       # Anime, episode, storage interfaces
-└── utils/             # Utility functions
-    ├── index.ts       # Utility exports
-    ├── storageUtil.ts # Generic storage operations
-    ├── episodeProgressUtil.ts  # Episode tracking
-    ├── planToWatchUtil.ts      # Plan to watch management
-    ├── hiddenAnimeUtil.ts      # Hidden anime management
-    └── animeUtil.ts   # High-level anime operations
+├── services/          # Business logic services
+│   └── animeService.ts # High-level anime operations
+├── repositories/      # Data access layer
+│   ├── EpisodeProgressRepository.ts # Episode tracking
+│   ├── PlanToWatchRepository.ts     # Plan to watch management
+│   └── HiddenAnimeRepository.ts     # Hidden anime management
+└── adapters/          # External API adapters
+    └── StorageAdapter.ts # Chrome storage operations
 ```
 
 ## Cross-Component Communication
@@ -215,17 +216,19 @@ chrome.runtime.sendMessage({
 
 ### Shared Storage
 
-Components share data through Chrome's storage API (abstracted through commons utilities):
+Components share data through Chrome's storage API (abstracted through the service layer):
 
 ```typescript
-// Any component can use these utilities
-import { EpisodeProgressUtil, AnimeUtil } from "@/commons/utils";
+// Any component can use the service
+import { AnimeService } from "@/commons/services";
+
+const animeService = new AnimeService();
 
 // Save episode progress
-await EpisodeProgressUtil.save(animeId, progressData);
+await animeService.updateEpisodeProgress(animeId, episode);
 
-// Get anime data
-const anime = await AnimeUtil.getAnimeById(animeId);
+// Get anime status
+const status = await animeService.getAnimeStatus(animeId);
 ```
 
 ## Development Guidelines
@@ -242,93 +245,93 @@ const anime = await AnimeUtil.getAnimeById(animeId);
 
 #### Background Folder
 
--   No Vue components
--   No direct DOM manipulation
--   Focus on extension lifecycle management
--   Handle cross-component communication
+- No Vue components
+- No direct DOM manipulation
+- Focus on extension lifecycle management
+- Handle cross-component communication
 
 #### Content Folder
 
--   Minimal UI (prefer native DOM manipulation)
--   Focus on page integration
--   Robust error handling for unknown page structures
--   Respect page performance
+- Minimal UI (prefer native DOM manipulation)
+- Focus on page integration
+- Robust error handling for unknown page structures
+- Respect page performance
 
 #### Popup Folder
 
--   Keep bundle size small
--   Optimize for quick loading
--   Use shared components from commons when possible
--   Handle offline states gracefully
+- Keep bundle size small
+- Optimize for quick loading
+- Use shared components from commons when possible
+- Handle offline states gracefully
 
 #### Options Folder
 
--   Can use full Vue.js features
--   Implement proper routing
--   Use Vue components for complex UI
--   Handle form validation and persistence
+- Can use full Vue.js features
+- Implement proper routing
+- Use Vue components for complex UI
+- Handle form validation and persistence
 
 #### Commons Folder
 
--   Write framework-agnostic code
--   Ensure 100% test coverage
--   Use TypeScript for type safety
--   Follow SOLID principles
+- Write framework-agnostic code
+- Ensure 100% test coverage
+- Use TypeScript for type safety
+- Follow SOLID principles
 
 ### Import Guidelines
 
 ```typescript
 // ✅ Correct: Import from commons
-import { EpisodeProgressUtil } from "@/commons/utils";
+import { AnimeService } from "@/commons/services";
 import type { AnimeData } from "@/commons/models";
 
 // ❌ Avoid: Cross-component imports
 import { PopupComponent } from "@/popup/components"; // Don't import popup code in content
 
 // ✅ Correct: Background to commons
-import { StorageUtil } from "@/commons/utils";
+import { StorageAdapter } from "@/commons/adapters";
 
 // ✅ Correct: Content to commons
-import { AnimeUtil } from "@/commons/utils";
+import { AnimeService } from "@/commons/services";
 ```
 
 ## File Naming Conventions
 
 ### TypeScript Files
 
--   Use camelCase: `episodeTracker.ts`
--   Suffix utilities with `Util`: `storageUtil.ts`
--   Use descriptive names: `animeDataExtractor.ts`
+- Use camelCase: `episodeTracker.ts`
+- Suffix utilities with `Util`: `storageUtil.ts`
+- Use descriptive names: `animeDataExtractor.ts`
 
 ### Vue Components
 
--   Use PascalCase: `EpisodeList.vue`
--   Suffix with component type: `HeaderLayout.vue`
--   Use descriptive names: `AnimeSearchForm.vue`
+- Use PascalCase: `EpisodeList.vue`
+- Suffix with component type: `HeaderLayout.vue`
+- Use descriptive names: `AnimeSearchForm.vue`
 
 ### HTML Files
 
--   Use lowercase: `index.html`
--   Match the component purpose: `popup.html`, `options.html`
+- Use lowercase: `index.html`
+- Match the component purpose: `popup.html`, `options.html`
 
 ## Best Practices
 
 ### 1. Maintain Clear Boundaries
 
 ```typescript
-// ✅ Good: Commons utility used by multiple components
-// commons/utils/animeUtil.ts
-export class AnimeUtil {
-    static async getCurrentAnime(): Promise<AnimeData | null> {
-        // Reusable logic
+// ✅ Good: Service used by multiple components
+// commons/services/animeService.ts
+export class AnimeService {
+    async getCurrentAnime(): Promise<AnimeData | null> {
+        // Reusable business logic
     }
 }
 
 // popup/PopupPage.vue
-import { AnimeUtil } from "@/commons/utils";
+import { AnimeService } from "@/commons/services";
 
 // content/index.ts
-import { AnimeUtil } from "@/commons/utils";
+import { AnimeService } from "@/commons/services";
 ```
 
 ### 2. Use Commons for Shared Logic
@@ -394,10 +397,10 @@ try {
 
 ### Per-Folder Testing
 
--   **Commons**: 100% unit test coverage required
--   **Background**: Integration tests for event handling
--   **Content**: Mock DOM environments for testing
--   **Popup/Options**: Component testing with Vue Test Utils
+- **Commons**: 100% unit test coverage required
+- **Background**: Integration tests for event handling
+- **Content**: Mock DOM environments for testing
+- **Popup/Options**: Component testing with Vue Test Utils
 
 ### Test File Organization
 
@@ -426,10 +429,10 @@ When moving functionality between folders:
 
 This folder structure ensures:
 
--   **Clear separation of concerns** between extension components
--   **Reusable code** in the commons folder
--   **Context-appropriate implementations** in each folder
--   **Maintainable architecture** that scales with the project
--   **Testable components** with clear boundaries
+- **Clear separation of concerns** between extension components
+- **Reusable code** in the commons folder
+- **Context-appropriate implementations** in each folder
+- **Maintainable architecture** that scales with the project
+- **Testable components** with clear boundaries
 
 When adding new features, always consider which folder the code belongs in based on its purpose and which other components might need to use it.

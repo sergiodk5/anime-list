@@ -24,14 +24,18 @@ anime-list/
 │   ├── options/          # Full dashboard/options page
 │   └── commons/
 │       ├── models/         # TypeScript interfaces and types
-│       └── utils/          # Utility functions (our main test focus)
+│       ├── services/       # Business logic services (our main test focus)
+│       ├── repositories/   # Data access layer
+│       └── adapters/       # External API adapters
 ├── test/                   # Test files (mirrors src structure)
 │   ├── setup.ts           # Test environment setup and Chrome API mocks
 │   ├── content/           # Content script tests
 │   ├── popup/             # Popup component tests
 │   ├── options/           # Options page tests
 │   └── commons/
-│       └── utils/          # Utility function tests
+│       ├── services/       # Service layer tests
+│       ├── repositories/   # Repository layer tests
+│       └── adapters/       # Adapter layer tests
 ├── vitest.config.ts        # Vitest configuration
 └── coverage/               # Generated coverage reports
 ```
@@ -125,15 +129,17 @@ chrome.storage.local.clear;
 
 Tests should mirror the source structure:
 
-- `src/commons/utils/storageUtil.ts` → `test/commons/utils/storageUtil.test.ts`
+- `src/commons/services/animeService.ts` → `test/commons/services/animeService.test.ts`
+- `src/commons/repositories/EpisodeProgressRepository.ts` → `test/commons/repositories/episodeProgressRepository.test.ts`
+- `src/commons/adapters/StorageAdapter.ts` → `test/commons/adapters/storageAdapter.test.ts`
 
 ### Basic Test Template
 
 ```typescript
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { YourUtil } from "@/commons/utils";
+import { AnimeService } from "@/commons/services";
 
-describe("YourUtil", () => {
+describe("AnimeService", () => {
     beforeEach(() => {
         // Reset mocks before each test
         vi.clearAllMocks();
@@ -243,11 +249,17 @@ describe("Content Script", () => {
 ```typescript
 describe("Initialization", () => {
     it("should initialize content script", async () => {
-        const { HiddenAnimeUtil, PlanToWatchUtil } = await import("@/commons/utils");
+        const { AnimeService } = await import("@/commons/services");
 
         // Mock dependencies
-        vi.mocked(HiddenAnimeUtil.isHidden).mockResolvedValue(false);
-        vi.mocked(PlanToWatchUtil.isPlanned).mockResolvedValue(false);
+        const mockAnimeService = {
+            getAnimeStatus: vi.fn().mockResolvedValue({
+                isTracked: false,
+                isPlanned: false,
+                isHidden: false,
+            }),
+        };
+        vi.mocked(AnimeService).mockImplementation(() => mockAnimeService);
 
         const contentScript = await import("@/content/index");
         await contentScript.init();
@@ -259,8 +271,15 @@ describe("Initialization", () => {
 describe("DOM Manipulation", () => {
     it("should create and add controls to anime items", async () => {
         // Setup mocks
-        const { HiddenAnimeUtil, PlanToWatchUtil } = await import("@/commons/utils");
-        vi.mocked(HiddenAnimeUtil.isHidden).mockResolvedValue(false);
+        const { AnimeService } = await import("@/commons/services");
+        const mockAnimeService = {
+            getAnimeStatus: vi.fn().mockResolvedValue({
+                isTracked: false,
+                isPlanned: false,
+                isHidden: false,
+            }),
+        };
+        vi.mocked(AnimeService).mockImplementation(() => mockAnimeService);
         vi.mocked(PlanToWatchUtil.isPlanned).mockResolvedValue(false);
 
         const { initializeControls } = await import("@/content/index");
@@ -692,7 +711,9 @@ All utilities and components must maintain:
 
 **Coverage applies to:**
 
-- All utility functions in `src/commons/utils/`
+- All service classes in `src/commons/services/`
+- Repository classes in `src/commons/repositories/`
+- Adapter classes in `src/commons/adapters/`
 - Vue components in `src/popup/`, `src/options/`
 - Business logic in `src/background/`, `src/content/`
 
@@ -910,7 +931,7 @@ expect(result).toHaveProperty("id", "123");
 
 ```bash
 # Run specific test file
-npm run test:unit -- storageUtil.test.ts
+npm run test:unit -- animeService.test.ts
 
 # Run tests with verbose output
 npm run test:unit -- --reporter=verbose

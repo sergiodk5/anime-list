@@ -17,30 +17,30 @@ src/popup/
 
 ### Core Technologies
 
--   **Vue 3** with Composition API
--   **TypeScript** for type safety
--   **Tailwind CSS** for styling
--   **Chrome Extension APIs** for browser integration
+- **Vue 3** with Composition API
+- **TypeScript** for type safety
+- **Tailwind CSS** for styling
+- **Chrome Extension APIs** for browser integration
 
 ## Current Popup Features
 
 ### 1. Brand Identity
 
--   **AnimeList branding** with custom icon
--   **Modern gradient design** (purple to pink)
--   **Animated background elements** for visual appeal
+- **AnimeList branding** with custom icon
+- **Modern gradient design** (purple to pink)
+- **Animated background elements** for visual appeal
 
 ### 2. Quick Actions
 
--   **Dashboard Access**: One-click navigation to options page
--   **Chrome API Integration**: Seamless browser integration
+- **Dashboard Access**: One-click navigation to options page
+- **Chrome API Integration**: Seamless browser integration
 
 ### 3. Visual Design
 
--   **320x240px dimensions** (80x60 Tailwind units)
--   **Anime-themed styling** with star patterns
--   **Responsive animations** and hover effects
--   **Accessibility-compliant** button interactions
+- **320x240px dimensions** (80x60 Tailwind units)
+- **Anime-themed styling** with star patterns
+- **Responsive animations** and hover effects
+- **Accessibility-compliant** button interactions
 
 ## Component Structure
 
@@ -93,22 +93,22 @@ src/popup/
 
 #### 1. Container (`anime-popup`)
 
--   Fixed 320x240px dimensions
--   Gradient background
--   Overflow hidden for clean edges
+- Fixed 320x240px dimensions
+- Gradient background
+- Overflow hidden for clean edges
 
 #### 2. Background Layer (`popup-background`)
 
--   Animated decorative elements
--   Low opacity overlay
--   Pure visual enhancement
+- Animated decorative elements
+- Low opacity overlay
+- Pure visual enhancement
 
 #### 3. Content Areas
 
--   **Header**: Branding and identity
--   **Description**: Clear value proposition
--   **Actions**: Primary user interactions
--   **Footer**: Visual polish
+- **Header**: Branding and identity
+- **Description**: Clear value proposition
+- **Actions**: Primary user interactions
+- **Footer**: Visual polish
 
 ## Styling Guidelines
 
@@ -117,8 +117,8 @@ src/popup/
 ```css
 /* Color Palette */
 --gradient-start: purple-600 /* #9333ea */ --gradient-middle: purple-700 /* #7c3aed */ --gradient-end: pink-600
-    /* #db2777 */ --text-primary: white /* #ffffff */ --text-secondary: white/90 /* rgba(255,255,255,0.9) */ --accent:
-    white/20 /* rgba(255,255,255,0.2) */ /* Typography */ --font-title: text-xl font-bold --font-body: text-sm
+    /* #db2777 */ --text-primary: white /* #ffffff */ --text-secondary: white/90 /* rgba(255,255,255,0.9) */
+    --accent: white/20 /* rgba(255,255,255,0.2) */ /* Typography */ --font-title: text-xl font-bold --font-body: text-sm
     --font-button: text-sm font-semibold /* Spacing */ --padding-container: 1.5rem (24px) --gap-elements: 0.75rem (12px)
     --gap-header: 0.75rem (12px);
 ```
@@ -181,11 +181,11 @@ expect(title.element.tagName).toBe("H1");
 
 ### Testing Best Practices
 
--   **Use data-testid attributes** for element selection
--   **Mock Chrome APIs** comprehensively
--   **Test error handling** for all Chrome API calls
--   **Verify accessibility** compliance
--   **Maintain 100% coverage** for all popup code
+- **Use data-testid attributes** for element selection
+- **Mock Chrome APIs** comprehensively
+- **Test error handling** for all Chrome API calls
+- **Verify accessibility** compliance
+- **Maintain 100% coverage** for all popup code
 
 ## Future Development Areas
 
@@ -263,7 +263,7 @@ src/popup/
 │   ├── useCurrentAnime.ts # Current anime detection logic
 │   ├── useEpisodeTracking.ts # Episode management
 │   └── usePopupState.ts   # Popup-specific state
-└── utils/                 # Popup-specific utilities
+└── services/              # Popup-specific services
     ├── popupLayoutHelper.ts # Layout calculations
     └── chromeApiWrapper.ts  # Chrome API abstractions
 ```
@@ -340,9 +340,9 @@ export function usePopupState() {
 
 #### 1. Plan the Feature
 
--   Define user stories and acceptance criteria
--   Design the UI layout within popup constraints
--   Plan data flow and Chrome API interactions
+- Define user stories and acceptance criteria
+- Design the UI layout within popup constraints
+- Plan data flow and Chrome API interactions
 
 #### 2. Create Components
 
@@ -398,9 +398,9 @@ describe("NewFeature", () => {
 
 #### 5. Update Documentation
 
--   Update this guide with new features
--   Add usage examples
--   Document any new patterns or conventions
+- Update this guide with new features
+- Add usage examples
+- Document any new patterns or conventions
 
 ### Performance Considerations
 
@@ -465,19 +465,21 @@ export async function sendToBackground(message: any) {
 #### Storage Operations
 
 ```typescript
-// Use commons utilities for consistency
-import { AnimeUtil, EpisodeProgressUtil } from "@/commons/utils";
+// Use service layer for consistency
+import { AnimeService } from "@/commons/services";
 
 // Popup-specific data operations
 export class PopupDataService {
+    private animeService = new AnimeService();
+
     static async getCurrentAnimeData(): Promise<AnimeData | null> {
         const tab = await getCurrentTab();
         // Extract anime data from current page
-        return AnimeUtil.extractFromUrl(tab.url);
+        return this.extractAnimeFromUrl(tab.url);
     }
 
-    static async updateEpisodeProgress(animeId: string, episode: number) {
-        return EpisodeProgressUtil.updateEpisode(animeId, episode);
+    async updateEpisodeProgress(animeId: string, episode: number) {
+        return this.animeService.updateEpisodeProgress(animeId, episode);
     }
 }
 ```
@@ -636,11 +638,11 @@ When updating popup functionality:
 
 ### Code Quality Standards
 
--   **TypeScript strict mode** enabled
--   **ESLint and Prettier** for code formatting
--   **100% test coverage** for all popup code
--   **Vue 3 Composition API** patterns
--   **Tailwind CSS** for consistent styling
+- **TypeScript strict mode** enabled
+- **ESLint and Prettier** for code formatting
+- **100% test coverage** for all popup code
+- **Vue 3 Composition API** patterns
+- **Tailwind CSS** for consistent styling
 
 ## Conclusion
 

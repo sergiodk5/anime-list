@@ -38,6 +38,7 @@ export default mergeConfig(
                 ],
                 exclude: [
                     "src/commons/utils/index.ts", // Simple export file
+                    "src/commons/services/index.ts", // Simple export file
                     "src/popup/index.ts", // Simple entry point
                     "src/options/index.ts", // Simple entry point
                     "src/options/router/index.ts", // Simple router setup
