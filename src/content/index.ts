@@ -3,7 +3,7 @@ import { HiddenAnimeUtil, PlanToWatchUtil } from "@/commons/utils";
 
 /**
  * Content script for anime website integration
- * Adds Watch and Hide controls to anime cards with glass-morphism styling
+ * Adds Plan and Hide controls to anime cards with glass-morphism styling
  */
 
 // Initialize the content script
@@ -57,24 +57,24 @@ export function extractAnimeData(element: Element): AnimeData | null {
 }
 
 /**
- * Create Watch button with glass-morphism styling
+ * Create Plan button with glass-morphism styling
  */
-export function createWatchButton(animeData: AnimeData): HTMLButtonElement {
+export function createPlanButton(animeData: AnimeData): HTMLButtonElement {
     const button = document.createElement("button");
-    button.className = "anime-list-watch-btn";
-    button.setAttribute("data-testid", "anime-watch-button");
+    button.className = "anime-list-plan-btn";
+    button.setAttribute("data-testid", "anime-plan-button");
     button.setAttribute("data-anime-id", animeData.animeId);
-    button.setAttribute("title", `Add "${animeData.animeTitle}" to watchlist`);
+    button.setAttribute("title", `Add "${animeData.animeTitle}" to plan-to-watch list`);
     button.innerHTML = `
         <span class="button-icon">📝</span>
-        <span class="button-text">Watch</span>
+        <span class="button-text">Plan</span>
     `;
 
     // Add click handler
     button.addEventListener("click", async (e) => {
         e.preventDefault();
         e.stopPropagation();
-        await handleWatchClick(animeData, button);
+        await handlePlanClick(animeData, button);
     });
 
     return button;
@@ -128,31 +128,31 @@ export function createClearHiddenButton(): HTMLButtonElement {
 }
 
 /**
- * Handle Watch button click
+ * Handle Plan button click
  */
-export async function handleWatchClick(animeData: AnimeData, button: HTMLButtonElement): Promise<void> {
+export async function handlePlanClick(animeData: AnimeData, button: HTMLButtonElement): Promise<void> {
     try {
         const isAlreadyPlanned = await PlanToWatchUtil.isPlanned(animeData.animeId);
 
         if (isAlreadyPlanned) {
-            // Remove from watchlist
+            // Remove from plan-to-watch list
             await PlanToWatchUtil.remove(animeData.animeId);
             button.classList.remove("active");
-            button.setAttribute("title", `Add "${animeData.animeTitle}" to watchlist`);
-            showFeedback(button, "Removed from watchlist", "success");
+            button.setAttribute("title", `Add "${animeData.animeTitle}" to plan-to-watch list`);
+            showFeedback(button, "Removed from plan-to-watch list", "success");
         } else {
-            // Add to watchlist
+            // Add to plan-to-watch list
             const planData = {
                 ...animeData,
                 addedAt: new Date().toISOString(),
             };
             await PlanToWatchUtil.add(planData);
             button.classList.add("active");
-            button.setAttribute("title", `Remove "${animeData.animeTitle}" from watchlist`);
-            showFeedback(button, "Added to watchlist", "success");
+            button.setAttribute("title", `Remove "${animeData.animeTitle}" from plan-to-watch list`);
+            showFeedback(button, "Added to plan-to-watch list", "success");
         }
     } catch (error) {
-        console.error("Error handling watch click:", error);
+        console.error("Error handling plan click:", error);
         showFeedback(button, "Error occurred", "error");
     }
 }
@@ -255,18 +255,18 @@ async function addControlsToItem(element: Element): Promise<void> {
         controlsContainer.setAttribute("data-testid", "anime-controls");
 
         // Create buttons
-        const watchButton = createWatchButton(animeData);
+        const planButton = createPlanButton(animeData);
         const hideButton = createHideButton(animeData);
 
-        // Check if already in watchlist and update button state
+        // Check if already in plan-to-watch list and update button state
         const isPlanned = await PlanToWatchUtil.isPlanned(animeData.animeId);
         if (isPlanned) {
-            watchButton.classList.add("active");
-            watchButton.setAttribute("title", `Remove "${animeData.animeTitle}" from watchlist`);
+            planButton.classList.add("active");
+            planButton.setAttribute("title", `Remove "${animeData.animeTitle}" from plan-to-watch list`);
         }
 
         // Add buttons to container
-        controlsContainer.appendChild(watchButton);
+        controlsContainer.appendChild(planButton);
         controlsContainer.appendChild(hideButton);
 
         // Find the poster element and add controls
@@ -382,7 +382,7 @@ function injectStyles(): void {
             z-index: 10;
         }
 
-        .anime-list-watch-btn,
+        .anime-list-plan-btn,
         .anime-list-hide-btn {
             display: flex;
             align-items: center;
@@ -400,7 +400,7 @@ function injectStyles(): void {
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        .anime-list-watch-btn:hover,
+        .anime-list-plan-btn:hover,
         .anime-list-hide-btn:hover {
             border-color: rgba(255, 255, 255, 0.3);
             background: rgba(255, 255, 255, 0.15);
@@ -409,18 +409,18 @@ function injectStyles(): void {
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
-        .anime-list-watch-btn:active,
+        .anime-list-plan-btn:active,
         .anime-list-hide-btn:active {
             transform: scale(0.95);
         }
 
-        .anime-list-watch-btn.active {
+        .anime-list-plan-btn.active {
             background: rgba(147, 51, 234, 0.3);
             border-color: rgba(147, 51, 234, 0.5);
             color: rgb(196, 181, 253);
         }
 
-        .anime-list-watch-btn.active:hover {
+        .anime-list-plan-btn.active:hover {
             background: rgba(147, 51, 234, 0.4);
             border-color: rgba(147, 51, 234, 0.6);
         }
@@ -518,7 +518,7 @@ function injectStyles(): void {
                 gap: 4px;
             }
 
-            .anime-list-watch-btn,
+            .anime-list-plan-btn,
             .anime-list-hide-btn {
                 padding: 4px 8px;
                 font-size: 11px;

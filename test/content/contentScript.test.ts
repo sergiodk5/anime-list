@@ -136,7 +136,7 @@ describe("Content Script", () => {
             expect(controls.length).toBeGreaterThan(0);
         });
 
-        it("should create watch buttons", async () => {
+        it("should create plan buttons", async () => {
             const { HiddenAnimeUtil, PlanToWatchUtil } = await import("@/commons/utils");
 
             vi.mocked(HiddenAnimeUtil.isHidden).mockResolvedValue(false);
@@ -145,11 +145,11 @@ describe("Content Script", () => {
             const { initializeControls } = await import("@/content/index");
             await initializeControls();
 
-            const watchButtons = document.querySelectorAll('[data-testid="anime-watch-button"]');
-            expect(watchButtons.length).toBeGreaterThan(0);
+            const planButtons = document.querySelectorAll('[data-testid="anime-plan-button"]');
+            expect(planButtons.length).toBeGreaterThan(0);
 
-            const button = watchButtons[0] as HTMLButtonElement;
-            expect(button.className).toBe("anime-list-watch-btn");
+            const button = planButtons[0] as HTMLButtonElement;
+            expect(button.className).toBe("anime-list-plan-btn");
             expect(button.getAttribute("data-anime-id")).toBeTruthy();
         });
 
@@ -186,7 +186,7 @@ describe("Content Script", () => {
     });
 
     describe("Button Functionality", () => {
-        it("should handle watch button click", async () => {
+        it("should handle plan button click", async () => {
             const { HiddenAnimeUtil, PlanToWatchUtil } = await import("@/commons/utils");
 
             vi.mocked(HiddenAnimeUtil.isHidden).mockResolvedValue(false);
@@ -196,11 +196,11 @@ describe("Content Script", () => {
             const { initializeControls } = await import("@/content/index");
             await initializeControls();
 
-            const watchButton = document.querySelector('[data-testid="anime-watch-button"]') as HTMLButtonElement;
-            expect(watchButton).toBeTruthy();
+            const planButton = document.querySelector('[data-testid="anime-plan-button"]') as HTMLButtonElement;
+            expect(planButton).toBeTruthy();
 
             // Simulate click
-            watchButton.click();
+            planButton.click();
 
             // Wait for async operation
             await new Promise((resolve) => setTimeout(resolve, 0));
@@ -484,12 +484,12 @@ describe("Content Script", () => {
             const { initializeControls } = await import("@/content/index");
             await initializeControls();
 
-            // Check that at least one watch button has the "active" class (lines 264-266)
-            const watchButtons = document.querySelectorAll('[data-testid="anime-watch-button"]');
-            const hasActiveButton = Array.from(watchButtons).some((button) => button.classList.contains("active"));
+            // Check that at least one plan button has the "active" class (lines 264-266)
+            const planButtons = document.querySelectorAll('[data-testid="anime-plan-button"]');
+            const hasActiveButton = Array.from(planButtons).some((button) => button.classList.contains("active"));
 
             expect(hasActiveButton).toBe(true);
-            expect(watchButtons.length).toBeGreaterThan(0);
+            expect(planButtons.length).toBeGreaterThan(0);
         });
     });
 
@@ -797,7 +797,7 @@ describe("Content Script", () => {
             }
         });
 
-        it("should handle error in watch button functionality", async () => {
+        it("should handle error in plan button functionality", async () => {
             const { HiddenAnimeUtil, PlanToWatchUtil } = await import("@/commons/utils");
 
             vi.mocked(HiddenAnimeUtil.isHidden).mockResolvedValue(false);
@@ -809,19 +809,19 @@ describe("Content Script", () => {
             const { initializeControls } = await import("@/content/index");
             await initializeControls();
 
-            const watchButton = document.querySelector('[data-testid="anime-watch-button"]') as HTMLButtonElement;
-            expect(watchButton).toBeTruthy();
+            const planButton = document.querySelector('[data-testid="anime-plan-button"]') as HTMLButtonElement;
+            expect(planButton).toBeTruthy();
 
             const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
             // Simulate click - this should trigger the error handling
-            watchButton.click();
+            planButton.click();
 
             // Wait for async operation
             await new Promise((resolve) => setTimeout(resolve, 0));
 
             // Should have logged the error (covering lines 155-157)
-            expect(consoleErrorSpy).toHaveBeenCalledWith("Error handling watch click:", expect.any(Error));
+            expect(consoleErrorSpy).toHaveBeenCalledWith("Error handling plan click:", expect.any(Error));
 
             consoleErrorSpy.mockRestore();
         });
@@ -855,7 +855,7 @@ describe("Content Script", () => {
             consoleErrorSpy.mockRestore();
         });
 
-        it("should handle removing anime from watchlist", async () => {
+        it("should handle removing anime from plan to watch list", async () => {
             const { HiddenAnimeUtil, PlanToWatchUtil } = await import("@/commons/utils");
 
             vi.mocked(HiddenAnimeUtil.isHidden).mockResolvedValue(false);
@@ -865,14 +865,14 @@ describe("Content Script", () => {
             const { initializeControls } = await import("@/content/index");
             await initializeControls();
 
-            const watchButton = document.querySelector('[data-testid="anime-watch-button"]') as HTMLButtonElement;
-            expect(watchButton).toBeTruthy();
+            const planButton = document.querySelector('[data-testid="anime-plan-button"]') as HTMLButtonElement;
+            expect(planButton).toBeTruthy();
 
             // Button should initially have "active" class
-            expect(watchButton.classList.contains("active")).toBe(true);
+            expect(planButton.classList.contains("active")).toBe(true);
 
-            // Simulate click to remove from watchlist (covering line 142)
-            watchButton.click();
+            // Simulate click to remove from plan to watch list (covering line 142)
+            planButton.click();
 
             // Wait for async operation
             await new Promise((resolve) => setTimeout(resolve, 0));

@@ -30,7 +30,7 @@ describe("Content Script Integration", () => {
             vi.mocked(HiddenAnimeUtil.isHidden).mockResolvedValue(false);
             vi.mocked(PlanToWatchUtil.isPlanned).mockResolvedValue(false);
 
-            // Step 1: Add anime to watchlist
+            // Step 1: Add anime to plan-to-watch list
             vi.mocked(PlanToWatchUtil.add).mockResolvedValue(undefined);
 
             const animeData = {
@@ -48,7 +48,7 @@ describe("Content Script Integration", () => {
             const isPlanned = await PlanToWatchUtil.isPlanned(animeData.animeId);
             expect(isPlanned).toBe(true);
 
-            // Step 3: Remove anime from watchlist
+            // Step 3: Remove anime from plan-to-watch list
             vi.mocked(PlanToWatchUtil.remove).mockResolvedValue(undefined);
             await PlanToWatchUtil.remove(animeData.animeId);
             expect(PlanToWatchUtil.remove).toHaveBeenCalledWith(animeData.animeId);
@@ -91,7 +91,7 @@ describe("Content Script Integration", () => {
                 },
             ];
 
-            // Add multiple anime to watchlist
+            // Add multiple anime to plan-to-watch list
             for (const anime of animeList) {
                 await PlanToWatchUtil.add(anime);
             }
@@ -234,7 +234,7 @@ describe("Content Script Integration", () => {
                 addedAt: new Date().toISOString(),
             };
 
-            // Add to watchlist
+            // Add to plan-to-watch list
             await PlanToWatchUtil.add(animeData);
 
             // Verify the exact data was stored
