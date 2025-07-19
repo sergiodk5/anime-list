@@ -1877,17 +1877,20 @@ export class SinglePageModal {
         }
     }
 
-    private async updateEpisode(animeId: string, newEpisode: number): Promise<void> {
+    public async updateEpisode(animeId: string, newEpisode: number): Promise<boolean> {
         try {
             const result = await this.animeService.updateEpisodeProgress(animeId, newEpisode);
             if (result.success) {
                 showToast(`Updated to episode ${newEpisode}`, "success");
+                return true;
             } else {
                 showToast(result.message || "Error updating episode", "error");
+                return false;
             }
         } catch (error) {
             console.error("Error updating episode:", error);
             showToast("Error updating episode", "error");
+            return false;
         }
     }
 

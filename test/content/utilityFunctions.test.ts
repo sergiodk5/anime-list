@@ -1,11 +1,11 @@
-import { describe, it, expect } from "vitest";
-import { 
-    canAddToPlan, 
-    canStartWatching, 
-    canHide, 
-    canRemoveFromPlan, 
+import { describe, expect, it } from "vitest";
+import {
+    canAddToPlan,
+    canHide,
+    canRemoveFromPlan,
+    canStartWatching,
     canStopWatching,
-    showToast 
+    showToast,
 } from "../../src/content/index";
 
 describe("Content Script Utility Functions", () => {

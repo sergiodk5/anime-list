@@ -1,6 +1,6 @@
 import type { AnimeStatus } from "@/commons/models";
-import { vi, afterEach, beforeEach, describe, expect, it } from "vitest";
 import { SinglePageModal } from "@/content/index";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock the AnimeService
 const mockAnimeService = {
@@ -73,7 +73,7 @@ describe("Single Page Modal Integration", () => {
                 },
                 {
                     url: "https://example.com/watch/attack-on-titan",
-                    expectedId: "attack-on-titan",  
+                    expectedId: "attack-on-titan",
                     description: "full slug pattern",
                 },
                 {
@@ -85,7 +85,7 @@ describe("Single Page Modal Integration", () => {
 
             testCases.forEach((testCase) => {
                 (window as any).location.href = testCase.url;
-                
+
                 // Test actual extractAnimeData method from real modal
                 const result = modal.extractAnimeData();
                 expect(result?.animeId).toBe(testCase.expectedId);
@@ -94,15 +94,15 @@ describe("Single Page Modal Integration", () => {
 
         it("should call createInfoButton method", () => {
             // Test actual createInfoButton method from real modal
-            const animeData = { 
-                animeId: "test-anime", 
+            const animeData = {
+                animeId: "test-anime",
                 animeTitle: "Test Anime",
-                animeSlug: "test-anime"
+                animeSlug: "test-anime",
             };
-            
+
             // This should not throw and should execute the createInfoButton method
             expect(() => modal.createInfoButton(animeData)).not.toThrow();
-            
+
             // Check that button was created in DOM
             const button = document.getElementById("anime-list-info-button");
             expect(button).toBeTruthy();
@@ -111,40 +111,192 @@ describe("Single Page Modal Integration", () => {
 
         it("should call showModal method", () => {
             // Test actual showModal method from real modal
-            const animeData = { 
-                animeId: "test-anime", 
+            const animeData = {
+                animeId: "test-anime",
                 animeTitle: "Test Anime",
-                animeSlug: "test-anime"
+                animeSlug: "test-anime",
             };
             const mockStatus = {
                 isTracked: true,
                 isPlanned: false,
                 isHidden: false,
-                progress: { 
+                progress: {
                     animeId: "test-anime",
                     animeTitle: "Test Anime",
                     animeSlug: "test-anime",
                     episodeId: "ep-5",
-                    currentEpisode: 5, 
-                    totalEpisodes: 12, 
-                    lastWatched: new Date().toISOString() 
-                }
+                    currentEpisode: 5,
+                    totalEpisodes: 12,
+                    lastWatched: new Date().toISOString(),
+                },
             };
-            
+
             // Clear any existing modals
             const existingModals = document.querySelectorAll('[style*="position: fixed"][style*="z-index: 10000"]');
-            existingModals.forEach(modal => modal.remove());
-            
+            existingModals.forEach((modal) => modal.remove());
+
             // This should not throw and should execute the showModal method
             expect(() => modal.showModal(animeData, mockStatus)).not.toThrow();
-            
+
             // Check that modal was created and appended to DOM
             const modalElements = document.querySelectorAll('[style*="position: fixed"][style*="z-index: 10000"]');
             expect(modalElements.length).toBeGreaterThan(0);
-            
+
             // Verify the modal contains the expected content
             const modalContent = document.querySelector('[style*="position: fixed"] h2');
             expect(modalContent?.textContent).toBe("Test Anime");
+        });
+
+        it("should handle modal close operations", async () => {
+            // Test modal close functionality
+            const animeData = {
+                animeId: "close-test",
+                animeTitle: "Close Test Anime",
+                animeSlug: "close-test-anime",
+            };
+            const mockStatus = {
+                isTracked: false,
+                isPlanned: false,
+                isHidden: false,
+                progress: undefined,
+            };
+
+            // Clear any existing modals
+            const existingModals = document.querySelectorAll('[style*="position: fixed"][style*="z-index: 10000"]');
+            existingModals.forEach((modal) => modal.remove());
+
+            // Show modal first
+            modal.showModal(animeData, mockStatus);
+
+            // Find the modal
+            const modalElement = document.querySelector('[style*="position: fixed"][style*="z-index: 10000"]');
+            expect(modalElement).toBeTruthy();
+
+            // Find and click the close button that says "Close"
+            const closeButton = Array.from(modalElement?.querySelectorAll("button") || []).find((btn) =>
+                btn.textContent?.includes("Close"),
+            );
+
+            if (closeButton) {
+                // Simulate clicking the close button
+                (closeButton as HTMLElement).click();
+
+                // Wait for the opacity transition and setTimeout
+                await new Promise((resolve) => setTimeout(resolve, 350));
+            } else {
+                // If no explicit close button, test modal background click
+                (modalElement as HTMLElement).click();
+                await new Promise((resolve) => setTimeout(resolve, 350));
+            }
+        });
+
+        it("should handle modal action button clicks", async () => {
+            // Test modal action buttons that trigger closeModal
+            const animeData = {
+                animeId: "action-test",
+                animeTitle: "Action Test Anime",
+                animeSlug: "action-test-anime",
+            };
+            const mockStatus = {
+                isTracked: false,
+                isPlanned: false,
+                isHidden: false,
+                progress: undefined,
+            };
+
+            // Clear any existing modals
+            const existingModals = document.querySelectorAll('[style*="position: fixed"][style*="z-index: 10000"]');
+            existingModals.forEach((modal) => modal.remove());
+
+            // Show modal
+            modal.showModal(animeData, mockStatus);
+
+            const modalElement = document.querySelector('[style*="position: fixed"][style*="z-index: 10000"]');
+            expect(modalElement).toBeTruthy();
+
+            // Find action buttons - these should trigger closeModal when clicked
+            const actionButtons = modalElement?.querySelectorAll("button");
+
+            if (actionButtons && actionButtons.length > 0) {
+                // Click the first action button (likely "Add to Plan")
+                const firstButton = actionButtons[0];
+                if (firstButton) {
+                    (firstButton as HTMLElement).click();
+
+                    // Wait for async operations and closeModal timeout
+                    await new Promise((resolve) => setTimeout(resolve, 350));
+                }
+            }
+        });
+
+        it("should handle episode update functionality", async () => {
+            // Test episode update with error scenarios
+            const animeData = {
+                animeId: "episode-test",
+                animeTitle: "Episode Test Anime",
+                animeSlug: "episode-test-anime",
+            };
+            const mockStatus = {
+                isTracked: true,
+                isPlanned: false,
+                isHidden: false,
+                progress: {
+                    animeId: "episode-test",
+                    animeTitle: "Episode Test Anime",
+                    animeSlug: "episode-test-anime",
+                    episodeId: "ep-5",
+                    currentEpisode: 5,
+                    totalEpisodes: 12,
+                    lastWatched: new Date().toISOString(),
+                },
+            };
+
+            // Test successful episode update
+            mockAnimeService.updateEpisodeProgress.mockResolvedValueOnce({
+                success: true,
+                message: "Episode updated successfully",
+            });
+
+            // Clear any existing modals
+            const existingModals = document.querySelectorAll('[style*="position: fixed"][style*="z-index: 10000"]');
+            existingModals.forEach((modal) => modal.remove());
+
+            // Show modal
+            modal.showModal(animeData, mockStatus);
+
+            const modalElement = document.querySelector('[style*="position: fixed"][style*="z-index: 10000"]');
+            expect(modalElement).toBeTruthy();
+
+            // Find and click the "+" button to increment episode
+            const plusButton = Array.from(modalElement?.querySelectorAll("button") || []).find((btn) =>
+                btn.textContent?.includes("+"),
+            );
+
+            if (plusButton) {
+                (plusButton as HTMLElement).click();
+                await new Promise((resolve) => setTimeout(resolve, 100));
+            }
+
+            // Test episode update error case
+            mockAnimeService.updateEpisodeProgress.mockResolvedValueOnce({
+                success: false,
+                message: "Update failed",
+            });
+
+            // Try incrementing again to trigger error path
+            if (plusButton) {
+                (plusButton as HTMLElement).click();
+                await new Promise((resolve) => setTimeout(resolve, 100));
+            }
+
+            // Test exception in update episode
+            mockAnimeService.updateEpisodeProgress.mockRejectedValueOnce(new Error("Network error"));
+
+            // Try incrementing again to trigger exception path
+            if (plusButton) {
+                (plusButton as HTMLElement).click();
+                await new Promise((resolve) => setTimeout(resolve, 100));
+            }
         });
 
         it("should call getStatusText method", () => {
@@ -153,15 +305,15 @@ describe("Single Page Modal Integration", () => {
                 isTracked: true,
                 isPlanned: false,
                 isHidden: false,
-                progress: { 
+                progress: {
                     animeId: "test-anime",
                     animeTitle: "Test Anime",
                     animeSlug: "test-anime",
                     episodeId: "ep-5",
-                    currentEpisode: 5, 
-                    totalEpisodes: 12, 
-                    lastWatched: new Date().toISOString() 
-                }
+                    currentEpisode: 5,
+                    totalEpisodes: 12,
+                    lastWatched: new Date().toISOString(),
+                },
             };
             const statusText = modal.getStatusText(mockStatus);
             expect(statusText).toContain("watching");
@@ -174,15 +326,15 @@ describe("Single Page Modal Integration", () => {
                 isTracked: true,
                 isPlanned: false,
                 isHidden: false,
-                progress: { 
+                progress: {
                     animeId: "test-anime",
                     animeTitle: "Test Anime",
                     animeSlug: "test-anime",
                     episodeId: "ep-5",
-                    currentEpisode: 5, 
-                    totalEpisodes: 12, 
-                    lastWatched: new Date().toISOString() 
-                }
+                    currentEpisode: 5,
+                    totalEpisodes: 12,
+                    lastWatched: new Date().toISOString(),
+                },
             };
             const actions = modal.getModalActions(mockStatus);
             expect(actions).toBeDefined();
@@ -192,10 +344,10 @@ describe("Single Page Modal Integration", () => {
         it("should call initialize method", () => {
             // Mock isWatchPage to return true
             (window as any).location.href = "https://example.com/watch/test-anime";
-            
+
             // Mock DOM elements
             document.body.innerHTML = '<div id="test-content"></div>';
-            
+
             // Test actual initialize method from real modal
             expect(() => modal.initialize()).not.toThrow();
         });
@@ -203,7 +355,7 @@ describe("Single Page Modal Integration", () => {
         it("should call initialize method on non-watch page", () => {
             // Mock isWatchPage to return false
             (window as any).location.href = "https://example.com/some-other-page";
-            
+
             // Test that initialize returns early on non-watch pages
             expect(() => modal.initialize()).not.toThrow();
         });
@@ -213,25 +365,25 @@ describe("Single Page Modal Integration", () => {
             const hiddenStatus = {
                 isTracked: false,
                 isPlanned: false,
-                isHidden: true
+                isHidden: true,
             };
             const hiddenStatusText = modal.getStatusText(hiddenStatus);
             expect(hiddenStatusText).toContain("Hidden");
-            
+
             // Test with planned anime status
             const plannedStatus = {
                 isTracked: false,
                 isPlanned: true,
-                isHidden: false
+                isHidden: false,
             };
             const plannedStatusText = modal.getStatusText(plannedStatus);
             expect(plannedStatusText).toContain("Planned");
-            
+
             // Test with basic tracked status (no progress)
             const basicTrackedStatus = {
                 isTracked: true,
                 isPlanned: false,
-                isHidden: false
+                isHidden: false,
             };
             const basicStatusText = modal.getStatusText(basicTrackedStatus);
             expect(basicStatusText).toContain("watching");
@@ -242,17 +394,17 @@ describe("Single Page Modal Integration", () => {
             const hiddenStatus = {
                 isTracked: false,
                 isPlanned: false,
-                isHidden: true
+                isHidden: true,
             };
             const hiddenActions = modal.getModalActions(hiddenStatus);
             expect(Array.isArray(hiddenActions)).toBe(true);
             expect(hiddenActions.length).toBeGreaterThan(0);
-            
+
             // Test actions for planned anime
             const plannedStatus = {
                 isTracked: false,
                 isPlanned: true,
-                isHidden: false
+                isHidden: false,
             };
             const plannedActions = modal.getModalActions(plannedStatus);
             expect(Array.isArray(plannedActions)).toBe(true);
@@ -260,110 +412,114 @@ describe("Single Page Modal Integration", () => {
         });
 
         it("should test modal close functionality", () => {
-            const animeData = { 
-                animeId: "test-anime", 
+            const animeData = {
+                animeId: "test-anime",
                 animeTitle: "Test Anime",
-                animeSlug: "test-anime"
+                animeSlug: "test-anime",
             };
             const mockStatus = {
                 isTracked: true,
                 isPlanned: false,
                 isHidden: false,
-                progress: { 
+                progress: {
                     animeId: "test-anime",
                     animeTitle: "Test Anime",
                     animeSlug: "test-anime",
                     episodeId: "ep-5",
-                    currentEpisode: 5, 
-                    totalEpisodes: 12, 
-                    lastWatched: new Date().toISOString() 
-                }
+                    currentEpisode: 5,
+                    totalEpisodes: 12,
+                    lastWatched: new Date().toISOString(),
+                },
             };
-            
+
             // Clear any existing modals
             const existingModals = document.querySelectorAll('[style*="position: fixed"][style*="z-index: 10000"]');
-            existingModals.forEach(modal => modal.remove());
-            
+            existingModals.forEach((modal) => modal.remove());
+
             // Create modal
             modal.showModal(animeData, mockStatus);
-            
+
             // Check that modal was created
             const modalElements = document.querySelectorAll('[style*="position: fixed"][style*="z-index: 10000"]');
             expect(modalElements.length).toBeGreaterThan(0);
-            
+
             // Find and click close button to trigger closeModal
-            const closeButton = Array.from(document.querySelectorAll('button')).find(btn => 
-                btn.textContent === 'Close'
+            const closeButton = Array.from(document.querySelectorAll("button")).find(
+                (btn) => btn.textContent === "Close",
             );
             expect(closeButton).toBeTruthy();
-            
+
             // Simulate close button click
             if (closeButton) {
                 closeButton.click();
             }
-            
+
             // Wait for animation and then check modal is gone (after setTimeout)
             setTimeout(() => {
-                const remainingModals = document.querySelectorAll('[style*="position: fixed"][style*="z-index: 10000"]');
+                const remainingModals = document.querySelectorAll(
+                    '[style*="position: fixed"][style*="z-index: 10000"]',
+                );
                 expect(remainingModals.length).toBe(0);
             }, 400);
         });
 
         it("should test ESC key modal close", () => {
-            const animeData = { 
-                animeId: "test-anime", 
+            const animeData = {
+                animeId: "test-anime",
                 animeTitle: "Test Anime",
-                animeSlug: "test-anime"
+                animeSlug: "test-anime",
             };
             const mockStatus = {
                 isTracked: true,
                 isPlanned: false,
-                isHidden: false
+                isHidden: false,
             };
-            
+
             // Create modal
             modal.showModal(animeData, mockStatus);
-            
+
             // Simulate ESC key press
-            const escEvent = new KeyboardEvent('keydown', {
-                key: 'Escape',
-                code: 'Escape',
-                keyCode: 27
+            const escEvent = new KeyboardEvent("keydown", {
+                key: "Escape",
+                code: "Escape",
+                keyCode: 27,
             });
             document.dispatchEvent(escEvent);
-            
+
             // Modal should start closing process
         });
 
         it("should test modal background click close", () => {
-            const animeData = { 
-                animeId: "test-anime", 
+            const animeData = {
+                animeId: "test-anime",
                 animeTitle: "Test Anime",
-                animeSlug: "test-anime"
+                animeSlug: "test-anime",
             };
             const mockStatus = {
                 isTracked: true,
                 isPlanned: false,
-                isHidden: false
+                isHidden: false,
             };
-            
+
             // Create modal
             modal.showModal(animeData, mockStatus);
-            
+
             // Find the modal overlay
-            const modalOverlay = document.querySelector('[style*="position: fixed"][style*="z-index: 10000"]') as HTMLElement;
+            const modalOverlay = document.querySelector(
+                '[style*="position: fixed"][style*="z-index: 10000"]',
+            ) as HTMLElement;
             expect(modalOverlay).toBeTruthy();
-            
+
             // Simulate click on the overlay background (not content)
             if (modalOverlay) {
-                const clickEvent = new MouseEvent('click', {
+                const clickEvent = new MouseEvent("click", {
                     bubbles: true,
-                    cancelable: true
+                    cancelable: true,
                 });
                 // Set target to the overlay itself (not child elements)
-                Object.defineProperty(clickEvent, 'target', {
+                Object.defineProperty(clickEvent, "target", {
                     value: modalOverlay,
-                    enumerable: true
+                    enumerable: true,
                 });
                 modalOverlay.dispatchEvent(clickEvent);
             }
