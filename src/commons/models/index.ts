@@ -32,3 +32,6 @@ export interface AnimeData {
     animeTitle: string;
     animeSlug: string;
 }
+
+// Export architecture types
+export * from "./architecture";

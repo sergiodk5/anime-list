@@ -1,21 +1,20 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// Mock the utilities
-vi.mock("@/commons/utils", () => ({
-    HiddenAnimeUtil: {
-        add: vi.fn(),
-        remove: vi.fn(),
-        isHidden: vi.fn(),
-        clear: vi.fn(),
-    },
-    PlanToWatchUtil: {
-        add: vi.fn(),
-        remove: vi.fn(),
-        isPlanned: vi.fn(),
-    },
-}));
+// Create a mock instance first
+const mockAnimeService = {
+    getAnimeStatus: vi.fn(),
+    addToPlanToWatch: vi.fn(),
+    removeFromPlanToWatch: vi.fn(),
+    hideAnime: vi.fn(),
+    unhideAnime: vi.fn(),
+    clearAllHidden: vi.fn(),
+    getAllAnime: vi.fn(),
+} as const;
 
-import { HiddenAnimeUtil, PlanToWatchUtil } from "@/commons/utils";
+// Mock the AnimeService
+vi.mock("@/commons/services", () => ({
+    AnimeService: vi.fn().mockImplementation(() => mockAnimeService),
+}));
 
 describe("Content Script Integration", () => {
     beforeEach(() => {
@@ -27,46 +26,93 @@ describe("Content Script Integration", () => {
     describe("Complete User Workflow", () => {
         it("should handle complete anime management workflow", async () => {
             // Mock initial state - no anime hidden or planned
-            vi.mocked(HiddenAnimeUtil.isHidden).mockResolvedValue(false);
-            vi.mocked(PlanToWatchUtil.isPlanned).mockResolvedValue(false);
+            mockAnimeService.getAnimeStatus.mockResolvedValue({
+                isTracked: false,
+                isPlanned: false,
+                isHidden: false,
+            });
 
             // Step 1: Add anime to plan-to-watch list
-            vi.mocked(PlanToWatchUtil.add).mockResolvedValue(undefined);
+            mockAnimeService.addToPlanToWatch.mockResolvedValue({
+                success: true,
+                message: "Added to plan-to-watch list",
+                newStatus: {
+                    isTracked: false,
+                    isPlanned: true,
+                    isHidden: false,
+                },
+            });
 
             const animeData = {
                 animeId: "attack-on-titan-123",
                 animeTitle: "Attack on Titan",
                 animeSlug: "attack-on-titan-123",
-                addedAt: new Date().toISOString(),
             };
 
-            await PlanToWatchUtil.add(animeData);
-            expect(PlanToWatchUtil.add).toHaveBeenCalledWith(animeData);
+            await mockAnimeService.addToPlanToWatch(animeData);
+            expect(mockAnimeService.addToPlanToWatch).toHaveBeenCalledWith(animeData);
 
             // Step 2: Check if anime is now planned
-            vi.mocked(PlanToWatchUtil.isPlanned).mockResolvedValue(true);
-            const isPlanned = await PlanToWatchUtil.isPlanned(animeData.animeId);
-            expect(isPlanned).toBe(true);
+            mockAnimeService.getAnimeStatus.mockResolvedValue({
+                isTracked: false,
+                isPlanned: true,
+                isHidden: false,
+            });
+
+            const status = await mockAnimeService.getAnimeStatus(animeData.animeId);
+            expect(status.isPlanned).toBe(true);
 
             // Step 3: Remove anime from plan-to-watch list
-            vi.mocked(PlanToWatchUtil.remove).mockResolvedValue(undefined);
-            await PlanToWatchUtil.remove(animeData.animeId);
-            expect(PlanToWatchUtil.remove).toHaveBeenCalledWith(animeData.animeId);
+            mockAnimeService.removeFromPlanToWatch.mockResolvedValue({
+                success: true,
+                message: "Removed from plan-to-watch list",
+                newStatus: {
+                    isTracked: false,
+                    isPlanned: false,
+                    isHidden: false,
+                },
+            });
+
+            await mockAnimeService.removeFromPlanToWatch(animeData.animeId);
+            expect(mockAnimeService.removeFromPlanToWatch).toHaveBeenCalledWith(animeData.animeId);
 
             // Step 4: Hide anime
-            vi.mocked(HiddenAnimeUtil.add).mockResolvedValue(undefined);
-            await HiddenAnimeUtil.add(animeData.animeId);
-            expect(HiddenAnimeUtil.add).toHaveBeenCalledWith(animeData.animeId);
+            mockAnimeService.hideAnime.mockResolvedValue({
+                success: true,
+                message: "Anime hidden",
+                newStatus: {
+                    isTracked: false,
+                    isPlanned: false,
+                    isHidden: true,
+                },
+            });
+
+            await mockAnimeService.hideAnime(animeData.animeId);
+            expect(mockAnimeService.hideAnime).toHaveBeenCalledWith(animeData.animeId);
 
             // Step 5: Check if anime is now hidden
-            vi.mocked(HiddenAnimeUtil.isHidden).mockResolvedValue(true);
-            const isHidden = await HiddenAnimeUtil.isHidden(animeData.animeId);
-            expect(isHidden).toBe(true);
+            mockAnimeService.getAnimeStatus.mockResolvedValue({
+                isTracked: false,
+                isPlanned: false,
+                isHidden: true,
+            });
+
+            const hiddenStatus = await mockAnimeService.getAnimeStatus(animeData.animeId);
+            expect(hiddenStatus.isHidden).toBe(true);
 
             // Step 6: Clear all hidden anime
-            vi.mocked(HiddenAnimeUtil.clear).mockResolvedValue(undefined);
-            await HiddenAnimeUtil.clear();
-            expect(HiddenAnimeUtil.clear).toHaveBeenCalled();
+            mockAnimeService.clearAllHidden.mockResolvedValue({
+                success: true,
+                message: "Restored 1 hidden anime",
+                newStatus: {
+                    isTracked: false,
+                    isPlanned: false,
+                    isHidden: false,
+                },
+            });
+
+            await mockAnimeService.clearAllHidden();
+            expect(mockAnimeService.clearAllHidden).toHaveBeenCalled();
         });
 
         it("should handle multiple anime operations", async () => {
@@ -75,69 +121,96 @@ describe("Content Script Integration", () => {
                     animeId: "naruto-001",
                     animeTitle: "Naruto",
                     animeSlug: "naruto-001",
-                    addedAt: new Date().toISOString(),
                 },
                 {
                     animeId: "one-piece-002",
                     animeTitle: "One Piece",
                     animeSlug: "one-piece-002",
-                    addedAt: new Date().toISOString(),
                 },
                 {
                     animeId: "dragon-ball-003",
                     animeTitle: "Dragon Ball",
                     animeSlug: "dragon-ball-003",
-                    addedAt: new Date().toISOString(),
                 },
             ];
 
+            // Mock successful addition to plan-to-watch list
+            mockAnimeService.addToPlanToWatch.mockResolvedValue({
+                success: true,
+                message: "Added to plan-to-watch list",
+                newStatus: {
+                    isTracked: false,
+                    isPlanned: true,
+                    isHidden: false,
+                },
+            });
+
             // Add multiple anime to plan-to-watch list
             for (const anime of animeList) {
-                await PlanToWatchUtil.add(anime);
+                await mockAnimeService.addToPlanToWatch(anime);
             }
 
-            expect(PlanToWatchUtil.add).toHaveBeenCalledTimes(3);
+            expect(mockAnimeService.addToPlanToWatch).toHaveBeenCalledTimes(3);
+
+            // Mock successful hiding
+            mockAnimeService.hideAnime.mockResolvedValue({
+                success: true,
+                message: "Anime hidden",
+                newStatus: {
+                    isTracked: false,
+                    isPlanned: false,
+                    isHidden: true,
+                },
+            });
 
             // Hide some anime
-            await HiddenAnimeUtil.add(animeList[0].animeId);
-            await HiddenAnimeUtil.add(animeList[1].animeId);
+            await mockAnimeService.hideAnime(animeList[0].animeId);
+            await mockAnimeService.hideAnime(animeList[1].animeId);
 
-            expect(HiddenAnimeUtil.add).toHaveBeenCalledTimes(2);
-            expect(HiddenAnimeUtil.add).toHaveBeenCalledWith(animeList[0].animeId);
-            expect(HiddenAnimeUtil.add).toHaveBeenCalledWith(animeList[1].animeId);
+            expect(mockAnimeService.hideAnime).toHaveBeenCalledTimes(2);
+            expect(mockAnimeService.hideAnime).toHaveBeenCalledWith(animeList[0].animeId);
+            expect(mockAnimeService.hideAnime).toHaveBeenCalledWith(animeList[1].animeId);
+
+            // Mock successful clear all hidden
+            mockAnimeService.clearAllHidden.mockResolvedValue({
+                success: true,
+                message: "Restored 2 hidden anime",
+                newStatus: {
+                    isTracked: false,
+                    isPlanned: false,
+                    isHidden: false,
+                },
+            });
 
             // Clear all hidden
-            await HiddenAnimeUtil.clear();
-            expect(HiddenAnimeUtil.clear).toHaveBeenCalled();
+            await mockAnimeService.clearAllHidden();
+            expect(mockAnimeService.clearAllHidden).toHaveBeenCalled();
         });
     });
 
     describe("Error Recovery", () => {
         it("should handle storage failures gracefully", async () => {
             // Mock storage errors
-            vi.mocked(PlanToWatchUtil.add).mockRejectedValue(new Error("Storage quota exceeded"));
-            vi.mocked(HiddenAnimeUtil.add).mockRejectedValue(new Error("Storage unavailable"));
+            mockAnimeService.addToPlanToWatch.mockRejectedValue(new Error("Storage quota exceeded"));
+            mockAnimeService.hideAnime.mockRejectedValue(new Error("Storage unavailable"));
 
             const animeData = {
                 animeId: "test-anime-123",
                 animeTitle: "Test Anime",
                 animeSlug: "test-anime-123",
-                addedAt: new Date().toISOString(),
             };
 
             // Operations should fail but not crash
-            await expect(PlanToWatchUtil.add(animeData)).rejects.toThrow("Storage quota exceeded");
-            await expect(HiddenAnimeUtil.add(animeData.animeId)).rejects.toThrow("Storage unavailable");
+            await expect(mockAnimeService.addToPlanToWatch(animeData)).rejects.toThrow("Storage quota exceeded");
+            await expect(mockAnimeService.hideAnime(animeData.animeId)).rejects.toThrow("Storage unavailable");
         });
 
         it("should handle corrupted data gracefully", async () => {
             // Mock corrupted state
-            vi.mocked(PlanToWatchUtil.isPlanned).mockRejectedValue(new Error("Corrupted data"));
-            vi.mocked(HiddenAnimeUtil.isHidden).mockRejectedValue(new Error("Corrupted data"));
+            mockAnimeService.getAnimeStatus.mockRejectedValue(new Error("Corrupted data"));
 
             // Should handle errors gracefully
-            await expect(PlanToWatchUtil.isPlanned("test-123")).rejects.toThrow("Corrupted data");
-            await expect(HiddenAnimeUtil.isHidden("test-123")).rejects.toThrow("Corrupted data");
+            await expect(mockAnimeService.getAnimeStatus("test-123")).rejects.toThrow("Corrupted data");
         });
     });
 
@@ -147,11 +220,20 @@ describe("Content Script Integration", () => {
                 animeId: "",
                 animeTitle: "",
                 animeSlug: "",
-                addedAt: new Date().toISOString(),
             };
 
-            await PlanToWatchUtil.add(emptyData);
-            expect(PlanToWatchUtil.add).toHaveBeenCalledWith(emptyData);
+            mockAnimeService.addToPlanToWatch.mockResolvedValue({
+                success: true,
+                message: "Added to plan-to-watch list",
+                newStatus: {
+                    isTracked: false,
+                    isPlanned: true,
+                    isHidden: false,
+                },
+            });
+
+            await mockAnimeService.addToPlanToWatch(emptyData);
+            expect(mockAnimeService.addToPlanToWatch).toHaveBeenCalledWith(emptyData);
         });
 
         it("should handle special characters in anime data", async () => {
@@ -159,11 +241,20 @@ describe("Content Script Integration", () => {
                 animeId: "special-123",
                 animeTitle: "Anime with Special Characters: 日本語, émojis 🎌, symbols &<>",
                 animeSlug: "special-anime-123",
-                addedAt: new Date().toISOString(),
             };
 
-            await PlanToWatchUtil.add(specialData);
-            expect(PlanToWatchUtil.add).toHaveBeenCalledWith(specialData);
+            mockAnimeService.addToPlanToWatch.mockResolvedValue({
+                success: true,
+                message: "Added to plan-to-watch list",
+                newStatus: {
+                    isTracked: false,
+                    isPlanned: true,
+                    isHidden: false,
+                },
+            });
+
+            await mockAnimeService.addToPlanToWatch(specialData);
+            expect(mockAnimeService.addToPlanToWatch).toHaveBeenCalledWith(specialData);
         });
 
         it("should handle very long anime titles", async () => {
@@ -172,11 +263,20 @@ describe("Content Script Integration", () => {
                 animeId: "long-title-123",
                 animeTitle: longTitle,
                 animeSlug: "long-title-123",
-                addedAt: new Date().toISOString(),
             };
 
-            await PlanToWatchUtil.add(longData);
-            expect(PlanToWatchUtil.add).toHaveBeenCalledWith(longData);
+            mockAnimeService.addToPlanToWatch.mockResolvedValue({
+                success: true,
+                message: "Added to plan-to-watch list",
+                newStatus: {
+                    isTracked: false,
+                    isPlanned: true,
+                    isHidden: false,
+                },
+            });
+
+            await mockAnimeService.addToPlanToWatch(longData);
+            expect(mockAnimeService.addToPlanToWatch).toHaveBeenCalledWith(longData);
         });
     });
 
@@ -185,43 +285,79 @@ describe("Content Script Integration", () => {
             const operations = [];
             const animeIds = Array.from({ length: 100 }, (_, i) => `anime-${i}`);
 
+            mockAnimeService.addToPlanToWatch.mockResolvedValue({
+                success: true,
+                message: "Added to plan-to-watch list",
+                newStatus: {
+                    isTracked: false,
+                    isPlanned: true,
+                    isHidden: false,
+                },
+            });
+
             // Queue rapid operations
             for (const id of animeIds) {
                 operations.push(
-                    PlanToWatchUtil.add({
+                    mockAnimeService.addToPlanToWatch({
                         animeId: id,
                         animeTitle: `Anime ${id}`,
                         animeSlug: id,
-                        addedAt: new Date().toISOString(),
                     }),
                 );
             }
 
             // Execute all operations
             await Promise.all(operations);
-            expect(PlanToWatchUtil.add).toHaveBeenCalledTimes(100);
+            expect(mockAnimeService.addToPlanToWatch).toHaveBeenCalledTimes(100);
         });
 
         it("should handle concurrent read/write operations", async () => {
             const animeId = "concurrent-test-123";
 
+            // Mock the status calls
+            mockAnimeService.getAnimeStatus.mockResolvedValue({
+                isTracked: false,
+                isPlanned: false,
+                isHidden: false,
+            });
+
+            mockAnimeService.addToPlanToWatch.mockResolvedValue({
+                success: true,
+                message: "Added to plan-to-watch list",
+                newStatus: {
+                    isTracked: false,
+                    isPlanned: true,
+                    isHidden: false,
+                },
+            });
+
+            mockAnimeService.hideAnime.mockResolvedValue({
+                success: true,
+                message: "Anime hidden",
+                newStatus: {
+                    isTracked: false,
+                    isPlanned: false,
+                    isHidden: true,
+                },
+            });
+
             // Simulate concurrent operations
             const operations = [
-                PlanToWatchUtil.isPlanned(animeId),
-                HiddenAnimeUtil.isHidden(animeId),
-                PlanToWatchUtil.add({
+                mockAnimeService.getAnimeStatus(animeId),
+                mockAnimeService.getAnimeStatus(animeId),
+                mockAnimeService.addToPlanToWatch({
                     animeId,
                     animeTitle: "Concurrent Test",
                     animeSlug: animeId,
-                    addedAt: new Date().toISOString(),
                 }),
-                HiddenAnimeUtil.add(animeId),
+                mockAnimeService.hideAnime(animeId),
             ];
 
             // Should handle concurrent operations
             await Promise.all(operations);
-            expect(PlanToWatchUtil.isPlanned).toHaveBeenCalledWith(animeId);
-            expect(HiddenAnimeUtil.isHidden).toHaveBeenCalledWith(animeId);
+            expect(mockAnimeService.getAnimeStatus).toHaveBeenCalledWith(animeId);
+            expect(mockAnimeService.addToPlanToWatch).toHaveBeenCalled();
+            expect(mockAnimeService.hideAnime).toHaveBeenCalledWith(animeId);
         });
     });
 
@@ -231,38 +367,53 @@ describe("Content Script Integration", () => {
                 animeId: "integrity-test-123",
                 animeTitle: "Integrity Test Anime",
                 animeSlug: "integrity-test-123",
-                addedAt: new Date().toISOString(),
             };
 
+            mockAnimeService.addToPlanToWatch.mockResolvedValue({
+                success: true,
+                message: "Added to plan-to-watch list",
+                newStatus: {
+                    isTracked: false,
+                    isPlanned: true,
+                    isHidden: false,
+                },
+            });
+
             // Add to plan-to-watch list
-            await PlanToWatchUtil.add(animeData);
+            await mockAnimeService.addToPlanToWatch(animeData);
 
             // Verify the exact data was stored
-            expect(PlanToWatchUtil.add).toHaveBeenCalledWith(
+            expect(mockAnimeService.addToPlanToWatch).toHaveBeenCalledWith(
                 expect.objectContaining({
                     animeId: animeData.animeId,
                     animeTitle: animeData.animeTitle,
                     animeSlug: animeData.animeSlug,
-                    addedAt: expect.any(String),
                 }),
             );
         });
 
-        it("should handle timestamp generation", async () => {
+        it("should handle service responses correctly", async () => {
             const animeData = {
-                animeId: "timestamp-test-123",
-                animeTitle: "Timestamp Test",
-                animeSlug: "timestamp-test-123",
-                addedAt: new Date().toISOString(),
+                animeId: "response-test-123",
+                animeTitle: "Response Test",
+                animeSlug: "response-test-123",
             };
 
-            await PlanToWatchUtil.add(animeData);
+            mockAnimeService.addToPlanToWatch.mockResolvedValue({
+                success: true,
+                message: "Added to plan-to-watch list",
+                newStatus: {
+                    isTracked: false,
+                    isPlanned: true,
+                    isHidden: false,
+                },
+            });
 
-            expect(PlanToWatchUtil.add).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    addedAt: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/),
-                }),
-            );
+            const result = await mockAnimeService.addToPlanToWatch(animeData);
+
+            expect(result.success).toBe(true);
+            expect(result.message).toBe("Added to plan-to-watch list");
+            expect(result.newStatus?.isPlanned).toBe(true);
         });
     });
 
@@ -271,27 +422,56 @@ describe("Content Script Integration", () => {
             const animeId = "state-test-123";
 
             // Initial state: not planned, not hidden
-            vi.mocked(PlanToWatchUtil.isPlanned).mockResolvedValue(false);
-            vi.mocked(HiddenAnimeUtil.isHidden).mockResolvedValue(false);
+            mockAnimeService.getAnimeStatus.mockResolvedValue({
+                isTracked: false,
+                isPlanned: false,
+                isHidden: false,
+            });
 
-            expect(await PlanToWatchUtil.isPlanned(animeId)).toBe(false);
-            expect(await HiddenAnimeUtil.isHidden(animeId)).toBe(false);
+            expect(await mockAnimeService.getAnimeStatus(animeId)).toEqual({
+                isTracked: false,
+                isPlanned: false,
+                isHidden: false,
+            });
 
             // State 1: planned, not hidden
-            vi.mocked(PlanToWatchUtil.isPlanned).mockResolvedValue(true);
-            expect(await PlanToWatchUtil.isPlanned(animeId)).toBe(true);
-            expect(await HiddenAnimeUtil.isHidden(animeId)).toBe(false);
+            mockAnimeService.getAnimeStatus.mockResolvedValue({
+                isTracked: false,
+                isPlanned: true,
+                isHidden: false,
+            });
+
+            expect(await mockAnimeService.getAnimeStatus(animeId)).toEqual({
+                isTracked: false,
+                isPlanned: true,
+                isHidden: false,
+            });
 
             // State 2: not planned, hidden
-            vi.mocked(PlanToWatchUtil.isPlanned).mockResolvedValue(false);
-            vi.mocked(HiddenAnimeUtil.isHidden).mockResolvedValue(true);
+            mockAnimeService.getAnimeStatus.mockResolvedValue({
+                isTracked: false,
+                isPlanned: false,
+                isHidden: true,
+            });
 
-            expect(await PlanToWatchUtil.isPlanned(animeId)).toBe(false);
-            expect(await HiddenAnimeUtil.isHidden(animeId)).toBe(true);
+            expect(await mockAnimeService.getAnimeStatus(animeId)).toEqual({
+                isTracked: false,
+                isPlanned: false,
+                isHidden: true,
+            });
 
             // State 3: back to initial state
-            vi.mocked(HiddenAnimeUtil.isHidden).mockResolvedValue(false);
-            expect(await HiddenAnimeUtil.isHidden(animeId)).toBe(false);
+            mockAnimeService.getAnimeStatus.mockResolvedValue({
+                isTracked: false,
+                isPlanned: false,
+                isHidden: false,
+            });
+
+            expect(await mockAnimeService.getAnimeStatus(animeId)).toEqual({
+                isTracked: false,
+                isPlanned: false,
+                isHidden: false,
+            });
         });
     });
 });

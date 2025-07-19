@@ -1,24 +1,24 @@
 import { JSDOM } from "jsdom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// Mock the utilities before importing the main script
-vi.mock("@/commons/utils", () => ({
-    AnimeUtil: {
-        getAnimeStatus: vi.fn(),
-        addToPlan: vi.fn(),
-        startTracking: vi.fn(),
-        stopTracking: vi.fn(),
-        hide: vi.fn(),
-        unhide: vi.fn(),
-        clearHidden: vi.fn(),
-        toggleHidden: vi.fn(),
-        updateEpisode: vi.fn(),
-        getAllAnimeByStatus: vi.fn(),
-        searchAnime: vi.fn(),
-        getStatistics: vi.fn(),
-        clearAll: vi.fn(),
-        exportData: vi.fn(),
-    },
+// Mock the AnimeService before importing the main script
+const mockAnimeService = {
+    getAnimeStatus: vi.fn(),
+    addToPlanToWatch: vi.fn(),
+    removeFromPlanToWatch: vi.fn(),
+    startWatching: vi.fn(),
+    updateEpisodeProgress: vi.fn(),
+    stopWatching: vi.fn(),
+    hideAnime: vi.fn(),
+    unhideAnime: vi.fn(),
+    clearAllHidden: vi.fn(),
+    getAnimeDetails: vi.fn(),
+    getAllAnime: vi.fn(),
+    clearAnimeData: vi.fn(),
+};
+
+vi.mock("@/commons/services", () => ({
+    AnimeService: vi.fn().mockImplementation(() => mockAnimeService),
 }));
 
 describe("Content Script", () => {
@@ -95,10 +95,8 @@ describe("Content Script", () => {
 
     describe("Initialization", () => {
         it("should initialize content script", async () => {
-            const { AnimeUtil } = await import("@/commons/utils");
-
-            // Mock storage utilities
-            vi.mocked(AnimeUtil.getAnimeStatus).mockResolvedValue({
+            // Setup mocks
+            mockAnimeService.getAnimeStatus.mockResolvedValue({
                 isTracked: false,
                 isPlanned: false,
                 isHidden: false,
@@ -127,10 +125,8 @@ describe("Content Script", () => {
 
     describe("Controls Creation", () => {
         it("should create and add controls to anime items", async () => {
-            const { AnimeUtil } = await import("@/commons/utils");
-
-            // Mock storage utilities
-            vi.mocked(AnimeUtil.getAnimeStatus).mockResolvedValue({
+            // Setup mocks
+            mockAnimeService.getAnimeStatus.mockResolvedValue({
                 isTracked: false,
                 isPlanned: false,
                 isHidden: false,
@@ -148,9 +144,8 @@ describe("Content Script", () => {
         });
 
         it("should create plan buttons", async () => {
-            const { AnimeUtil } = await import("@/commons/utils");
-
-            vi.mocked(AnimeUtil.getAnimeStatus).mockResolvedValue({
+            // Setup mocks
+            mockAnimeService.getAnimeStatus.mockResolvedValue({
                 isTracked: false,
                 isPlanned: false,
                 isHidden: false,
@@ -168,9 +163,8 @@ describe("Content Script", () => {
         });
 
         it("should create hide buttons", async () => {
-            const { AnimeUtil } = await import("@/commons/utils");
-
-            vi.mocked(AnimeUtil.getAnimeStatus).mockResolvedValue({
+            // Setup mocks
+            mockAnimeService.getAnimeStatus.mockResolvedValue({
                 isTracked: false,
                 isPlanned: false,
                 isHidden: false,
@@ -188,9 +182,8 @@ describe("Content Script", () => {
         });
 
         it("should create clear hidden button", async () => {
-            const { AnimeUtil } = await import("@/commons/utils");
-
-            vi.mocked(AnimeUtil.getAnimeStatus).mockResolvedValue({
+            // Setup mocks
+            mockAnimeService.getAnimeStatus.mockResolvedValue({
                 isTracked: false,
                 isPlanned: false,
                 isHidden: false,
@@ -207,14 +200,13 @@ describe("Content Script", () => {
 
     describe("Button Functionality", () => {
         it("should handle plan button click", async () => {
-            const { AnimeUtil } = await import("@/commons/utils");
-
-            vi.mocked(AnimeUtil.getAnimeStatus).mockResolvedValue({
+            // Setup mocks
+            mockAnimeService.getAnimeStatus.mockResolvedValue({
                 isTracked: false,
                 isPlanned: false,
                 isHidden: false,
             });
-            vi.mocked(AnimeUtil.addToPlan).mockResolvedValue(undefined);
+            mockAnimeService.addToPlanToWatch.mockResolvedValue(undefined);
 
             const { initializeControls } = await import("@/content/index");
             await initializeControls();
@@ -228,7 +220,7 @@ describe("Content Script", () => {
             // Wait for async operation
             await new Promise((resolve) => setTimeout(resolve, 0));
 
-            expect(AnimeUtil.addToPlan).toHaveBeenCalledWith(
+            expect(mockAnimeService.addToPlanToWatch).toHaveBeenCalledWith(
                 expect.objectContaining({
                     animeId: expect.any(String),
                     animeTitle: expect.any(String),
@@ -238,14 +230,13 @@ describe("Content Script", () => {
         });
 
         it("should handle hide button click", async () => {
-            const { AnimeUtil } = await import("@/commons/utils");
-
-            vi.mocked(AnimeUtil.getAnimeStatus).mockResolvedValue({
+            // Setup mocks
+            mockAnimeService.getAnimeStatus.mockResolvedValue({
                 isTracked: false,
                 isPlanned: false,
                 isHidden: false,
             });
-            vi.mocked(AnimeUtil.hide).mockResolvedValue(undefined);
+            mockAnimeService.hideAnime.mockResolvedValue(undefined);
 
             const { initializeControls } = await import("@/content/index");
             await initializeControls();
@@ -259,18 +250,17 @@ describe("Content Script", () => {
             // Wait for async operation
             await new Promise((resolve) => setTimeout(resolve, 0));
 
-            expect(AnimeUtil.hide).toHaveBeenCalledWith(expect.any(String));
+            expect(mockAnimeService.hideAnime).toHaveBeenCalledWith(expect.any(String));
         });
 
         it("should handle clear hidden button click", async () => {
-            const { AnimeUtil } = await import("@/commons/utils");
-
-            vi.mocked(AnimeUtil.getAnimeStatus).mockResolvedValue({
+            // Setup mocks
+            mockAnimeService.getAnimeStatus.mockResolvedValue({
                 isTracked: false,
                 isPlanned: false,
                 isHidden: false,
             });
-            vi.mocked(AnimeUtil.clearHidden).mockResolvedValue(undefined);
+            mockAnimeService.clearAllHidden.mockResolvedValue(undefined);
 
             const { initializeControls } = await import("@/content/index");
             await initializeControls();
@@ -286,7 +276,7 @@ describe("Content Script", () => {
             // Wait for async operation
             await new Promise((resolve) => setTimeout(resolve, 0));
 
-            expect(AnimeUtil.clearHidden).toHaveBeenCalled();
+            expect(mockAnimeService.clearAllHidden).toHaveBeenCalled();
         });
     });
 
@@ -309,10 +299,8 @@ describe("Content Script", () => {
 
     describe("Hidden Anime Handling", () => {
         it("should hide anime items that are marked as hidden", async () => {
-            const { AnimeUtil } = await import("@/commons/utils");
-
             // Mock first anime as hidden, second as not hidden
-            vi.mocked(AnimeUtil.getAnimeStatus)
+            mockAnimeService.getAnimeStatus
                 .mockResolvedValueOnce({
                     isTracked: false,
                     isPlanned: false,
@@ -344,9 +332,7 @@ describe("Content Script", () => {
 
     describe("Error Handling", () => {
         it("should handle storage errors gracefully", async () => {
-            const { AnimeUtil } = await import("@/commons/utils");
-
-            vi.mocked(AnimeUtil.getAnimeStatus).mockRejectedValue(new Error("Storage error"));
+            mockAnimeService.getAnimeStatus.mockRejectedValue(new Error("Storage error"));
 
             const { initializeControls } = await import("@/content/index");
 
@@ -408,8 +394,7 @@ describe("Content Script", () => {
             });
 
             // Mock all storage operations to avoid localStorage issues
-            const { AnimeUtil } = await import("@/commons/utils");
-            vi.mocked(AnimeUtil.getAnimeStatus).mockResolvedValue({
+            mockAnimeService.getAnimeStatus.mockResolvedValue({
                 isTracked: false,
                 isPlanned: false,
                 isHidden: false,
@@ -508,8 +493,7 @@ describe("Content Script", () => {
 
         it("should cover isPlanned=true branch in addControlsToItem", async () => {
             // Mock storage to return that anime is already planned
-            const { AnimeUtil } = await import("@/commons/utils");
-            vi.mocked(AnimeUtil.getAnimeStatus).mockResolvedValue({
+            mockAnimeService.getAnimeStatus.mockResolvedValue({
                 isTracked: false,
                 isPlanned: true, // This is the key change
                 isHidden: false,
@@ -524,12 +508,14 @@ describe("Content Script", () => {
             const { initializeControls } = await import("@/content/index");
             await initializeControls();
 
-            // Check that at least one plan button has the "active" class (lines 264-266)
+            // Check that planned anime shows Start Watching + Remove Plan buttons (new business rules)
+            const startWatchingButtons = document.querySelectorAll('[data-testid="anime-start-watching-button"]');
+            const removePlanButtons = document.querySelectorAll('[data-testid="anime-remove-plan-button"]');
             const planButtons = document.querySelectorAll('[data-testid="anime-plan-button"]');
-            const hasActiveButton = Array.from(planButtons).some((button) => button.classList.contains("active"));
 
-            expect(hasActiveButton).toBe(true);
-            expect(planButtons.length).toBeGreaterThan(0);
+            expect(startWatchingButtons.length).toBeGreaterThan(0);
+            expect(removePlanButtons.length).toBeGreaterThan(0);
+            expect(planButtons.length).toBe(0); // Planned anime should not have Plan buttons
         });
     });
 
@@ -613,8 +599,7 @@ describe("Content Script", () => {
             const container = document.querySelector(".film_list-wrap");
             container?.appendChild(itemWithoutPoster);
 
-            const { AnimeUtil } = await import("@/commons/utils");
-            vi.mocked(AnimeUtil.getAnimeStatus).mockResolvedValue({
+            mockAnimeService.getAnimeStatus.mockResolvedValue({
                 isTracked: false,
                 isPlanned: false,
                 isHidden: false,
@@ -778,16 +763,14 @@ describe("Content Script", () => {
         });
 
         it("should handle error in clear hidden button functionality", async () => {
-            const { AnimeUtil } = await import("@/commons/utils");
-
-            vi.mocked(AnimeUtil.getAnimeStatus).mockResolvedValue({
+            mockAnimeService.getAnimeStatus.mockResolvedValue({
                 isTracked: false,
                 isPlanned: false,
                 isHidden: false,
             });
 
-            // Mock clearHidden to throw an error (lines 202-204)
-            vi.mocked(AnimeUtil.clearHidden).mockRejectedValue(new Error("Storage error"));
+            // Mock clearAllHidden to throw an error (lines 202-204)
+            mockAnimeService.clearAllHidden.mockRejectedValue(new Error("Storage error"));
 
             const { initializeControls } = await import("@/content/index");
             await initializeControls();
@@ -844,16 +827,14 @@ describe("Content Script", () => {
         });
 
         it("should handle error in plan button functionality", async () => {
-            const { AnimeUtil } = await import("@/commons/utils");
-
-            vi.mocked(AnimeUtil.getAnimeStatus).mockResolvedValue({
+            mockAnimeService.getAnimeStatus.mockResolvedValue({
                 isTracked: false,
                 isPlanned: false,
                 isHidden: false,
             });
 
-            // Mock AnimeUtil.addToPlan to throw an error (lines 155-157)
-            vi.mocked(AnimeUtil.addToPlan).mockRejectedValue(new Error("Storage error"));
+            // Mock addToPlanToWatch to throw an error (lines 155-157)
+            mockAnimeService.addToPlanToWatch.mockRejectedValue(new Error("Storage error"));
 
             const { initializeControls } = await import("@/content/index");
             await initializeControls();
@@ -876,16 +857,14 @@ describe("Content Script", () => {
         });
 
         it("should handle error in hide button functionality", async () => {
-            const { AnimeUtil } = await import("@/commons/utils");
-
-            vi.mocked(AnimeUtil.getAnimeStatus).mockResolvedValue({
+            mockAnimeService.getAnimeStatus.mockResolvedValue({
                 isTracked: false,
                 isPlanned: false,
                 isHidden: false,
             });
 
-            // Mock AnimeUtil.hide to throw an error (lines 180-182)
-            vi.mocked(AnimeUtil.hide).mockRejectedValue(new Error("Storage error"));
+            // Mock hideAnime to throw an error (lines 180-182)
+            mockAnimeService.hideAnime.mockRejectedValue(new Error("Storage error"));
 
             const { initializeControls } = await import("@/content/index");
             await initializeControls();
@@ -908,43 +887,49 @@ describe("Content Script", () => {
         });
 
         it("should handle removing anime from plan to watch list", async () => {
-            const { AnimeUtil } = await import("@/commons/utils");
-
-            vi.mocked(AnimeUtil.getAnimeStatus).mockResolvedValue({
+            mockAnimeService.getAnimeStatus.mockResolvedValue({
                 isTracked: false,
                 isPlanned: true, // Already planned
                 isHidden: false,
             });
-            vi.mocked(AnimeUtil.stopTracking).mockResolvedValue(undefined);
+            mockAnimeService.removeFromPlanToWatch.mockResolvedValue(undefined);
 
             const { initializeControls } = await import("@/content/index");
             await initializeControls();
 
-            const planButton = document.querySelector('[data-testid="anime-plan-button"]') as HTMLButtonElement;
-            expect(planButton).toBeTruthy();
+            // Planned anime should have Remove Plan button, not Plan button
+            const removePlanButton = document.querySelector(
+                '[data-testid="anime-remove-plan-button"]',
+            ) as HTMLButtonElement;
+            const planButton = document.querySelector('[data-testid="anime-plan-button"]');
+            expect(removePlanButton).toBeTruthy();
+            expect(planButton).toBeNull(); // Should not have Plan button
 
-            // Button should initially have "active" class
-            expect(planButton.classList.contains("active")).toBe(true);
-
-            // Simulate click to remove from plan to watch list (covering line 142)
-            planButton.click();
+            // Simulate click to remove from plan to watch list
+            removePlanButton.click();
 
             // Wait for async operation
             await new Promise((resolve) => setTimeout(resolve, 0));
 
-            // Should have called stopTracking (covering line 142)
-            expect(AnimeUtil.stopTracking).toHaveBeenCalled();
+            // Should have called removeFromPlanToWatch (covering line 142)
+            expect(mockAnimeService.removeFromPlanToWatch).toHaveBeenCalled();
         });
 
         it("should handle clear hidden button with hidden items", async () => {
-            const { AnimeUtil } = await import("@/commons/utils");
-
-            vi.mocked(AnimeUtil.getAnimeStatus).mockResolvedValue({
+            mockAnimeService.getAnimeStatus.mockResolvedValue({
                 isTracked: false,
                 isPlanned: false,
                 isHidden: false,
             });
-            vi.mocked(AnimeUtil.clearHidden).mockResolvedValue(undefined);
+            mockAnimeService.clearAllHidden.mockResolvedValue({
+                success: true,
+                message: "Restored 2 hidden anime",
+                newStatus: {
+                    isTracked: false,
+                    isPlanned: false,
+                    isHidden: false,
+                },
+            });
 
             const { initializeControls } = await import("@/content/index");
             await initializeControls();
@@ -971,8 +956,8 @@ describe("Content Script", () => {
             // Wait for async operation
             await new Promise((resolve) => setTimeout(resolve, 0));
 
-            // Verify that AnimeUtil.clearHidden was called
-            expect(AnimeUtil.clearHidden).toHaveBeenCalled();
+            // Verify that AnimeService.clearAllHidden was called
+            expect(mockAnimeService.clearAllHidden).toHaveBeenCalled();
 
             // Verify that hidden items were shown (covering lines 192, 196-197)
             expect(hiddenItem1.classList.contains("anime-hidden")).toBe(false);
@@ -982,14 +967,20 @@ describe("Content Script", () => {
         });
 
         it("should handle showFeedback timeout removal", async () => {
-            const { AnimeUtil } = await import("@/commons/utils");
-
-            vi.mocked(AnimeUtil.getAnimeStatus).mockResolvedValue({
+            mockAnimeService.getAnimeStatus.mockResolvedValue({
                 isTracked: false,
                 isPlanned: false,
                 isHidden: false,
             });
-            vi.mocked(AnimeUtil.clearHidden).mockResolvedValue(undefined);
+            mockAnimeService.clearAllHidden.mockResolvedValue({
+                success: true,
+                message: "Restored 2 hidden anime",
+                newStatus: {
+                    isTracked: false,
+                    isPlanned: false,
+                    isHidden: false,
+                },
+            });
 
             const { initializeControls } = await import("@/content/index");
             await initializeControls();
@@ -999,26 +990,22 @@ describe("Content Script", () => {
             ) as HTMLButtonElement;
             expect(clearButton).toBeTruthy();
 
-            // Simulate click to trigger showFeedback
+            // Simulate click to trigger toast notification
             clearButton.click();
 
-            // Wait for async operation and feedback to be added
+            // Wait for async operation and toast to be added
             await new Promise((resolve) => setTimeout(resolve, 10));
 
-            // Find the feedback element that was added
-            const feedbackElement = document.querySelector(".anime-list-feedback");
-            expect(feedbackElement).toBeTruthy();
+            // Find the toast element that was added (new notification system)
+            const toastElement = document.querySelector('[data-testid="anime-toast"]');
+            expect(toastElement).toBeTruthy();
 
-            // Mock the remove function to verify it's called
-            const removeSpy = vi.spyOn(feedbackElement!, "remove").mockImplementation(() => {});
+            // Wait for the toast to auto-dismiss (5 seconds)
+            await new Promise((resolve) => setTimeout(resolve, 5100));
 
-            // Wait for the timeout to complete (2 seconds)
-            await new Promise((resolve) => setTimeout(resolve, 2100));
-
-            // Verify the feedback was removed (covering line 227)
-            expect(removeSpy).toHaveBeenCalled();
-
-            removeSpy.mockRestore();
+            // Verify the toast was removed
+            const toastAfterTimeout = document.querySelector('[data-testid="anime-toast"]');
+            expect(toastAfterTimeout).toBeNull();
         });
 
         it("should handle extractAnimeData with null href attribute", async () => {

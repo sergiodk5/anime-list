@@ -1,21 +1,19 @@
-# Anime## 🚦 Current Status
-
-**✅ Completed:**t Development Roadmap
+# Anime List Development Roadmap
 
 > **Priority-based roadmap for AnimeList Chrome Extension**  
 > Updated: July 19, 2025
 
 ---
 
-## � Current Status
+## 🚦 Current Status
 
 **✅ Completed:**
 
 - Content script integration (Watch/Hide buttons on anime websites)
 - Chrome extension popup with dashboard navigation
-- Complete backend storage system with unified AnimeUtil architecture
+- Complete backend service-repository architecture
 - Beautiful glass-morphism UI design system
-- 100% test coverage for all utilities
+- 100% test coverage for all services and repositories
 
 **🎯 Next Phase:** Connect the backend storage system to the frontend UI
 
@@ -28,12 +26,12 @@
 **Issue**: UI shows static data instead of real anime data from storage
 
 - [ ] **Replace Static Data with Dynamic Content**
-    - [ ] Update HomeView statistics to use real data from AnimeUtil
+    - [ ] Update HomeView statistics to use real data from AnimeService
     - [ ] Connect AllWatchLists to actual anime collections
-    - [ ] Replace hardcoded counts with storage utility calls
+    - [ ] Replace hardcoded counts with service layer calls
 
 - [ ] **Create Vue Composables**
-    - [ ] `composables/useAnimeStorage.ts` - wrapper for AnimeUtil
+    - [ ] `composables/useAnimeStorage.ts` - wrapper for AnimeService
     - [ ] `composables/useEpisodeProgress.ts` - reactive episode tracking
     - [ ] `composables/usePlanToWatch.ts` - plan management
     - [ ] `composables/useHiddenAnime.ts` - hidden anime management

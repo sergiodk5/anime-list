@@ -189,6 +189,28 @@
             color: rgb(191, 219, 254);
         }
 
+        /* State section styling */
+        .state-section {
+            margin: 40px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .state-title {
+            color: #ffd700;
+            font-size: 1.5em;
+            margin: 0 0 10px 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .state-description {
+            color: rgba(255, 255, 255, 0.9);
+            margin: 0 0 20px 0;
+            font-size: 1.1em;
+        }
+
         /* Responsive design */
         @media (max-width: 768px) {
             .film_list-wrap {
@@ -211,7 +233,7 @@
 <body>
     <div class="header">
         <h1>🎌 AnimeList Content Script Demo</h1>
-        <p>Interactive demonstration of the watchlist and hidden anime controls</p>
+        <p>Complete Business Rule System with State Management & Toast Notifications</p>
     </div>
 
     <div class="demo-container">
@@ -220,145 +242,139 @@
         </div>
 
         <div class="instructions">
-            <h2>🎯 How to Use</h2>
+            <h2>📋 Business Rules & State Management</h2>
+            <p>This demo shows the complete anime state management system with business rule enforcement:</p>
             <ul>
-                <li><span class="icon">📝</span> <strong>Watch Button:</strong> Click to add/remove anime from your
-                    watchlist</li>
-                <li><span class="icon">👁️</span> <strong>Hide Button:</strong> Click to hide anime from the listing
-                </li>
-                <li><span class="icon">🔄</span> <strong>Clear Hidden:</strong> Click to restore all hidden anime</li>
-                <li><span class="icon">💬</span> <strong>Feedback:</strong> Success/error messages appear near buttons
+                <li><span class="icon">🎯</span> <strong>Clean State:</strong> Plan + Hide buttons (anime not in any
+                    list)</li>
+                <li><span class="icon">📋</span> <strong>Planned State:</strong> Start Watching + Remove Plan buttons
+                    (NO hide allowed)</li>
+                <li><span class="icon">▶️</span> <strong>Watching State:</strong> Episode controls + Stop Watching (NO
+                    plan/hide allowed)</li>
+                <li><span class="icon">�️</span> <strong>Hidden State:</strong> No buttons shown, anime hidden from
+                    display</li>
+                <li><span class="icon">💬</span> <strong>Toast Notifications:</strong> Success/error messages in
+                    top-right corner</li>
+                <li><span class="icon">🚫</span> <strong>Business Rules:</strong> Invalid state transitions are blocked
                 </li>
             </ul>
         </div>
 
-        <div class="film_list-wrap">
-            <div class="flw-item">
-                <div class="film-poster">
-                    <img src="https://via.placeholder.com/300x200/4a5568/ffffff?text=Attack+on+Titan"
-                        alt="Attack on Titan">
-                    <a href="/watch/attack-on-titan-123" class="film-poster-ahref">
-                        <i class="fas fa-play"></i>
-                    </a>
-                </div>
-                <div class="film-detail">
-                    <h3 class="film-name">
-                        <a href="/attack-on-titan-123" title="Attack on Titan" class="dynamic-name">
-                            Attack on Titan
+        <!-- Clean State Demo -->
+        <div class="state-section">
+            <h2 class="state-title">🎯 Clean State (Not in any list)</h2>
+            <p class="state-description">These anime can be added to Plan or Hidden list</p>
+            <div class="film_list-wrap">
+                <div class="flw-item">
+                    <div class="film-poster">
+                        <img src="https://via.placeholder.com/300x200/4a5568/ffffff?text=Attack+on+Titan"
+                            alt="Attack on Titan">
+                        <a href="/watch/attack-on-titan-123" class="film-poster-ahref">
+                            <i class="fas fa-play"></i>
                         </a>
-                    </h3>
-                    <div class="fd-infor">
-                        <span class="fdi-item">TV</span>
-                        <span class="fdi-item">24m</span>
-                        <span class="fdi-item">Action</span>
+                    </div>
+                    <div class="film-detail">
+                        <h3 class="film-name">
+                            <a href="/attack-on-titan-123" title="Attack on Titan" class="dynamic-name">
+                                Attack on Titan
+                            </a>
+                        </h3>
+                        <div class="fd-infor">
+                            <span class="fdi-item">TV</span>
+                            <span class="fdi-item">24m</span>
+                            <span class="fdi-item">Action</span>
+                        </div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <div class="flw-item">
-                <div class="film-poster">
-                    <img src="https://via.placeholder.com/300x200/2d3748/ffffff?text=One+Piece" alt="One Piece">
-                    <a href="/watch/one-piece-456" class="film-poster-ahref">
-                        <i class="fas fa-play"></i>
-                    </a>
-                </div>
-                <div class="film-detail">
-                    <h3 class="film-name">
-                        <a href="/one-piece-456" title="One Piece" class="dynamic-name">
-                            One Piece
+        <!-- Planned State Demo -->
+        <div class="state-section">
+            <h2 class="state-title">📋 Planned State (In Plan to Watch list)</h2>
+            <p class="state-description">These anime show Start Watching + Remove Plan buttons. Hide button is blocked!
+            </p>
+            <div class="film_list-wrap">
+                <div class="flw-item">
+                    <div class="film-poster">
+                        <img src="https://via.placeholder.com/300x200/2d3748/ffffff?text=One+Piece" alt="One Piece">
+                        <a href="/watch/one-piece-456" class="film-poster-ahref">
+                            <i class="fas fa-play"></i>
                         </a>
-                    </h3>
-                    <div class="fd-infor">
-                        <span class="fdi-item">TV</span>
-                        <span class="fdi-item">24m</span>
-                        <span class="fdi-item">Adventure</span>
+                    </div>
+                    <div class="film-detail">
+                        <h3 class="film-name">
+                            <a href="/one-piece-456" title="One Piece" class="dynamic-name">
+                                One Piece
+                            </a>
+                        </h3>
+                        <div class="fd-infor">
+                            <span class="fdi-item">TV</span>
+                            <span class="fdi-item">24m</span>
+                            <span class="fdi-item">Adventure</span>
+                        </div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <div class="flw-item">
-                <div class="film-poster">
-                    <img src="https://via.placeholder.com/300x200/1a202c/ffffff?text=Naruto" alt="Naruto">
-                    <a href="/watch/naruto-789" class="film-poster-ahref">
-                        <i class="fas fa-play"></i>
-                    </a>
-                </div>
-                <div class="film-detail">
-                    <h3 class="film-name">
-                        <a href="/naruto-789" title="Naruto" class="dynamic-name">
-                            Naruto
+        <!-- Watching State Demo -->
+        <div class="state-section">
+            <h2 class="state-title">▶️ Watching State (Currently Watching)</h2>
+            <p class="state-description">These anime show episode controls + Stop Watching. Plan/Hide buttons blocked!
+            </p>
+            <div class="film_list-wrap">
+                <div class="flw-item">
+                    <div class="film-poster">
+                        <img src="https://via.placeholder.com/300x200/1a202c/ffffff?text=Naruto" alt="Naruto">
+                        <a href="/watch/naruto-789" class="film-poster-ahref">
+                            <i class="fas fa-play"></i>
                         </a>
-                    </h3>
-                    <div class="fd-infor">
-                        <span class="fdi-item">TV</span>
-                        <span class="fdi-item">23m</span>
-                        <span class="fdi-item">Shounen</span>
+                    </div>
+                    <div class="film-detail">
+                        <h3 class="film-name">
+                            <a href="/naruto-789" title="Naruto" class="dynamic-name">
+                                Naruto
+                            </a>
+                        </h3>
+                        <div class="fd-infor">
+                            <span class="fdi-item">TV</span>
+                            <span class="fdi-item">23m</span>
+                            <span class="fdi-item">Shounen</span>
+                        </div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <div class="flw-item">
-                <div class="film-poster">
-                    <img src="https://via.placeholder.com/300x200/2c5282/ffffff?text=Dragon+Ball" alt="Dragon Ball">
-                    <a href="/watch/dragon-ball-012" class="film-poster-ahref">
-                        <i class="fas fa-play"></i>
-                    </a>
-                </div>
-                <div class="film-detail">
-                    <h3 class="film-name">
-                        <a href="/dragon-ball-012" title="Dragon Ball" class="dynamic-name">
-                            Dragon Ball
+        <!-- Hidden State Demo -->
+        <div class="state-section">
+            <h2 class="state-title">👁️ Hidden State (Hidden from display)</h2>
+            <p class="state-description">Hidden anime are not displayed. Use Clear Hidden button to reveal them.</p>
+            <div class="film_list-wrap">
+                <div class="flw-item anime-hidden" style="display: none;">
+                    <div class="film-poster">
+                        <img src="https://via.placeholder.com/300x200/2c5282/ffffff?text=Dragon+Ball" alt="Dragon Ball">
+                        <a href="/watch/dragon-ball-012" class="film-poster-ahref">
+                            <i class="fas fa-play"></i>
                         </a>
-                    </h3>
-                    <div class="fd-infor">
-                        <span class="fdi-item">TV</span>
-                        <span class="fdi-item">25m</span>
-                        <span class="fdi-item">Action</span>
+                    </div>
+                    <div class="film-detail">
+                        <h3 class="film-name">
+                            <a href="/dragon-ball-012" title="Dragon Ball" class="dynamic-name">
+                                Dragon Ball (Hidden)
+                            </a>
+                        </h3>
+                        <div class="fd-infor">
+                            <span class="fdi-item">TV</span>
+                            <span class="fdi-item">25m</span>
+                            <span class="fdi-item">Action</span>
+                        </div>
                     </div>
                 </div>
-            </div>
-
-            <div class="flw-item">
-                <div class="film-poster">
-                    <img src="https://via.placeholder.com/300x200/553c9a/ffffff?text=Demon+Slayer" alt="Demon Slayer">
-                    <a href="/watch/demon-slayer-345" class="film-poster-ahref">
-                        <i class="fas fa-play"></i>
-                    </a>
-                </div>
-                <div class="film-detail">
-                    <h3 class="film-name">
-                        <a href="/demon-slayer-345" title="Demon Slayer" class="dynamic-name">
-                            Demon Slayer
-                        </a>
-                    </h3>
-                    <div class="fd-infor">
-                        <span class="fdi-item">TV</span>
-                        <span class="fdi-item">22m</span>
-                        <span class="fdi-item">Supernatural</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="flw-item">
-                <div class="film-poster">
-                    <img src="https://via.placeholder.com/300x200/744210/ffffff?text=My+Hero+Academia"
-                        alt="My Hero Academia">
-                    <a href="/watch/my-hero-academia-678" class="film-poster-ahref">
-                        <i class="fas fa-play"></i>
-                    </a>
-                </div>
-                <div class="film-detail">
-                    <h3 class="film-name">
-                        <a href="/my-hero-academia-678" title="My Hero Academia" class="dynamic-name">
-                            My Hero Academia
-                        </a>
-                    </h3>
-                    <div class="fd-infor">
-                        <span class="fdi-item">TV</span>
-                        <span class="fdi-item">24m</span>
-                        <span class="fdi-item">Superhero</span>
-                    </div>
-                </div>
+                <p style="color: #ffd700; font-style: italic; padding: 20px; text-align: center;">
+                    Hidden anime are not visible until you click "Clear Hidden" button
+                </p>
             </div>
         </div>
 
@@ -370,14 +386,295 @@
     </div>
 
     <script>
-        // Simulate the content script loading
+        // Simulate the content script loading with business rule demonstrations
         console.log('AnimeList Content Script Demo loaded');
 
         // Add a demo message
         setTimeout(() => {
             const status = document.querySelector('.status');
-            status.innerHTML = '✅ Content script loaded successfully! Controls will appear on anime cards below. <br><small>In a real extension, these controls would be automatically injected.</small>';
+            if (status) {
+                status.innerHTML = '✅ Content script loaded successfully! Different button states shown below based on business rules. <br><small>In a real extension, these controls would be automatically injected based on actual anime status.</small>';
+            }
+
+            // Simulate adding controls for different states
+            simulateBusinessRuleControls();
         }, 1000);
+
+        function simulateBusinessRuleControls() {
+            // Clean State - Add Plan + Hide buttons (Attack on Titan)
+            const cleanStateItem = document.querySelector('.state-section:nth-child(2) .flw-item');
+            if (cleanStateItem) {
+                addDemoControls(cleanStateItem, 'clean');
+            }
+
+            // Planned State - Add Start Watching + Remove Plan buttons (One Piece)
+            const plannedStateItem = document.querySelector('.state-section:nth-child(3) .flw-item');
+            if (plannedStateItem) {
+                addDemoControls(plannedStateItem, 'planned');
+            }
+
+            // Watching State - Add Episode Controls + Stop Watching (Naruto)
+            const watchingStateItem = document.querySelector('.state-section:nth-child(4) .flw-item');
+            if (watchingStateItem) {
+                addDemoControls(watchingStateItem, 'watching');
+            }
+
+            // Add Clear Hidden button globally
+            addClearHiddenButton();
+        }
+
+        function addDemoControls(item, state) {
+            const controlsContainer = document.createElement('div');
+            controlsContainer.className = 'anime-list-controls demo-controls ' + state + '-state';
+            controlsContainer.style.cssText = `
+                display: flex;
+                gap: 8px;
+                margin-top: 12px;
+                padding: 8px;
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 8px;
+                backdrop-filter: blur(10px);
+            `;
+
+            if (state === 'clean') {
+                controlsContainer.innerHTML = `
+                    <button class="anime-btn anime-plan" onclick="showToast('Added to Plan to Watch!', 'success')">📋 Plan to Watch</button>
+                    <button class="anime-btn anime-hide" onclick="showToast('Anime hidden from list', 'info')">👁️ Hide</button>
+                `;
+            } else if (state === 'planned') {
+                controlsContainer.innerHTML = `
+                    <button class="anime-btn anime-start-watching" onclick="showToast('Started watching Episode 1!', 'success')">▶️ Start Watching</button>
+                    <button class="anime-btn anime-remove-plan" onclick="showToast('Removed from plan', 'info')">❌ Remove Plan</button>
+                    <small style="color: #ffd700; font-style: italic; margin-top: 4px;">Hide button blocked for planned anime</small>
+                `;
+            } else if (state === 'watching') {
+                controlsContainer.innerHTML = `
+                                } else if (state === 'watching') {
+                controlsContainer.innerHTML = `
+                    < div class="anime-list-combined-watching-controls" style = "
+                display: flex;
+                align - items: center;
+                gap: 6px;
+                padding: 6px 8px;
+                background: rgba(0, 0, 0, 0.7);
+                border: 1px solid rgba(16, 185, 129, 0.4);
+                border - radius: 8px;
+                color: rgb(167, 243, 208);
+                position: relative;
+                transition: all 0.3s ease;
+                backdrop - filter: blur(10px);
+                box - shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+                ">
+                    < div class="episode-display" style = "display: flex; align-items: center; gap: 4px; transition: all 0.3s ease;" >
+                            <span class="episode-label" style="font-size: 10px; font-weight: 500; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);">Ep:</span>
+                            <button class="episode-btn episode-decrement" onclick="showToast('Episode decreased to 11', 'info')" style="
+                                width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;
+                                background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.3);
+                                border-radius: 4px; color: white; cursor: pointer; font-size: 12px; font-weight: bold;
+                                text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8); transition: all 0.2s ease;
+                            ">−</button>
+                            <input type="number" class="episode-current" value="12" style="
+                                width: 35px; padding: 2px 4px; background: rgba(255, 255, 255, 0.15);
+                                border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 4px;
+                                color: white; font-size: 10px; text-align: center;
+                                text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+                            ">
+                            <button class="episode-btn episode-increment" onclick="showToast('Episode increased to 13', 'info')" style="
+                                width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;
+                                background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.3);
+                                border-radius: 4px; color: white; cursor: pointer; font-size: 12px; font-weight: bold;
+                                text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8); transition: all 0.2s ease;
+                            ">+</button>
+                        </div>
+                        <button class="stop-watching-btn" onclick="showToast('Stopped watching', 'info')" style="
+                            display: flex; align-items: center; gap: 3px; padding: 3px 6px;
+                            background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.3);
+                            border-radius: 5px; color: rgb(252, 165, 165); cursor: pointer;
+                            font-size: 9px; font-weight: 500; transition: all 0.3s ease;
+                            position: absolute; right: -35px; top: 50%; transform: translateY(-50%);
+                            white-space: nowrap; opacity: 0; pointer-events: none;
+                        ">
+                            <span style="font-size: 8px;">⏹️</span>
+                            <span style="font-size: 8px;">Stop</span>
+                        </button>
+                    </div >
+                    <small style="color: #ffd700; font-style: italic; margin-top: 4px;">Plan/Hide buttons blocked • Hover to slide stop button in</small>
+                `;
+                
+                // Add hover behavior for the combined watching controls
+                setTimeout(() => {
+                    const combinedControls = controlsContainer.querySelector('.anime-list-combined-watching-controls');
+                    const stopBtn = combinedControls.querySelector('.stop-watching-btn');
+                    
+                    combinedControls.addEventListener('mouseenter', () => {
+                        // Expand container and slide stop button in
+                        combinedControls.style.paddingRight = '45px';
+                        combinedControls.style.background = 'rgba(0, 0, 0, 0.8)';
+                        combinedControls.style.borderColor = 'rgba(16, 185, 129, 0.6)';
+                        stopBtn.style.right = '6px';
+                        stopBtn.style.opacity = '1';
+                        stopBtn.style.pointerEvents = 'auto';
+                    });
+                    
+                    combinedControls.addEventListener('mouseleave', () => {
+                        // Contract container and slide stop button out
+                        combinedControls.style.paddingRight = '8px';
+                        combinedControls.style.background = 'rgba(0, 0, 0, 0.7)';
+                        combinedControls.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+                        stopBtn.style.right = '-35px';
+                        stopBtn.style.opacity = '0';
+                        stopBtn.style.pointerEvents = 'none';
+                    });
+                }, 100);
+                `;
+
+                // Add hover behavior for the combined watching controls
+                setTimeout(() => {
+                    const combinedControls = controlsContainer.querySelector('.anime-list-combined-watching-controls');
+                    const stopBtn = combinedControls.querySelector('.stop-watching-btn');
+                    const episodeDisplay = combinedControls.querySelector('.episode-display');
+
+                    combinedControls.addEventListener('mouseenter', () => {
+                        stopBtn.style.display = 'flex';
+                        episodeDisplay.style.opacity = '0.6';
+                    });
+
+                    combinedControls.addEventListener('mouseleave', () => {
+                        stopBtn.style.display = 'none';
+                        episodeDisplay.style.opacity = '1';
+                    });
+                }, 100);
+            }
+
+            // Add basic button styling
+            const style = document.createElement('style');
+            style.textContent = `
+                .anime-btn {
+                    padding: 6px 12px;
+                    border: none;
+                    border-radius: 6px;
+                    background: rgba(255, 255, 255, 0.2);
+                    color: white;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    border: 1px solid rgba(255, 255, 255, 0.3);
+                    backdrop-filter: blur(5px);
+                    font-size: 0.9em;
+                }
+                .anime-btn:hover {
+                    background: rgba(255, 255, 255, 0.3);
+                    transform: translateY(-1px);
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+                }
+                .demo-controls {
+                    animation: slideIn 0.3s ease-out;
+                }
+                @keyframes slideIn {
+                    from { opacity: 0; transform: translateY(10px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+            `;
+            document.head.appendChild(style);
+
+            item.appendChild(controlsContainer);
+        }
+
+        function addClearHiddenButton() {
+            const clearBtn = document.createElement('button');
+            clearBtn.textContent = '🔄 Clear All Hidden';
+            clearBtn.className = 'anime-btn clear-hidden-btn';
+            clearBtn.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                padding: 12px 24px;
+                background: rgba(255, 215, 0, 0.2);
+                border: 1px solid rgba(255, 215, 0, 0.5);
+                color: #ffd700;
+                cursor: pointer;
+                border-radius: 8px;
+                backdrop-filter: blur(10px);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                z-index: 1000;
+                font-weight: bold;
+                transition: all 0.2s ease;
+            `;
+            clearBtn.onmouseover = () => {
+                clearBtn.style.background = 'rgba(255, 215, 0, 0.3)';
+                clearBtn.style.transform = 'translateY(-2px)';
+            };
+            clearBtn.onmouseout = () => {
+                clearBtn.style.background = 'rgba(255, 215, 0, 0.2)';
+                clearBtn.style.transform = 'translateY(0)';
+            };
+            clearBtn.onclick = () => {
+                showToast('All hidden anime revealed!', 'success');
+                // Show hidden anime
+                const hiddenItem = document.querySelector('.anime-hidden');
+                if (hiddenItem) {
+                    hiddenItem.style.display = 'block';
+                    hiddenItem.style.opacity = '0.7';
+                }
+            };
+            document.body.appendChild(clearBtn);
+        }
+
+        function showToast(message, type) {
+            const toast = document.createElement('div');
+            toast.className = `anime-list-toast anime-list-toast-${type}`;
+            toast.textContent = message;
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 12px 20px;
+                border-radius: 8px;
+                color: white;
+                font-weight: bold;
+                z-index: 1001;
+                backdrop-filter: blur(10px);
+                animation: toastSlideIn 0.3s ease-out;
+                max-width: 300px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            `;
+
+            if (type === 'success') {
+                toast.style.background = 'rgba(34, 197, 94, 0.2)';
+                toast.style.border = '1px solid rgba(34, 197, 94, 0.5)';
+            } else if (type === 'error') {
+                toast.style.background = 'rgba(239, 68, 68, 0.2)';
+                toast.style.border = '1px solid rgba(239, 68, 68, 0.5)';
+            } else {
+                toast.style.background = 'rgba(59, 130, 246, 0.2)';
+                toast.style.border = '1px solid rgba(59, 130, 246, 0.5)';
+            }
+
+            // Add toast animation
+            const toastStyle = document.createElement('style');
+            toastStyle.textContent = `
+                @keyframes toastSlideIn {
+                    from { opacity: 0; transform: translateX(100%); }
+                    to { opacity: 1; transform: translateX(0); }
+                }
+                @keyframes toastSlideOut {
+                    from { opacity: 1; transform: translateX(0); }
+                    to { opacity: 0; transform: translateX(100%); }
+                }
+            `;
+            document.head.appendChild(toastStyle);
+
+            document.body.appendChild(toast);
+
+            // Auto-dismiss after 3 seconds
+            setTimeout(() => {
+                toast.style.animation = 'toastSlideOut 0.3s ease-in forwards';
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.parentNode.removeChild(toast);
+                    }
+                }, 300);
+            }, 3000);
+        }
     </script>
 </body>
 

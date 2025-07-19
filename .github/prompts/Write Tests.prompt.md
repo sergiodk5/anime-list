@@ -14,7 +14,7 @@ Ask for the file or function to test if not provided.
 
 ### Test File Structure:
 
-- Mirror source structure: `src/commons/utils/file.ts` → `test/commons/utils/file.test.ts`
+- Mirror source structure: `src/commons/services/animeService.ts` → `test/commons/services/animeService.test.ts`
 - Use descriptive test names that explain the behavior being tested
 - Group related tests with `describe` blocks
 
@@ -26,27 +26,27 @@ Ask for the file or function to test if not provided.
 
 ### Coverage Requirements:
 
-- Maintain 100% test coverage for all utility functions
+- Maintain 100% test coverage for all service and repository classes
 - Test all code paths including error conditions
 - Test edge cases and boundary conditions
 
 ### Test Patterns:
 
-#### Storage Utility Tests:
+#### Service Layer Tests:
 
 ```typescript
-describe("StorageUtil", () => {
+describe("AnimeService", () => {
     beforeEach(() => {
         vi.clearAllMocks();
         chrome.storage.local.get.mockImplementation(() => Promise.resolve({}));
     });
 
-    it("should handle successful storage operations", async () => {
+    it("should handle successful service operations", async () => {
         chrome.storage.local.set.mockResolvedValue();
         // Test implementation
     });
 
-    it("should handle storage errors gracefully", async () => {
+    it("should handle service errors gracefully", async () => {
         chrome.storage.local.set.mockRejectedValue(new Error("Storage error"));
         // Test error handling
     });

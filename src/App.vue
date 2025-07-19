@@ -36,20 +36,28 @@
 
 <script setup lang="ts">
 import type { EpisodeProgress } from "@/commons/models";
-import { EpisodeProgressUtil } from "@/commons/utils";
+import { AnimeService } from "@/commons/services";
 import { onMounted, onUnmounted, ref } from "vue";
 
 const watchList = ref<EpisodeProgress[]>([]);
+const animeService = new AnimeService();
 
 const removeFromWatchList = async (animeId: string) => {
-    await EpisodeProgressUtil.remove(animeId);
-    watchList.value = await EpisodeProgressUtil.getAllAsArray();
+    const result = await animeService.stopWatching(animeId);
+    if (result.success) {
+        // Refresh the watch list after successful removal
+        const allAnime = await animeService.getAllAnime();
+        watchList.value = allAnime.currentlyWatching;
+    } else {
+        console.error("Failed to remove from watch list:", result.message);
+    }
 };
 
 const checkForNewLinksListener = () => {
     chrome.storage.onChanged.addListener(async (changes) => {
         if (changes.episodeProgress) {
-            watchList.value = await EpisodeProgressUtil.getAllAsArray();
+            const allAnime = await animeService.getAllAnime();
+            watchList.value = allAnime.currentlyWatching;
         }
     });
 };
@@ -59,7 +67,8 @@ const openOptions = () => {
 };
 
 onMounted(async () => {
-    watchList.value = await EpisodeProgressUtil.getAllAsArray();
+    const allAnime = await animeService.getAllAnime();
+    watchList.value = allAnime.currentlyWatching;
     checkForNewLinksListener();
 });
 
