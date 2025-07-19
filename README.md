@@ -1,39 +1,6 @@
 # AnimeList Chrome Extension
 
-[![CI](https://github.com/ser#### **Unified Storage System** ✅
-
-- **🏗️ AnimeUtil Architecture**: Unified interface for all anime operations
-- **🏪 Local-First Storage**: All data stored securely in browser's local storage
-- **📊 Comprehensive APIs**: Full CRUD operations for anime tracking
-- **🔄 Storage Utilities**: `AnimeUtil`, `EpisodeProgressUtil`, `PlanToWatchUtil`, `HiddenAnimeUtil`
-- **📈 Data Models**: Complete TypeScript interfaces for all anime data structures
-
-#### **Enterprise-Grade Testing** ✅
-
-- **🧪 100% Test Coverage**: Comprehensive unit tests for all components and utilities (287 tests)
-- **🛡️ Type Safety**: Full TypeScript implementation with strict type checking
-- **📝 Data-TestId System**: Robust testing infrastructure for UI components
-- **⚡ Performance Testing**: Optimized for Chrome extension environment
-
-### 🔄 Architecture Overview
-
-The extension has a **unified architecture** where:
-
-- **Content Script**: Uses `AnimeUtil` for all anime operations (Watch/Hide buttons)
-- **Dashboard UI**: Ready for integration with the same `AnimeUtil` backend
-- **Storage Layer**: Centralized through `AnimeUtil` with underlying specialized utilities
-- **Testing**: Complete coverage ensuring reliability across all components
-
-### 📋 Integration Status
-
-#### **Current Integration Gaps**
-
-The extension has excellent architecture with complete backend implementation, but needs frontend integration:
-
-- **❌ Static Data**: Dashboard displays hardcoded numbers instead of using `AnimeUtil.getStatistics()`
-- **❌ Missing Routes**: Links to `/favorites` and list detail pages don't exist
-- **❌ Button Functionality**: "Add New Anime" and navigation buttons need connection to backend
-- **❌ Episode Progress UI**: No interface for the fully-implemented episode tracking systemst/actions/workflows/ci.yml/badge.svg)](https://github.com/sergiodk5/anime-list/actions/workflows/ci.yml)
+[![CI](https://github.com/sergiodk5/anime-list/actions/workflows/ci.yml/badge.svg)](https://github.com/sergiodk5/anime-list/actions/workflows/ci.yml)
 [![Release](https://github.com/sergiodk5/anime-list/actions/workflows/release.yml/badge.svg)](https://github.com/sergiodk5/anime-list/actions/workflows/release.yml)
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/sergiodk5/anime-list)](https://github.com/sergiodk5/anime-list/releases)
 [![GitHub issues](https://img.shields.io/github/issues/sergiodk5/anime-list)](https://github.com/sergiodk5/anime-list/issues)
@@ -69,7 +36,6 @@ A modern browser extension to enhance your anime viewing experience with beautif
 ### 🎯 Currently Implemented
 
 #### **Content Script Integration** ✅
-
 - **Plan to Watch List**: Add anime to your personal "plan to watch" list directly from anime listing pages
 - **Hide Anime System**: Hide anime you're not interested in with easy unhide functionality
 - **Seamless Integration**: UI elements injected directly into anime websites for native feel
@@ -77,7 +43,6 @@ A modern browser extension to enhance your anime viewing experience with beautif
 - **Visual Feedback**: Success/error notifications with glass-morphism styling
 
 #### **Modern Dashboard (Options Page)** ⚠️ _Static UI Only_
-
 - **🏠 Home Dashboard**: Beautiful anime-themed welcome page with glass-morphism design
 - **📺 Watch Lists Overview**: Static view of anime list categories (Currently Watching, Completed, Plan to Watch, On Hold, Dropped)
 - **🎨 Glass-Morphism UI**: Modern design with anime-themed branding and purple-pink gradients
@@ -85,38 +50,50 @@ A modern browser extension to enhance your anime viewing experience with beautif
 - **🧭 Vue Router Navigation**: Basic routing between Home and Watch Lists pages
 
 #### **Extension Popup** ✅
-
 - **🎌 Anime-Themed Branding**: Consistent anime icon and aesthetic
 - **⚙️ Quick Dashboard Access**: One-click navigation to full options page
 - **🎨 Modern Design**: Glass-morphism effects with animated background elements
 
-#### **Robust Storage System** ✅
-
+#### **Unified Storage System** ✅
+- **🏗️ AnimeUtil Architecture**: Unified interface for all anime operations
 - **🏪 Local-First Storage**: All data stored securely in browser's local storage
-- **📊 Comprehensive APIs**: Full CRUD operations for anime tracking (backend utilities)
-- **🔄 Storage Utilities**: `EpisodeProgressUtil`, `PlanToWatchUtil`, `HiddenAnimeUtil`, `AnimeUtil`
+- **📊 Comprehensive APIs**: Full CRUD operations for anime tracking
+- **🔄 Storage Utilities**: `AnimeUtil`, `EpisodeProgressUtil`, `PlanToWatchUtil`, `HiddenAnimeUtil`
 - **📈 Data Models**: Complete TypeScript interfaces for all anime data structures
 
 #### **Enterprise-Grade Testing** ✅
-
-- **🧪 100% Test Coverage**: Comprehensive unit tests for all components and utilities (286 tests)
+- **🧪 100% Test Coverage**: Comprehensive unit tests for all components and utilities (287 tests)
 - **🛡️ Type Safety**: Full TypeScript implementation with strict type checking
 - **📝 Data-TestId System**: Robust testing infrastructure for UI components
 - **⚡ Performance Testing**: Optimized for Chrome extension environment
 
-### � Known Limitations & Roadmap
+### 🔄 Architecture Overview
+
+The extension has a **unified architecture** where:
+- **Content Script**: Uses `AnimeUtil` for all anime operations (Watch/Hide buttons)
+- **Dashboard UI**: Ready for integration with the same `AnimeUtil` backend
+- **Storage Layer**: Centralized through `AnimeUtil` with underlying specialized utilities
+- **Testing**: Complete coverage ensuring reliability across all components
+
+### 📋 Integration Status
+
+#### **Current Integration Gaps**
+
+The extension has excellent architecture with complete backend implementation, but needs frontend integration:
+- **❌ Static Data**: Dashboard displays hardcoded numbers instead of using `AnimeUtil.getStatistics()`
+- **❌ Missing Routes**: Links to `/favorites` and list detail pages don't exist
+- **❌ Button Functionality**: "Add New Anime" and navigation buttons need connection to backend
+- **❌ Episode Progress UI**: No interface for the fully-implemented episode tracking system
 
 #### **Next Development Phase**
 
 The extension is production-ready with a solid foundation:
-
 - ✅ Unified AnimeUtil backend architecture with 100% test coverage
 - ✅ Working content script for anime websites
 - ✅ Beautiful UI design system and components
 - ✅ Proper Chrome extension architecture
 
 **Immediate next steps:**
-
 1. **Connect UI to Backend**: Replace static data with `AnimeUtil` calls
 2. **Add Missing Routes**: Create favorites page and individual list detail pages
 3. **Implement Button Functionality**: Connect all existing buttons to actual features
@@ -125,62 +102,17 @@ The extension is production-ready with a solid foundation:
 ### 🚀 Roadmap & Future Goals
 
 #### **Backend-Frontend Integration** (Next Phase)
-
 - **Vue Composables**: Create reactive wrappers for `AnimeUtil`
 - **Real-Time Data**: Replace static numbers with live data from storage
 - **Interactive Features**: Add anime creation, editing, and management
 - **Episode Progress UI**: Visual episode tracking interface
 
 #### **MyAnimeList Integration** (Future)
-
 - **API Integration**: Connect with MyAnimeList for anime metadata and cover art
 - **Auto-Sync**: Synchronize progress between extension and MAL account
 - **Rich Anime Details**: Enhanced anime information with descriptions, ratings, and links
 
 #### **Advanced Features** (Long-term)
-
-- **🔍 Smart Search**: Global search across all anime lists
-- **📊 Advanced Analytics**: Detailed statistics and viewing patterns
-- **🎯 Recommendations**: AI-powered anime suggestions based on preferences
-- **📤 Export/Import**: Data portability for backup and migration
-- **🌙 Theme System**: Multiple UI themes beyond current anime aesthetic
-- **🖼️ Anime Cover Art**: Visual representation of anime in lists
-- **📱 Mobile Optimization**: Enhanced mobile experience
-- **♿ Accessibility**: Full WCAG compliance for screen readers
-
-#### **Next Development Phase**
-
-The extension has a solid foundation with:
-
-- ✅ Complete backend storage system with 100% test coverage
-- ✅ Working content script for anime websites
-- ✅ Beautiful UI design system and components
-- ✅ Proper Chrome extension architecture
-
-**Immediate next steps:**
-
-1. **Connect UI to Backend**: Replace static data with storage utility calls
-2. **Add Missing Routes**: Create favorites page and individual list detail pages
-3. **Implement Button Functionality**: Connect all existing buttons to actual features
-4. **Add Episode Progress UI**: Create interface for tracking episode progress
-
-### �🚀 Roadmap & Future Goals
-
-#### **Backend-Frontend Integration** (Next Phase)
-
-- **Vue Composables**: Create reactive wrappers for storage utilities
-- **Real-Time Data**: Replace static numbers with live data from storage
-- **Interactive Features**: Add anime creation, editing, and management
-- **Episode Progress UI**: Visual episode tracking interface
-
-#### **MyAnimeList Integration** (Future)
-
-- **API Integration**: Connect with MyAnimeList for anime metadata and cover art
-- **Auto-Sync**: Synchronize progress between extension and MAL account
-- **Rich Anime Details**: Enhanced anime information with descriptions, ratings, and links
-
-#### **Advanced Features** (Long-term)
-
 - **🔍 Smart Search**: Global search across all anime lists
 - **📊 Advanced Analytics**: Detailed statistics and viewing patterns
 - **🎯 Recommendations**: AI-powered anime suggestions based on preferences
@@ -266,7 +198,7 @@ npm run format
 
 ### 🧪 Testing
 
-We maintain **100% test coverage** with **286 comprehensive tests**:
+We maintain **100% test coverage** with **287 comprehensive tests**:
 
 ```sh
 # Run all tests
@@ -280,7 +212,6 @@ npm run test:unit:coverage:ui
 ```
 
 **Test Coverage Breakdown:**
-
 - ✅ **Storage Utilities**: 100% coverage (90 tests)
 - ✅ **Content Script**: 100% coverage (51 tests)
 - ✅ **Vue Components**: 100% coverage (125 tests)
@@ -289,7 +220,6 @@ npm run test:unit:coverage:ui
 ### 📚 Documentation
 
 Comprehensive guides are available in the `docs/` folder:
-
 - **[Project Structure Guide](./docs/PROJECT_STRUCTURE.md)**: Architecture and folder organization
 - **[UI Design Guide](./docs/UI_DESIGN_GUIDE.md)**: Design system and component patterns
 - **[Options Guide](./docs/OPTIONS_GUIDE.md)**: Options page development
@@ -299,7 +229,6 @@ Comprehensive guides are available in the `docs/` folder:
 ## 🎨 Design System
 
 Our extension features a consistent **anime-themed design** with:
-
 - **🌈 Glass-morphism Effects**: Backdrop blur and translucent surfaces
 - **🎌 Anime Branding**: Japanese animation inspired visual identity
 - **💜 Purple-Pink Gradients**: Anime-inspired color palette
@@ -309,14 +238,12 @@ Our extension features a consistent **anime-themed design** with:
 ## 🏗️ Architecture
 
 ### Extension Components
-
 - **🔧 Background Script**: Chrome extension lifecycle handler
 - **📄 Content Scripts**: Injected Watch/Hide controls for anime websites
 - **🎯 Popup**: Quick access interface with dashboard navigation
 - **📊 Options Page**: Vue.js dashboard with glass-morphism design (static data)
 
 ### Data Flow
-
 ```
 Content Script ↔ Chrome Storage ↔ Background Script
      ↕                ↕                   ↕
@@ -324,7 +251,6 @@ Content Script ↔ Chrome Storage ↔ Background Script
 ```
 
 ### Storage Architecture
-
 - **📊 Episode Progress**: Complete backend API (not connected to UI)
 - **📝 Plan to Watch**: Working content script integration
 - **🙈 Hidden Anime**: Working content script integration
@@ -342,13 +268,11 @@ Content Script ↔ Chrome Storage ↔ Background Script
 ### 🎯 Priority Development Areas
 
 **High Priority:**
-
 - Connect dashboard UI to storage utilities
 - Add missing route implementations
 - Implement episode progress tracking interface
 
 **Medium Priority:**
-
 - Add anime management features (add/edit/delete)
 - Implement search and filtering
 - Add data export/import capabilities
