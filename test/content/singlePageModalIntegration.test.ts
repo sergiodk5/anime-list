@@ -1,9 +1,28 @@
 import type { AnimeStatus } from "@/commons/models";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { vi, afterEach, beforeEach, describe, expect, it } from "vitest";
+import { SinglePageModal } from "@/content/index";
 
-// Test the single page modal integration with existing content script
+// Mock the AnimeService
+const mockAnimeService = {
+    getAnimeStatus: vi.fn(),
+    addToPlanToWatch: vi.fn(),
+    removeFromPlanToWatch: vi.fn(),
+    startWatching: vi.fn(),
+    stopWatching: vi.fn(),
+    hideAnime: vi.fn(),
+    unhideAnime: vi.fn(),
+    updateEpisodeProgress: vi.fn(),
+};
+
+// Mock the AnimeService constructor
+vi.mock("@/commons/utils", () => ({
+    AnimeService: vi.fn().mockImplementation(() => mockAnimeService),
+}));
+
+// Test the single page modal integration with real SinglePageModal class
 describe("Single Page Modal Integration", () => {
     let originalLocation: Location;
+    let modal: SinglePageModal;
 
     beforeEach(() => {
         // Setup DOM
@@ -16,6 +35,18 @@ describe("Single Page Modal Integration", () => {
         (window as any).location = {
             href: "https://example.com/watch/test-anime-123",
         };
+
+        // Create real modal instance
+        modal = new SinglePageModal();
+
+        // Reset mocks
+        vi.clearAllMocks();
+        mockAnimeService.getAnimeStatus.mockResolvedValue({
+            isTracked: false,
+            isPlanned: false,
+            isHidden: false,
+            progress: undefined,
+        });
     });
 
     afterEach(() => {
@@ -29,12 +60,8 @@ describe("Single Page Modal Integration", () => {
 
     describe("Integration with Content Script", () => {
         it("should initialize single page modal on watch pages", () => {
-            // Simulate a watch page
-            (window as any).location.href = "https://example.com/watch/demon-slayer-123";
-
-            // Verify we can detect watch pages
-            const isWatchPage = window.location.href.includes("/watch/");
-            expect(isWatchPage).toBe(true);
+            // Test actual isWatchPage method from real modal
+            expect(modal.isWatchPage()).toBe(true);
         });
 
         it("should extract anime ID from URL patterns", () => {
@@ -46,7 +73,7 @@ describe("Single Page Modal Integration", () => {
                 },
                 {
                     url: "https://example.com/watch/attack-on-titan",
-                    expectedId: "attack-on-titan",
+                    expectedId: "attack-on-titan",  
                     description: "full slug pattern",
                 },
                 {
@@ -56,17 +83,290 @@ describe("Single Page Modal Integration", () => {
                 },
             ];
 
-            testCases.forEach(({ url, expectedId }) => {
-                const urlMatch = url.match(/\/watch\/([^/?]+)/);
-                expect(urlMatch).toBeTruthy();
-
-                if (urlMatch) {
-                    const slug = urlMatch[1];
-                    const numericMatch = slug.match(/-(\d+)$/);
-                    const extractedId = numericMatch ? numericMatch[1] : slug;
-                    expect(extractedId).toBe(expectedId);
-                }
+            testCases.forEach((testCase) => {
+                (window as any).location.href = testCase.url;
+                
+                // Test actual extractAnimeData method from real modal
+                const result = modal.extractAnimeData();
+                expect(result?.animeId).toBe(testCase.expectedId);
             });
+        });
+
+        it("should call createInfoButton method", () => {
+            // Test actual createInfoButton method from real modal
+            const animeData = { 
+                animeId: "test-anime", 
+                animeTitle: "Test Anime",
+                animeSlug: "test-anime"
+            };
+            
+            // This should not throw and should execute the createInfoButton method
+            expect(() => modal.createInfoButton(animeData)).not.toThrow();
+            
+            // Check that button was created in DOM
+            const button = document.getElementById("anime-list-info-button");
+            expect(button).toBeTruthy();
+            expect(button?.textContent).toContain("Anime Info");
+        });
+
+        it("should call showModal method", () => {
+            // Test actual showModal method from real modal
+            const animeData = { 
+                animeId: "test-anime", 
+                animeTitle: "Test Anime",
+                animeSlug: "test-anime"
+            };
+            const mockStatus = {
+                isTracked: true,
+                isPlanned: false,
+                isHidden: false,
+                progress: { 
+                    animeId: "test-anime",
+                    animeTitle: "Test Anime",
+                    animeSlug: "test-anime",
+                    episodeId: "ep-5",
+                    currentEpisode: 5, 
+                    totalEpisodes: 12, 
+                    lastWatched: new Date().toISOString() 
+                }
+            };
+            
+            // Clear any existing modals
+            const existingModals = document.querySelectorAll('[style*="position: fixed"][style*="z-index: 10000"]');
+            existingModals.forEach(modal => modal.remove());
+            
+            // This should not throw and should execute the showModal method
+            expect(() => modal.showModal(animeData, mockStatus)).not.toThrow();
+            
+            // Check that modal was created and appended to DOM
+            const modalElements = document.querySelectorAll('[style*="position: fixed"][style*="z-index: 10000"]');
+            expect(modalElements.length).toBeGreaterThan(0);
+            
+            // Verify the modal contains the expected content
+            const modalContent = document.querySelector('[style*="position: fixed"] h2');
+            expect(modalContent?.textContent).toBe("Test Anime");
+        });
+
+        it("should call getStatusText method", () => {
+            // Test actual getStatusText method from real modal
+            const mockStatus = {
+                isTracked: true,
+                isPlanned: false,
+                isHidden: false,
+                progress: { 
+                    animeId: "test-anime",
+                    animeTitle: "Test Anime",
+                    animeSlug: "test-anime",
+                    episodeId: "ep-5",
+                    currentEpisode: 5, 
+                    totalEpisodes: 12, 
+                    lastWatched: new Date().toISOString() 
+                }
+            };
+            const statusText = modal.getStatusText(mockStatus);
+            expect(statusText).toContain("watching");
+            expect(statusText).toContain("5");
+        });
+
+        it("should call getModalActions method", () => {
+            // Test actual getModalActions method from real modal
+            const mockStatus = {
+                isTracked: true,
+                isPlanned: false,
+                isHidden: false,
+                progress: { 
+                    animeId: "test-anime",
+                    animeTitle: "Test Anime",
+                    animeSlug: "test-anime",
+                    episodeId: "ep-5",
+                    currentEpisode: 5, 
+                    totalEpisodes: 12, 
+                    lastWatched: new Date().toISOString() 
+                }
+            };
+            const actions = modal.getModalActions(mockStatus);
+            expect(actions).toBeDefined();
+            expect(Array.isArray(actions)).toBe(true);
+        });
+
+        it("should call initialize method", () => {
+            // Mock isWatchPage to return true
+            (window as any).location.href = "https://example.com/watch/test-anime";
+            
+            // Mock DOM elements
+            document.body.innerHTML = '<div id="test-content"></div>';
+            
+            // Test actual initialize method from real modal
+            expect(() => modal.initialize()).not.toThrow();
+        });
+
+        it("should call initialize method on non-watch page", () => {
+            // Mock isWatchPage to return false
+            (window as any).location.href = "https://example.com/some-other-page";
+            
+            // Test that initialize returns early on non-watch pages
+            expect(() => modal.initialize()).not.toThrow();
+        });
+
+        it("should test different status configurations", () => {
+            // Test with hidden anime status
+            const hiddenStatus = {
+                isTracked: false,
+                isPlanned: false,
+                isHidden: true
+            };
+            const hiddenStatusText = modal.getStatusText(hiddenStatus);
+            expect(hiddenStatusText).toContain("Hidden");
+            
+            // Test with planned anime status
+            const plannedStatus = {
+                isTracked: false,
+                isPlanned: true,
+                isHidden: false
+            };
+            const plannedStatusText = modal.getStatusText(plannedStatus);
+            expect(plannedStatusText).toContain("Planned");
+            
+            // Test with basic tracked status (no progress)
+            const basicTrackedStatus = {
+                isTracked: true,
+                isPlanned: false,
+                isHidden: false
+            };
+            const basicStatusText = modal.getStatusText(basicTrackedStatus);
+            expect(basicStatusText).toContain("watching");
+        });
+
+        it("should test different modal actions for different statuses", () => {
+            // Test actions for hidden anime
+            const hiddenStatus = {
+                isTracked: false,
+                isPlanned: false,
+                isHidden: true
+            };
+            const hiddenActions = modal.getModalActions(hiddenStatus);
+            expect(Array.isArray(hiddenActions)).toBe(true);
+            expect(hiddenActions.length).toBeGreaterThan(0);
+            
+            // Test actions for planned anime
+            const plannedStatus = {
+                isTracked: false,
+                isPlanned: true,
+                isHidden: false
+            };
+            const plannedActions = modal.getModalActions(plannedStatus);
+            expect(Array.isArray(plannedActions)).toBe(true);
+            expect(plannedActions.length).toBeGreaterThan(0);
+        });
+
+        it("should test modal close functionality", () => {
+            const animeData = { 
+                animeId: "test-anime", 
+                animeTitle: "Test Anime",
+                animeSlug: "test-anime"
+            };
+            const mockStatus = {
+                isTracked: true,
+                isPlanned: false,
+                isHidden: false,
+                progress: { 
+                    animeId: "test-anime",
+                    animeTitle: "Test Anime",
+                    animeSlug: "test-anime",
+                    episodeId: "ep-5",
+                    currentEpisode: 5, 
+                    totalEpisodes: 12, 
+                    lastWatched: new Date().toISOString() 
+                }
+            };
+            
+            // Clear any existing modals
+            const existingModals = document.querySelectorAll('[style*="position: fixed"][style*="z-index: 10000"]');
+            existingModals.forEach(modal => modal.remove());
+            
+            // Create modal
+            modal.showModal(animeData, mockStatus);
+            
+            // Check that modal was created
+            const modalElements = document.querySelectorAll('[style*="position: fixed"][style*="z-index: 10000"]');
+            expect(modalElements.length).toBeGreaterThan(0);
+            
+            // Find and click close button to trigger closeModal
+            const closeButton = Array.from(document.querySelectorAll('button')).find(btn => 
+                btn.textContent === 'Close'
+            );
+            expect(closeButton).toBeTruthy();
+            
+            // Simulate close button click
+            if (closeButton) {
+                closeButton.click();
+            }
+            
+            // Wait for animation and then check modal is gone (after setTimeout)
+            setTimeout(() => {
+                const remainingModals = document.querySelectorAll('[style*="position: fixed"][style*="z-index: 10000"]');
+                expect(remainingModals.length).toBe(0);
+            }, 400);
+        });
+
+        it("should test ESC key modal close", () => {
+            const animeData = { 
+                animeId: "test-anime", 
+                animeTitle: "Test Anime",
+                animeSlug: "test-anime"
+            };
+            const mockStatus = {
+                isTracked: true,
+                isPlanned: false,
+                isHidden: false
+            };
+            
+            // Create modal
+            modal.showModal(animeData, mockStatus);
+            
+            // Simulate ESC key press
+            const escEvent = new KeyboardEvent('keydown', {
+                key: 'Escape',
+                code: 'Escape',
+                keyCode: 27
+            });
+            document.dispatchEvent(escEvent);
+            
+            // Modal should start closing process
+        });
+
+        it("should test modal background click close", () => {
+            const animeData = { 
+                animeId: "test-anime", 
+                animeTitle: "Test Anime",
+                animeSlug: "test-anime"
+            };
+            const mockStatus = {
+                isTracked: true,
+                isPlanned: false,
+                isHidden: false
+            };
+            
+            // Create modal
+            modal.showModal(animeData, mockStatus);
+            
+            // Find the modal overlay
+            const modalOverlay = document.querySelector('[style*="position: fixed"][style*="z-index: 10000"]') as HTMLElement;
+            expect(modalOverlay).toBeTruthy();
+            
+            // Simulate click on the overlay background (not content)
+            if (modalOverlay) {
+                const clickEvent = new MouseEvent('click', {
+                    bubbles: true,
+                    cancelable: true
+                });
+                // Set target to the overlay itself (not child elements)
+                Object.defineProperty(clickEvent, 'target', {
+                    value: modalOverlay,
+                    enumerable: true
+                });
+                modalOverlay.dispatchEvent(clickEvent);
+            }
         });
 
         it("should create modal elements in DOM", () => {

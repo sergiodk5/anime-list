@@ -1386,21 +1386,21 @@ export async function init(): Promise<void> {
 /**
  * Single page controller for watch pages with anime info modal
  */
-class SinglePageModal {
+export class SinglePageModal {
     private animeService = new AnimeService();
     private modalElement: HTMLElement | null = null;
 
     /**
      * Check if current page is a watch page
      */
-    private isWatchPage(): boolean {
+    isWatchPage(): boolean {
         return window.location.href.includes("/watch/");
     }
 
     /**
      * Extract anime data from watch page
      */
-    private extractAnimeData(): AnimeData | null {
+    extractAnimeData(): AnimeData | null {
         try {
             const url = window.location.href;
             const urlMatch = url.match(/\/watch\/([^/?]+)/);
@@ -1467,7 +1467,7 @@ class SinglePageModal {
     /**
      * Create the floating "Anime Info" button
      */
-    private createInfoButton(animeData: AnimeData): void {
+    createInfoButton(animeData: AnimeData): void {
         // Remove existing button
         const existingButton = document.getElementById("anime-list-info-button");
         if (existingButton) {
@@ -1561,7 +1561,7 @@ class SinglePageModal {
     /**
      * Show the modal
      */
-    private showModal(animeData: AnimeData, status: AnimeStatus): void {
+    showModal(animeData: AnimeData, status: AnimeStatus): void {
         if (this.modalElement) {
             this.closeModal();
         }
@@ -1796,7 +1796,7 @@ class SinglePageModal {
         }, 10);
     }
 
-    private getStatusText(status: AnimeStatus): string {
+    getStatusText(status: AnimeStatus): string {
         if (status.isHidden) return "Hidden from lists";
         if (status.isTracked && status.progress) {
             return `Currently watching - Episode ${status.progress.currentEpisode}`;
@@ -1806,7 +1806,7 @@ class SinglePageModal {
         return "Not tracked";
     }
 
-    private getModalActions(status: AnimeStatus) {
+    getModalActions(status: AnimeStatus) {
         if (status.isHidden) {
             return [{ type: "unhide", label: "Remove from Hidden", style: "success" }];
         } else if (status.isPlanned) {
