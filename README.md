@@ -1,15 +1,9 @@
+[![CI](https://github.com/sergiodk5/anime-list/actions/workflows/ci.yml/badge.svg)](https://github.com/sergiodk5/anime-list/actions/workflows/ci.yml)
+[![Vue.js](https://img.shields.io/badge/Vue.js-4FC08D?logo=vue.js&logoColor=white)](https://vuejs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+
 # AnimeList Chrome Extension
-
-[![CI](https://github.com/se#### **Unified Storage System** ✅
-
-- **🏗️ Service Architecture**: Clean service-repository pattern for all anime operations
-- **🏪 Local-First Storage**: All data stored securely in browser's local storage
-- **📊 Comprehensive APIs**: Full CRUD operations via AnimeService
-- **🔄 Storage Layers**: `AnimeService`, `Repositories`, `StorageAdapter`
-- **📈 Data Models**: Complete TypeScript interfaces for all anime data structures/anime-list/actions/workflows/ci.yml/badge.svg)](https://github.com/sergiodk5/anime-list/actions/workflows/ci.yml)
-  [![Vue.js](https://img.shields.io/badge/Vue.js-4FC08D?logo=vue.js&logoColor=white)](https://vuejs.org/)
-  [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-  [![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 
 A modern browser extension to enhance your anime viewing experience with beautiful glass-morphism UI and comprehensive tracking features. Take control of your watch lists, track progress, and customize what you see.
 
@@ -19,7 +13,7 @@ A modern browser extension to enhance your anime viewing experience with beautif
 
 - ✅ Content script integration with Watch/Hide buttons on anime websites
 - ✅ Chrome extension popup with dashboard navigation
-- ✅ Clean service-repository architecture with 100% test coverage (461 tests)
+- ✅ Clean service-repository architecture with 100% test coverage (370 tests)
 - ✅ Beautiful glass-morphism UI design system
 - ✅ Complete storage system with all CRUD operations
 
@@ -64,15 +58,15 @@ A modern browser extension to enhance your anime viewing experience with beautif
 
 #### **Unified Storage System** ✅
 
-- **🏗️ AnimeUtil Architecture**: Unified interface for all anime operations
+- **🏗️ Service Architecture**: Clean service-repository pattern for all anime operations
 - **🏪 Local-First Storage**: All data stored securely in browser's local storage
-- **📊 Comprehensive APIs**: Full CRUD operations for anime tracking
-- **🔄 Storage Utilities**: `AnimeUtil`, `EpisodeProgressUtil`, `PlanToWatchUtil`, `HiddenAnimeUtil`
+- **📊 Comprehensive APIs**: Full CRUD operations via AnimeService
+- **🔄 Storage Layers**: `AnimeService`, `Repositories`, `StorageAdapter`
 - **📈 Data Models**: Complete TypeScript interfaces for all anime data structures
 
 #### **Enterprise-Grade Testing** ✅
 
-- **🧪 100% Test Coverage**: Comprehensive unit tests for all components and services (461 tests)
+- **🧪 100% Test Coverage**: Comprehensive unit tests for all components and services (370 tests)
 - **🛡️ Type Safety**: Full TypeScript implementation with strict type checking
 - **📝 Data-TestId System**: Robust testing infrastructure for UI components
 - **⚡ Performance Testing**: Optimized for Chrome extension environment
@@ -146,9 +140,9 @@ The extension is production-ready with a solid foundation:
 - **📝 Language**: TypeScript with strict type checking
 - **🎨 Styling**: Tailwind CSS v4 with glass-morphism utilities
 - **🧭 Routing**: Vue Router for SPA navigation (2 routes currently implemented)
-- **🏪 State**: Chrome Storage API with comprehensive utility wrappers
+- **🏪 State**: Chrome Storage API with service-repository architecture
 - **🔌 Browser API**: Chrome Extension APIs (Manifest V3)
-- **🧪 Testing**: Vitest with V8 coverage (287 tests, 100% coverage)
+- **🧪 Testing**: Vitest with V8 coverage (370 tests, 100% coverage)
 - **📏 Linting**: ESLint with Vue and TypeScript rules
 - **💅 Formatting**: Prettier with Tailwind class sorting
 
@@ -188,7 +182,7 @@ npm run dev
 # Build extension for testing
 npm run build:ext
 
-# Run unit tests (287 tests)
+# Run unit tests (370 tests)
 npm run test:unit
 
 # Run tests with coverage (100% coverage)
@@ -217,7 +211,7 @@ npm run format
 
 ### 🧪 Testing
 
-We maintain **100% test coverage** with **287 comprehensive tests**:
+We maintain **100% test coverage** with **370 comprehensive tests**:
 
 ```sh
 # Run all tests
@@ -232,9 +226,9 @@ npm run test:unit:coverage:ui
 
 **Test Coverage Breakdown:**
 
-- ✅ **Storage Utilities**: 100% coverage (90 tests)
-- ✅ **Content Script**: 100% coverage (51 tests)
-- ✅ **Vue Components**: 100% coverage (125 tests)
+- ✅ **Service Layer**: 100% coverage (AnimeService, repositories, adapters)
+- ✅ **Content Script**: 100% coverage (content script integration)
+- ✅ **Vue Components**: 100% coverage (popup and options components)
 - ✅ **Edge Cases**: Complete error handling and boundary testing
 
 ### 📚 Documentation
@@ -242,6 +236,7 @@ npm run test:unit:coverage:ui
 Comprehensive guides are available in the `docs/` folder:
 
 - **[Project Structure Guide](./docs/PROJECT_STRUCTURE.md)**: Architecture and folder organization
+- **[AnimeService Guide](./docs/ANIMESERVICE_GUIDE.md)**: Service layer documentation and usage
 - **[UI Design Guide](./docs/UI_DESIGN_GUIDE.md)**: Design system and component patterns
 - **[Options Guide](./docs/OPTIONS_GUIDE.md)**: Options page development
 - **[Popup Guide](./docs/POPUP_GUIDE.md)**: Popup component development
@@ -271,7 +266,7 @@ Our extension features a consistent **anime-themed design** with:
 ```
 Content Script ↔ Chrome Storage ↔ Background Script
      ↕                ↕                   ↕
-  Popup UI ←→ Storage Utils ←→ Options Dashboard (static)
+  Popup UI ←→ AnimeService ←→ Options Dashboard (static)
 ```
 
 ### Storage Architecture
@@ -294,7 +289,7 @@ Content Script ↔ Chrome Storage ↔ Background Script
 
 **High Priority:**
 
-- Connect dashboard UI to storage utilities
+- Connect dashboard UI to AnimeService backend
 - Add missing route implementations
 - Implement episode progress tracking interface
 

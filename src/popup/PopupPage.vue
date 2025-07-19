@@ -75,6 +75,32 @@
                 >
             </button>
 
+            <!-- Clear Hidden Button -->
+            <button
+                data-testid="clear-hidden-button"
+                class="group relative mt-3 flex w-full transform items-center justify-center gap-2 overflow-hidden rounded-xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-medium text-white/90 backdrop-blur-xs transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-white/40 hover:bg-white/20 hover:text-white hover:shadow-lg hover:shadow-black/20 active:translate-y-0 active:duration-75 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:bg-white/10"
+                @click="clearAllHidden"
+                :disabled="isClearing"
+            >
+                <!-- Animated shine effect -->
+                <div
+                    data-testid="clear-button-shine"
+                    class="absolute inset-0 -translate-x-full bg-linear-to-r from-transparent via-white/15 to-transparent transition-transform duration-700 ease-out group-hover:translate-x-full"
+                ></div>
+
+                <!-- Button content -->
+                <span
+                    data-testid="clear-button-icon"
+                    class="text-base drop-shadow-xs"
+                    >🗑️</span
+                >
+                <span
+                    data-testid="clear-button-text"
+                    class="font-medium tracking-wide drop-shadow-xs"
+                    >{{ isClearing ? "Clearing..." : "Clear All Hidden" }}</span
+                >
+            </button>
+
             <!-- Footer with animated dots -->
             <div
                 data-testid="popup-footer"
@@ -103,6 +129,12 @@
 </template>
 
 <script setup lang="ts">
+import { AnimeService } from "@/commons/services/AnimeService";
+import { ref } from "vue";
+
+const animeService = new AnimeService();
+const isClearing = ref(false);
+
 const openOptions = () => {
     try {
         if (typeof chrome !== "undefined" && chrome?.runtime?.openOptionsPage) {
@@ -114,8 +146,24 @@ const openOptions = () => {
         console.error("Failed to open options page:", error);
     }
 };
-</script>
 
-<style scoped>
-/* Using Tailwind CSS classes - minimal custom styles needed */
-</style>
+const clearAllHidden = async () => {
+    if (isClearing.value) return;
+
+    try {
+        isClearing.value = true;
+        const result = await animeService.clearAllHidden();
+
+        if (result.success) {
+            // Show success feedback - could be a toast or console log for now
+            console.log("✅", result.message);
+        } else {
+            console.error("❌ Failed to clear hidden anime:", result.message);
+        }
+    } catch (error) {
+        console.error("❌ Error clearing hidden anime:", error);
+    } finally {
+        isClearing.value = false;
+    }
+};
+</script>

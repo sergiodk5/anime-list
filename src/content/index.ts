@@ -82,6 +82,11 @@ export function canStopWatching(status: AnimeStatus): boolean {
  * Toast notification system
  */
 export function showToast(message: string, type: "success" | "error" | "info"): void {
+    // Skip toast creation in test environment
+    if (typeof window === "undefined" || !window.document || (globalThis as any).vitest) {
+        return;
+    }
+
     const toastId = `toast-${toastCounter++}`;
 
     const toast = document.createElement("div");
@@ -743,7 +748,7 @@ export async function handleClearHiddenClick(): Promise<void> {
         // Use the optimized clearAllHidden method
         const result = await animeService.clearAllHidden();
 
-        if (result.success) {
+        if (result?.success) {
             // Show all previously hidden items in the DOM
             const hiddenItems = document.querySelectorAll(".anime-hidden");
             hiddenItems.forEach((item) => {
@@ -751,9 +756,9 @@ export async function handleClearHiddenClick(): Promise<void> {
                 (item as HTMLElement).style.display = "";
             });
 
-            showToast(result.message, "success");
+            showToast(result.message || "Cleared hidden anime", "success");
         } else {
-            showToast(result.message, "error");
+            showToast(result?.message || "Failed to clear hidden anime", "error");
         }
     } catch (error) {
         console.error("Error handling clear hidden click:", error);
@@ -1379,7 +1384,586 @@ export async function init(): Promise<void> {
     }
 }
 
+// =============================================================================
+// SINGLE ANIME PAGE FUNCTIONALITY (PHASE 0)
+// =============================================================================
+
+/**
+ * Single page controller for watch pages with anime info modal
+ */
+// Single Page Modal state - module-level variables for state management
+/**
+ * Single page modal functions and variables
+ */
+export let singlePageModalElement: HTMLElement | null = null;
+let singlePageAnimeService: AnimeService | null = null;
+
+/**
+ * Reset the single page anime service for testing
+ */
+export function resetSinglePageAnimeService(): void {
+    singlePageAnimeService = null;
+}
+
+/**
+ * Get or create the single page anime service instance
+ */
+function getSinglePageAnimeService(): AnimeService {
+    if (!singlePageAnimeService) {
+        singlePageAnimeService = new AnimeService();
+    }
+    return singlePageAnimeService;
+}
+
+/**
+ * Check if current page is a watch page
+ */
+export function isWatchPage(): boolean {
+    return window.location.href.includes("/watch/");
+}
+
+/**
+ * Extract anime data from watch page
+ */
+export function extractSinglePageAnimeData(): AnimeData | null {
+    try {
+        const url = window.location.href;
+        const urlMatch = url.match(/\/watch\/([^/?]+)/);
+        if (!urlMatch) return null;
+
+        const originalSlug = urlMatch[1];
+
+        // Try multiple ID extraction strategies
+        let animeId = originalSlug;
+
+        // Strategy 1: Extract numeric ID from end (e.g., "anime-name-12345" -> "12345")
+        const numericIdMatch = originalSlug.match(/-(\d+)$/);
+        if (numericIdMatch) {
+            animeId = numericIdMatch[1];
+        }
+
+        // Strategy 2: If no numeric suffix, use the full slug
+        // This handles cases where the anime ID is the full slug
+
+        // Try different selectors to get anime title
+        const titleSelectors = [
+            ".ani_detail-info h2",
+            ".watch-detail .title",
+            "h1.anime-title",
+            "h1",
+            "h2",
+            "[class*='title']",
+            ".film-name",
+            ".anime-title",
+        ];
+
+        let animeTitle = originalSlug; // Fallback to original slug
+        for (const selector of titleSelectors) {
+            const element = document.querySelector(selector);
+            if (element?.textContent?.trim()) {
+                animeTitle = element.textContent.trim();
+                break;
+            }
+        }
+
+        const animeData = {
+            animeId,
+            animeTitle,
+            animeSlug: originalSlug.toLowerCase(),
+        };
+
+        // Store debug info for modal display
+        (animeData as any).debugInfo = {
+            url,
+            originalSlug,
+            extractionStrategy: numericIdMatch ? "numeric-suffix" : "full-slug",
+            titleSelectorUsed: titleSelectors.find((sel) => document.querySelector(sel)?.textContent?.trim()) || "none",
+        };
+
+        console.log("Extracted anime data from watch page:", animeData);
+        return animeData;
+    } catch (error) {
+        console.error("Error extracting anime data:", error);
+        return null;
+    }
+}
+
+/**
+ * Create the floating "Anime Info" button
+ */
+export function createSinglePageInfoButton(animeData: AnimeData): void {
+    // Remove existing button
+    const existingButton = document.getElementById("anime-list-info-button");
+    if (existingButton) {
+        existingButton.remove();
+    }
+
+    // Create button
+    const button = document.createElement("button");
+    button.id = "anime-list-info-button";
+    button.textContent = "Anime Info";
+
+    // Add styles
+    const style = document.createElement("style");
+    style.textContent = `
+        #anime-list-info-button {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            z-index: 9999;
+            padding: 12px 20px;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.9), rgba(124, 58, 237, 0.9));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            transition: all 0.2s ease;
+        }
+        #anime-list-info-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        }
+    `;
+
+    if (!document.querySelector("#anime-list-button-styles")) {
+        style.id = "anime-list-button-styles";
+        document.head.appendChild(style);
+    }
+
+    button.addEventListener("click", () => openSinglePageModal(animeData));
+    document.body.appendChild(button);
+}
+
+/**
+ * Open the anime info modal
+ */
+async function openSinglePageModal(animeData: AnimeData): Promise<void> {
+    try {
+        // Try to get status with the extracted ID first
+        let status = await getSinglePageAnimeService().getAnimeStatus(animeData.animeId);
+
+        // If not found and we used numeric extraction, try with the full slug as backup
+        const debug = (animeData as any).debugInfo || {};
+        if (
+            !status.isTracked &&
+            !status.isPlanned &&
+            !status.isHidden &&
+            debug.extractionStrategy === "numeric-suffix" &&
+            debug.originalSlug
+        ) {
+            const alternativeStatus = await getSinglePageAnimeService().getAnimeStatus(debug.originalSlug);
+            if (alternativeStatus.isTracked || alternativeStatus.isPlanned || alternativeStatus.isHidden) {
+                status = alternativeStatus;
+                // Update the anime data to use the working ID
+                animeData.animeId = debug.originalSlug;
+                debug.usedFallbackId = true;
+            }
+        }
+
+        // Debug logging
+        console.log("Single Page Modal Debug:");
+        console.log("Anime Data:", animeData);
+        console.log("Anime Status:", status);
+        console.log("Is Tracked:", status.isTracked);
+        console.log("Is Planned:", status.isPlanned);
+        console.log("Is Hidden:", status.isHidden);
+        console.log("Progress:", status.progress);
+
+        showSinglePageModal(animeData, status);
+    } catch (error) {
+        console.error("Error opening modal:", error);
+        showToast("Error loading anime information", "error");
+    }
+}
+
+/**
+ * Show the modal
+ */
+export function showSinglePageModal(animeData: AnimeData, status: AnimeStatus): void {
+    if (singlePageModalElement) {
+        closeSinglePageModal();
+    }
+
+    // Create modal overlay
+    singlePageModalElement = document.createElement("div");
+    singlePageModalElement.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(10px);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    `;
+
+    // Create modal content
+    const modalContent = document.createElement("div");
+    modalContent.style.cssText = `
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 2rem;
+        min-width: 400px;
+        max-width: 500px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        color: white;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    `;
+
+    // Add title
+    const title = document.createElement("h2");
+    title.textContent = animeData.animeTitle;
+    title.style.cssText = "margin: 0 0 1rem 0; font-size: 1.5rem;";
+
+    // Add status
+    const statusText = document.createElement("p");
+    statusText.textContent = getSinglePageStatusText(status);
+    statusText.style.cssText = "margin: 0 0 1.5rem 0; opacity: 0.8;";
+
+    // Add actions
+    const actions = getSinglePageModalActions(status);
+    const actionsContainer = document.createElement("div");
+    actionsContainer.style.cssText = "margin-bottom: 1.5rem;";
+
+    actions.forEach((action) => {
+        if (action.type === "episodeControls") {
+            // Create episode controls instead of a button
+            const episodeControlsContainer = document.createElement("div");
+            episodeControlsContainer.style.cssText = `
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                margin-bottom: 0.75rem;
+                padding: 12px 16px;
+                background: rgba(16, 185, 129, 0.1);
+                border: 1px solid rgba(16, 185, 129, 0.3);
+                border-radius: 8px;
+                color: rgb(167, 243, 208);
+            `;
+
+            const currentEpisode = status.progress?.currentEpisode || 1;
+
+            episodeControlsContainer.innerHTML = `
+                <span style="font-size: 14px; font-weight: 500;">Episode:</span>
+                <button class="modal-episode-btn modal-episode-decrement" style="
+                    width: 32px;
+                    height: 32px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: rgba(255, 255, 255, 0.1);
+                    border: 1px solid rgba(255, 255, 255, 0.3);
+                    border-radius: 6px;
+                    color: white;
+                    cursor: pointer;
+                    font-size: 16px;
+                    font-weight: bold;
+                    transition: all 0.2s ease;
+                ">−</button>
+                <input type="number" class="modal-episode-current" min="1" max="999" value="${currentEpisode}" style="
+                    width: 60px;
+                    padding: 8px;
+                    background: rgba(255, 255, 255, 0.1);
+                    border: 1px solid rgba(255, 255, 255, 0.3);
+                    border-radius: 6px;
+                    color: white;
+                    font-size: 14px;
+                    text-align: center;
+                    outline: none;
+                ">
+                <button class="modal-episode-btn modal-episode-increment" style="
+                    width: 32px;
+                    height: 32px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: rgba(255, 255, 255, 0.1);
+                    border: 1px solid rgba(255, 255, 255, 0.3);
+                    border-radius: 6px;
+                    color: white;
+                    cursor: pointer;
+                    font-size: 16px;
+                    font-weight: bold;
+                    transition: all 0.2s ease;
+                ">+</button>
+            `;
+
+            // Add event listeners
+            const decrementBtn = episodeControlsContainer.querySelector(
+                ".modal-episode-decrement",
+            ) as HTMLButtonElement;
+            const incrementBtn = episodeControlsContainer.querySelector(
+                ".modal-episode-increment",
+            ) as HTMLButtonElement;
+            const episodeInput = episodeControlsContainer.querySelector(".modal-episode-current") as HTMLInputElement;
+
+            decrementBtn.addEventListener("click", async () => {
+                const current = parseInt(episodeInput.value, 10);
+                const newEpisode = Math.max(1, current - 1);
+                if (newEpisode !== current) {
+                    episodeInput.value = newEpisode.toString();
+                    await updateSinglePageEpisode(animeData.animeId, newEpisode);
+                }
+            });
+
+            incrementBtn.addEventListener("click", async () => {
+                const current = parseInt(episodeInput.value, 10);
+                const newEpisode = Math.min(999, current + 1);
+                if (newEpisode !== current) {
+                    episodeInput.value = newEpisode.toString();
+                    await updateSinglePageEpisode(animeData.animeId, newEpisode);
+                }
+            });
+
+            episodeInput.addEventListener("change", async () => {
+                const newEpisode = parseInt(episodeInput.value, 10);
+                if (!isNaN(newEpisode) && newEpisode >= 1 && newEpisode <= 999) {
+                    await updateSinglePageEpisode(animeData.animeId, newEpisode);
+                } else {
+                    episodeInput.value = (status.progress?.currentEpisode || 1).toString();
+                }
+            });
+
+            // Add hover effects
+            [decrementBtn, incrementBtn].forEach((btn) => {
+                btn.addEventListener("mouseenter", () => {
+                    btn.style.background = "rgba(16, 185, 129, 0.3)";
+                    btn.style.borderColor = "rgba(16, 185, 129, 0.5)";
+                });
+                btn.addEventListener("mouseleave", () => {
+                    btn.style.background = "rgba(255, 255, 255, 0.1)";
+                    btn.style.borderColor = "rgba(255, 255, 255, 0.3)";
+                });
+            });
+
+            actionsContainer.appendChild(episodeControlsContainer);
+        } else {
+            // Create regular button
+            const button = document.createElement("button");
+            button.textContent = action.label;
+            button.style.cssText = `
+                display: block;
+                width: 100%;
+                margin-bottom: 0.75rem;
+                padding: 12px 16px;
+                border: none;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 14px;
+                font-weight: 500;
+                ${getSinglePageButtonStyles(action.style)}
+            `;
+
+            button.addEventListener("click", () => {
+                handleSinglePageAction(action.type, animeData);
+            });
+
+            actionsContainer.appendChild(button);
+        }
+    });
+
+    // Close button
+    const closeButton = document.createElement("button");
+    closeButton.textContent = "Close";
+    closeButton.style.cssText = `
+        width: 100%;
+        padding: 12px;
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 8px;
+        cursor: pointer;
+    `;
+    closeButton.addEventListener("click", () => closeSinglePageModal());
+
+    // Assemble modal
+    modalContent.appendChild(title);
+    modalContent.appendChild(statusText);
+    modalContent.appendChild(actionsContainer);
+    modalContent.appendChild(closeButton);
+    singlePageModalElement.appendChild(modalContent);
+
+    // Event handlers
+    singlePageModalElement.addEventListener("click", (e) => {
+        if (e.target === singlePageModalElement) {
+            closeSinglePageModal();
+        }
+    });
+
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+            closeSinglePageModal();
+        }
+    });
+
+    // Show modal
+    document.body.appendChild(singlePageModalElement);
+    setTimeout(() => {
+        if (singlePageModalElement) {
+            singlePageModalElement.style.opacity = "1";
+        }
+    }, 10);
+}
+
+/**
+ * Get status text for modal display
+ */
+export function getSinglePageStatusText(status: AnimeStatus): string {
+    if (status.isHidden) return "Hidden from lists";
+    if (status.isTracked && status.progress) {
+        return `Currently watching - Episode ${status.progress.currentEpisode}`;
+    }
+    if (status.isTracked) return "Currently watching";
+    if (status.isPlanned) return "Planned to watch";
+    return "Not tracked";
+}
+
+/**
+ * Get modal actions based on anime status
+ */
+export function getSinglePageModalActions(status: AnimeStatus) {
+    if (status.isHidden) {
+        return [{ type: "unhide", label: "Remove from Hidden", style: "success" }];
+    } else if (status.isPlanned) {
+        return [
+            { type: "removePlan", label: "Remove from Plan", style: "danger" },
+            { type: "startWatching", label: "Start Watching", style: "primary" },
+        ];
+    } else if (status.isTracked) {
+        return [
+            { type: "episodeControls", label: "Episode Controls", style: "primary" },
+            { type: "stopWatching", label: "Stop Watching", style: "danger" },
+        ];
+    } else {
+        return [
+            { type: "addToPlan", label: "Add to Plan", style: "primary" },
+            { type: "hide", label: "Hide Anime", style: "warning" },
+        ];
+    }
+}
+
+/**
+ * Get button styles based on style type
+ */
+function getSinglePageButtonStyles(style: string): string {
+    switch (style) {
+        case "primary":
+            return "background: linear-gradient(135deg, rgba(139, 92, 246, 0.9), rgba(124, 58, 237, 0.9)); color: white;";
+        case "success":
+            return "background: linear-gradient(135deg, rgba(34, 197, 94, 0.9), rgba(22, 163, 74, 0.9)); color: white;";
+        case "danger":
+            return "background: linear-gradient(135deg, rgba(239, 68, 68, 0.9), rgba(220, 38, 38, 0.9)); color: white;";
+        case "warning":
+            return "background: linear-gradient(135deg, rgba(245, 158, 11, 0.9), rgba(217, 119, 6, 0.9)); color: white;";
+        default:
+            return "background: rgba(255, 255, 255, 0.1); color: white;";
+    }
+}
+
+/**
+ * Handle modal action clicks
+ */
+async function handleSinglePageAction(actionType: string, animeData: AnimeData): Promise<void> {
+    try {
+        switch (actionType) {
+            case "addToPlan":
+                await getSinglePageAnimeService().addToPlanToWatch(animeData);
+                showToast("Added to plan to watch", "success");
+                break;
+            case "removePlan":
+                await getSinglePageAnimeService().removeFromPlanToWatch(animeData.animeId);
+                showToast("Removed from plan to watch", "info");
+                break;
+            case "startWatching":
+                await getSinglePageAnimeService().startWatching(animeData, 1);
+                showToast("Started watching", "success");
+                break;
+            case "stopWatching":
+                await getSinglePageAnimeService().stopWatching(animeData.animeId);
+                showToast("Stopped watching", "info");
+                break;
+            case "hide":
+                await getSinglePageAnimeService().hideAnime(animeData.animeId);
+                showToast("Anime hidden", "info");
+                break;
+            case "unhide":
+                await getSinglePageAnimeService().unhideAnime(animeData.animeId);
+                showToast("Removed from hidden", "success");
+                break;
+        }
+        closeSinglePageModal();
+    } catch (error) {
+        console.error(`Error handling action ${actionType}:`, error);
+        showToast("An error occurred", "error");
+    }
+}
+
+/**
+ * Update episode progress
+ */
+export async function updateSinglePageEpisode(animeId: string, newEpisode: number): Promise<boolean> {
+    try {
+        const result = await getSinglePageAnimeService().updateEpisodeProgress(animeId, newEpisode);
+        if (result.success) {
+            showToast(`Updated to episode ${newEpisode}`, "success");
+            return true;
+        } else {
+            showToast(result.message || "Error updating episode", "error");
+            return false;
+        }
+    } catch (error) {
+        console.error("Error updating episode:", error);
+        showToast("Error updating episode", "error");
+        return false;
+    }
+}
+
+/**
+ * Close the modal
+ */
+export function closeSinglePageModal(): void {
+    if (!singlePageModalElement) return;
+
+    singlePageModalElement.style.opacity = "0";
+    setTimeout(() => {
+        if (singlePageModalElement && singlePageModalElement.parentNode) {
+            singlePageModalElement.parentNode.removeChild(singlePageModalElement);
+            singlePageModalElement = null;
+        }
+    }, 300);
+}
+
+/**
+ * Initialize single page functionality
+ */
+export function initializeSinglePage(): void {
+    if (!isWatchPage()) return;
+
+    const animeData = extractSinglePageAnimeData();
+    if (animeData) {
+        createSinglePageInfoButton(animeData);
+    }
+}
+
 // Only auto-initialize if not in test environment
 if (typeof window !== "undefined" && typeof document !== "undefined" && (globalThis as any).window?.location) {
     init();
+
+    // Initialize single page functionality
+    setTimeout(() => {
+        initializeSinglePage();
+    }, 1000);
 }
