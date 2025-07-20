@@ -36,6 +36,38 @@ import {
 const mockAnimeServiceModule = await import("@/commons/services");
 const mockAnimeService = (mockAnimeServiceModule as any).__mockAnimeService;
 
+/**
+ * Helper function to wait for modal to appear and be fully initialized
+ * This replaces fixed timeouts with polling for better CI reliability
+ */
+async function waitForModalToAppear(maxWait = 1000): Promise<HTMLElement | null> {
+    const startTime = Date.now();
+    while (Date.now() - startTime < maxWait) {
+        const element = document.querySelector('[style*="position: fixed"][style*="z-index: 10000"]') as HTMLElement;
+        if (element && element.style.opacity === "1") {
+            return element;
+        }
+        await new Promise(resolve => setTimeout(resolve, 10));
+    }
+    return null;
+}
+
+/**
+ * Helper function to wait for modal to close and be fully removed
+ * This replaces fixed timeouts with polling for better CI reliability
+ */
+async function waitForModalToClose(maxWait = 1000): Promise<boolean> {
+    const startTime = Date.now();
+    while (Date.now() - startTime < maxWait) {
+        const element = document.querySelector('[style*="position: fixed"][style*="z-index: 10000"]') as HTMLElement;
+        if (!element || element.style.opacity === "0") {
+            return true;
+        }
+        await new Promise(resolve => setTimeout(resolve, 10));
+    }
+    return false;
+}
+
 // Test the single page modal integration with plain functions
 describe("Single Page Modal Integration", () => {
     let originalLocation: Location;
@@ -815,11 +847,8 @@ describe("Single Page Modal Integration", () => {
             // Show modal
             showSinglePageModal(animeData, mockStatus);
 
-            // Wait for modal to be fully initialized (including opacity set to "1")
-            await new Promise((resolve) => setTimeout(resolve, 20));
-
-            // Find the modal
-            const modalElement = document.querySelector('[style*="position: fixed"][style*="z-index: 10000"]');
+            // Wait for modal to be fully initialized with polling
+            const modalElement = await waitForModalToAppear();
             expect(modalElement).toBeTruthy();
 
             // Verify modal is initially visible
@@ -829,12 +858,9 @@ describe("Single Page Modal Integration", () => {
             const escapeEvent = new KeyboardEvent("keydown", { key: "Escape" });
             document.dispatchEvent(escapeEvent);
 
-            // Wait for modal closing animation and verify
-            await new Promise((resolve) => setTimeout(resolve, 20));
-
-            if (modalElement) {
-                expect((modalElement as HTMLElement).style.opacity).toBe("0");
-            }
+            // Wait for modal closing animation with polling
+            const closed = await waitForModalToClose();
+            expect(closed).toBe(true);
         });
 
         it("should handle modal backdrop click to close", async () => {
@@ -853,11 +879,8 @@ describe("Single Page Modal Integration", () => {
             // Show modal
             showSinglePageModal(animeData, mockStatus);
 
-            // Wait for modal to be fully initialized
-            await new Promise((resolve) => setTimeout(resolve, 20));
-
-            // Find the modal
-            const modalElement = document.querySelector('[style*="position: fixed"][style*="z-index: 10000"]');
+            // Wait for modal to be fully initialized with polling
+            const modalElement = await waitForModalToAppear();
             expect(modalElement).toBeTruthy();
 
             // Verify modal is initially visible
@@ -869,9 +892,9 @@ describe("Single Page Modal Integration", () => {
                 Object.defineProperty(clickEvent, "target", { value: modalElement });
                 modalElement.dispatchEvent(clickEvent);
 
-                // Wait for modal closing animation and verify
-                await new Promise((resolve) => setTimeout(resolve, 20));
-                expect((modalElement as HTMLElement).style.opacity).toBe("0");
+                // Wait for modal closing animation with polling
+                const closed = await waitForModalToClose();
+                expect(closed).toBe(true);
             }
         });
     });
