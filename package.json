@@ -6,8 +6,9 @@
     "scripts": {
         "dev": "vite",
         "build": "run-p type-check \"build-only {@}\" --",
+        "build:content": "vite build --config vite.content.config.ts",
         "build:manifest": "node dist/src/manifest/index.js > dist/manifest.json",
-        "build:ext": "npm run clear-dist && npm run build && npm run build:manifest",
+        "build:ext": "npm run clear-dist && npm run build && npm run build:content && npm run build:manifest",
         "build-only": "vite build",
         "preview": "vite preview",
         "test:unit": "vitest run",

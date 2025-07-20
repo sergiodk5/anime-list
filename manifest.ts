@@ -34,7 +34,7 @@ const manifest: any = {
     permissions: ["activeTab", "storage"],
     web_accessible_resources: [
         {
-            resources: ["assets/images/*"],
+            resources: ["assets/images/*", "assets/*.js"],
             matches: ["<all_urls>"],
         },
     ],
