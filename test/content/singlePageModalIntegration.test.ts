@@ -814,16 +814,18 @@ describe("Single Page Modal Integration", () => {
 
             // Use fake timers to control the modal timing precisely
             vi.useFakeTimers();
-            
+
             try {
                 // Show modal (this will create element with opacity 0 and set timeout)
                 showSinglePageModal(animeData, mockStatus);
-                
+
                 // Fast-forward past the 10ms timeout to make modal visible
                 vi.advanceTimersByTime(15);
-                
+
                 // Now find the modal - it should be visible
-                const modalElement = document.querySelector('[style*="position: fixed"][style*="z-index: 10000"]') as HTMLElement;
+                const modalElement = document.querySelector(
+                    '[style*="position: fixed"][style*="z-index: 10000"]',
+                ) as HTMLElement;
                 expect(modalElement).toBeTruthy();
                 expect(modalElement.style.opacity).toBe("1");
 
@@ -833,7 +835,7 @@ describe("Single Page Modal Integration", () => {
 
                 // Fast-forward past the closing animation timeout (300ms)
                 vi.advanceTimersByTime(350);
-                
+
                 // Modal should now be closed (opacity 0)
                 expect(modalElement.style.opacity).toBe("0");
             } finally {
@@ -856,16 +858,18 @@ describe("Single Page Modal Integration", () => {
 
             // Use fake timers to control the modal timing precisely
             vi.useFakeTimers();
-            
+
             try {
                 // Show modal (this will create element with opacity 0 and set timeout)
                 showSinglePageModal(animeData, mockStatus);
-                
+
                 // Fast-forward past the 10ms timeout to make modal visible
                 vi.advanceTimersByTime(15);
-                
+
                 // Now find the modal - it should be visible
-                const modalElement = document.querySelector('[style*="position: fixed"][style*="z-index: 10000"]') as HTMLElement;
+                const modalElement = document.querySelector(
+                    '[style*="position: fixed"][style*="z-index: 10000"]',
+                ) as HTMLElement;
                 expect(modalElement).toBeTruthy();
                 expect(modalElement.style.opacity).toBe("1");
 
@@ -876,7 +880,7 @@ describe("Single Page Modal Integration", () => {
 
                 // Fast-forward past the closing animation timeout (300ms)
                 vi.advanceTimersByTime(350);
-                
+
                 // Modal should now be closed (opacity 0 or removed)
                 expect(modalElement.style.opacity).toBe("0");
             } finally {
