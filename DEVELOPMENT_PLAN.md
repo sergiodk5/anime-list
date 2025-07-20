@@ -2,9 +2,307 @@
 
 > **Comprehensive development roadmap after AnimeService architecture completion**  
 > Created: July 19, 2025  
-> Status: Ready for Phase 1 Implementation
+> Updated: July 20, 2025 - Added Single Anime Page Modal Implementation  
+> Status: Phase 0 (Single Page Modal) - Ready for Implementation
 
 ---
+
+## 🎯 **PHASE 0: Single Anime Page Modal Implementation**
+
+> **Priority**: IMMEDIATE - New Core Feature Request  
+> **Estimated Time**: 1-2 weeks  
+> **URL Pattern**: Pages containing `/watch/` path (e.g., `https://hianime.to/watch/immoral-guild-uncensored-18216`)
+
+### **Requirements Analysis**
+
+#### **Single Anime Page Identification**
+
+- **URL Detection**: Page URL must contain `/watch/` path segment
+- **Page Type**: Individual anime watch/detail pages (not anime listing pages)
+- **Trigger**: "Anime Info" button that opens a modal with comprehensive anime management
+
+#### **Modal Window Specifications**
+
+**Modal Content Based on Anime Status:**
+
+1. **Hidden Anime:**
+    - ✅ "Remove from Hidden" button
+    - 🚫 No other actions available
+
+2. **Planned Anime:**
+    - ✅ "Remove from Plan" button
+    - ✅ "Start Watching" button (moves to watching list)
+    - 🚫 Cannot hide planned anime
+
+3. **Currently Watching Anime:**
+    - ✅ "Stop Watching" button (removes from watching list)
+    - ✅ Episode input/selector to update current episode
+    - 🚫 Cannot plan or hide watching anime
+
+4. **Untracked Anime (Clean State):**
+    - ✅ "Add to Plan" button
+    - ✅ "Hide Anime" button
+    - 🚫 Cannot start watching without planning first (business rule)
+
+#### **Toast Notification Requirements**
+
+- **Position**: Top-right corner of page
+- **Stacking**: Multiple notifications stack vertically
+- **Auto-dismiss**: 3-4 second timer
+- **Types**: Success (green), Error (red), Info (blue)
+- **Styling**: Glass-morphism design matching extension theme
+
+### **0.1 Content Script Architecture Refactoring**
+
+**Objective**: Break down the 1386-line `index.ts` into modular architecture
+
+**Current State**: Single monolithic file with all functionality
+**Target State**: Clean separation of concerns with dedicated modules
+
+#### **Proposed File Structure**
+
+```
+src/content/
+├── index.ts                    # Main entry point and page detection
+├── controllers/
+│   ├── ListPageController.ts   # Handles anime listing pages (current functionality)
+│   └── SinglePageController.ts # NEW: Handles individual anime pages
+├── components/
+│   ├── ui/
+│   │   ├── ToastSystem.ts      # Toast notification management
+│   │   ├── ModalManager.ts     # Modal window management
+│   │   └── ButtonFactory.ts    # Button creation utilities
+│   ├── buttons/
+│   │   ├── PlanButton.ts       # Plan to watch button logic
+│   │   ├── WatchingControls.ts # Episode tracking controls
+│   │   ├── HideButton.ts       # Hide anime button logic
+│   │   └── InfoButton.ts       # NEW: Anime info button for single pages
+│   └── modals/
+│       └── AnimeInfoModal.ts   # NEW: Single page anime info modal
+├── services/
+│   ├── PageDetector.ts         # Determines page type (list vs single)
+│   ├── AnimeExtractor.ts       # Extracts anime data from DOM
+│   └── BusinessRules.ts        # Centralized business rule validation
+└── types/
+    └── ContentTypes.ts         # Content script specific types
+```
+
+#### **Tasks for Architecture Refactoring**
+
+- [x] **Create `PageDetector.ts`**
+    - ✅ Page type detection (LIST_PAGE, SINGLE_PAGE, UNKNOWN)
+    - ✅ URL pattern matching for watch pages (/watch/ detection)
+    - ✅ Dual functionality support (watch pages can have both single page modal AND anime lists)
+    - ✅ Helper methods: `shouldRunSinglePageLogic()`, `shouldRunListPageLogic()`
+
+- [x] **Create `SinglePageController.ts`**
+    - ✅ Anime info floating button creation with glass-morphism styling
+    - ✅ CSS-based hover effects (no JavaScript event listeners)
+    - ✅ Modal creation and management with proper z-index and animations
+    - ✅ Status-based action buttons with episode input validation
+    - ✅ Integration with AnimeService for all CRUD operations
+    - ✅ Business rule enforcement in modal actions
+
+- [x] **Create `AnimeExtractor.ts`**
+    - ✅ Watch page anime data extraction with multiple selector fallbacks
+    - ✅ List page compatibility maintenance for existing functionality
+
+- [x] **Create `ToastSystem.ts`**
+    - ✅ Singleton toast notification system with glass-morphism design
+    - ✅ Multiple toast stacking in top-right corner
+    - ✅ Auto-dismiss with configurable timing (3.5 seconds)
+    - ✅ Success/Error/Info toast types with color coding
+    - ✅ Click-to-dismiss functionality
+
+- [x] **Create `ContentTypes.ts`**
+    - ✅ TypeScript interfaces for AnimeData, AnimeStatus, ModalAction, Toast
+    - ✅ PageType enum and ContentFeature enum for feature flags
+    - ✅ Proper type safety for all content script components
+
+- [x] **Update main `index.ts`**
+    - ✅ Modular initialization based on page type detection
+    - ✅ Support for both single page and list page functionality on same page
+    - ✅ MutationObserver for SPA navigation handling
+    - ✅ Proper error handling and logging
+
+### **0.2 Single Page Anime Data Extraction**
+
+**Objective**: Extract anime information from individual watch pages
+
+**Tasks**:
+
+- [ ] **Analyze watch page DOM structure**
+    - Identify anime title selectors on watch pages
+    - Identify anime ID extraction patterns
+    - Map different anime sites' watch page structures
+
+- [ ] **Create `WatchPageExtractor.ts`**
+
+    ```typescript
+    export class WatchPageExtractor {
+        static extractAnimeData(): AnimeData | null {
+            // Try different selectors based on site
+            const titleSelectors = [
+                ".ani_detail-info h2", // Common pattern 1
+                ".watch-detail .title", // Common pattern 2
+                "h1.anime-title", // Common pattern 3
+                "[data-title]", // Fallback pattern
+            ];
+
+            // Extract from URL as fallback
+            const urlMatch = window.location.href.match(/\/watch\/([^/\?]+)/);
+            if (!urlMatch) return null;
+
+            const animeId = urlMatch[1];
+
+            // Try to get title from DOM
+            let animeTitle = animeId; // Fallback to ID
+            for (const selector of titleSelectors) {
+                const element = document.querySelector(selector);
+                if (element?.textContent?.trim()) {
+                    animeTitle = element.textContent.trim();
+                    break;
+                }
+            }
+
+            return {
+                animeId,
+                animeTitle,
+                animeSlug: animeId.toLowerCase(),
+            };
+        }
+    }
+    ```
+
+### **0.3 Modal UI Implementation**
+
+**Objective**: Create responsive modal with glass-morphism design
+
+**Tasks**:
+
+- [ ] **Design modal layout**
+
+    ```css
+    .anime-info-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(10px);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .anime-info-modal-content {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 2rem;
+        min-width: 400px;
+        max-width: 500px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+    ```
+
+- [ ] **Implement modal state management**
+    - Open/close animations
+    - Keyboard navigation (ESC to close)
+    - Click outside to close
+    - Prevent body scrolling when modal is open
+
+- [ ] **Add responsive design**
+    - Mobile-friendly modal sizing
+    - Touch-friendly button sizes
+    - Proper spacing for different screen sizes
+
+### **0.4 Business Rule Integration**
+
+**Objective**: Enforce same business rules as list pages in modal actions
+
+**Tasks**:
+
+- [ ] **Implement action validation**
+
+    ```typescript
+    class ModalActionValidator {
+        static validateAction(action: string, status: AnimeStatus): boolean {
+            switch (action) {
+                case "addToPlan":
+                    return canAddToPlan(status);
+                case "startWatching":
+                    return canStartWatching(status);
+                case "hide":
+                    return canHide(status);
+                // ... other actions
+            }
+        }
+
+        static getBlockedReason(action: string, status: AnimeStatus): string {
+            // Return user-friendly error messages
+            if (action === "hide" && status.isPlanned) {
+                return "Cannot hide planned anime. Remove from plan first.";
+            }
+            // ... other blocked actions
+        }
+    }
+    ```
+
+- [ ] **Add action feedback**
+    - Success toasts for completed actions
+    - Error toasts for blocked actions
+    - Loading states during API calls
+
+### **0.5 Testing & Integration**
+
+**Tasks**:
+
+- [ ] **Create test structure for new architecture**
+
+    ```
+    test/content/
+    ├── controllers/
+    │   ├── SinglePageController.test.ts
+    │   └── ListPageController.test.ts
+    ├── components/
+    │   └── modals/
+    │       └── AnimeInfoModal.test.ts
+    └── services/
+        └── PageDetector.test.ts
+    ```
+
+- [ ] **Test single page detection**
+    - Various watch page URL patterns
+    - Correct page type identification
+    - Anime data extraction accuracy
+
+- [ ] **Test modal functionality**
+    - Modal open/close behavior
+    - Action button availability based on status
+    - Toast notification integration
+    - Business rule enforcement
+
+- [ ] **Test responsive behavior**
+    - Different screen sizes
+    - Mobile interaction
+    - Accessibility compliance
+
+### **0.6 Documentation Updates**
+
+**Tasks**:
+
+- [ ] **Update content script documentation**
+    - Document new architecture
+    - Add usage examples for single pages
+    - Update API documentation
+
+- [ ] **Create modal design guide**
+    - Glass-morphism styling patterns
+    - Responsive design guidelines
+    - Animation specifications
 
 ## � **CORE BUSINESS REQUIREMENTS**
 
@@ -88,11 +386,11 @@ Current content script allows these **INVALID** operations:
 
 ---
 
-## 🎯 PHASE 1: Watch List Feature Implementation
+## 🎯 PHASE 1: Watch List Feature Implementation (List Pages)
 
-> **Priority**: Critical - Core missing functionality
-> **Estimated Time**: 1-2 weeks
-> **Dependencies**: None (architecture complete)
+> **Priority**: High - Core missing functionality for anime listing pages  
+> **Estimated Time**: 1-2 weeks  
+> **Dependencies**: Phase 0 (architecture refactoring complete)
 
 ### 1.1 Content Script Watch List UI
 
@@ -495,7 +793,17 @@ Current content script allows these **INVALID** operations:
 
 ## 📋 Implementation Checklist
 
-### **Immediate Next Steps (This Week)**
+### **Immediate Next Steps (This Week - Phase 0)**
+
+- [ ] **Phase 0.1**: Create `PageDetector.ts` to identify list vs single pages
+- [ ] **Phase 0.1**: Break down monolithic `index.ts` into controller architecture
+- [ ] **Phase 0.2**: Create `SinglePageController.ts` for watch page handling
+- [ ] **Phase 0.2**: Implement anime data extraction from watch pages
+- [ ] **Phase 0.3**: Create `AnimeInfoModal.ts` with glass-morphism design
+- [ ] **Phase 0.4**: Integrate business rules and toast notifications for modal actions
+- [ ] **Phase 0.5**: Add comprehensive testing for new architecture
+
+### **Short Term (Next 2 Weeks - Phase 1)**
 
 - [ ] **Phase 1.1**: Implement business rule validation functions (`canAddToPlan()`, `canStartWatching()`, `canHide()`)
 - [ ] **Phase 1.1**: Create `createStartWatchingButton()` with episode input validation
@@ -526,9 +834,22 @@ Current content script allows these **INVALID** operations:
 
 ## 🚀 Success Criteria
 
-### **Phase 1 Success**: Content Script Business Rule Implementation
+### **Phase 0 Success**: Single Anime Page Modal Implementation
 
-- [ ] **Business Rules Enforced**: All anime state transitions follow exact specifications
+- [ ] **Page Detection**: Correctly identifies watch pages containing `/watch/` URL pattern
+- [ ] **Modal Functionality**: "Anime Info" button opens responsive modal with anime management
+- [ ] **Business Rules Enforced**: Same state transition rules as list pages
+    - ✅ Hidden anime: Only "Remove from Hidden" action available
+    - ✅ Planned anime: "Remove from Plan" and "Start Watching" actions available
+    - ✅ Watching anime: "Stop Watching" and episode update available
+    - ✅ Clean state: "Add to Plan" and "Hide" actions available
+- [ ] **Toast Notifications**: All modal actions trigger appropriate notifications
+- [ ] **Responsive Design**: Modal works on desktop and mobile devices
+- [ ] **Architecture Refactoring**: Content script broken into modular, testable components
+
+### **Phase 1 Success**: List Page Business Rule Implementation
+
+- [ ] **Business Rules Enforced**: All anime state transitions follow exact specifications on listing pages
     - ✅ Planned anime cannot be hidden
     - ✅ Watching anime cannot be planned or hidden
     - ✅ Hidden anime cannot be planned or watched (until unhidden)
@@ -569,3 +890,24 @@ Current content script allows these **INVALID** operations:
 - **Testing Patterns**: Match existing test patterns in `test/` directory
 - **Storage Models**: Use existing `AnimeData`, `EpisodeProgress`, `PlanToWatch` interfaces
 - **Business Logic**: Reference original plan requirements for complete state management
+- **Single Page URL Pattern**: `/watch/` segment indicates individual anime page (e.g., `https://hianime.to/watch/anime-name-12345`)
+
+## 📋 Architecture Decision Records
+
+### **ADR-001: Content Script Refactoring**
+
+- **Decision**: Break monolithic `index.ts` (1386 lines) into modular controller architecture
+- **Reasoning**: Single responsibility principle, better testability, cleaner maintenance
+- **Impact**: New developers can understand and modify specific features without touching entire codebase
+
+### **ADR-002: Page Detection Strategy**
+
+- **Decision**: Use URL pattern matching for page type detection
+- **Reasoning**: Reliable across different anime sites, easily extendable
+- **Pattern**: `/watch/` segment indicates single anime page vs listing page
+
+### **ADR-003: Modal vs Inline UI**
+
+- **Decision**: Use modal overlay for single page anime management
+- **Reasoning**: Doesn't interfere with watch page layout, provides focused interaction area
+- **Implementation**: Glass-morphism modal matching extension design system

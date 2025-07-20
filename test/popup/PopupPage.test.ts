@@ -10,9 +10,18 @@ global.chrome = {
     },
 } as any;
 
+// Mock AnimeService
+const mockClearAllHidden = vi.fn();
+vi.mock("@/commons/services/AnimeService", () => ({
+    AnimeService: vi.fn(() => ({
+        clearAllHidden: mockClearAllHidden,
+    })),
+}));
+
 describe("PopupPage", () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        mockClearAllHidden.mockReset();
     });
 
     describe("Component Rendering", () => {
@@ -128,6 +137,38 @@ describe("PopupPage", () => {
             await button.trigger("click");
 
             expect(mockOpenOptionsPage).toHaveBeenCalledTimes(3);
+        });
+    });
+
+    describe("Clear Hidden Button", () => {
+        it("should render the clear hidden button", () => {
+            const wrapper = mount(PopupPage);
+            const button = wrapper.find('[data-testid="clear-hidden-button"]');
+            expect(button.exists()).toBe(true);
+        });
+
+        it("should render button with correct text and icon", () => {
+            const wrapper = mount(PopupPage);
+            const button = wrapper.find('[data-testid="clear-hidden-button"]');
+
+            const icon = button.find('[data-testid="clear-button-icon"]');
+            const text = button.find('[data-testid="clear-button-text"]');
+
+            expect(icon.exists()).toBe(true);
+            expect(icon.text()).toBe("🗑️");
+            expect(text.exists()).toBe(true);
+            expect(text.text()).toBe("Clear All Hidden");
+        });
+
+        it("should call clearAllHidden when clicked", async () => {
+            mockClearAllHidden.mockResolvedValue({ success: true, message: "Cleared successfully" });
+
+            const wrapper = mount(PopupPage);
+            const button = wrapper.find('[data-testid="clear-hidden-button"]');
+
+            await button.trigger("click");
+
+            expect(mockClearAllHidden).toHaveBeenCalledTimes(1);
         });
     });
 
@@ -380,6 +421,10 @@ describe("PopupPage", () => {
                 "button-icon",
                 "button-text",
                 "button-shine",
+                "clear-hidden-button",
+                "clear-button-icon",
+                "clear-button-text",
+                "clear-button-shine",
                 "popup-footer",
                 "decorative-dots",
                 "dot",
@@ -399,7 +444,9 @@ describe("PopupPage", () => {
             expect(html).toContain("AnimeList");
             expect(html).toContain("Manage your anime watch list and track your progress");
             expect(html).toContain("Open Dashboard");
+            expect(html).toContain("Clear All Hidden");
             expect(html).toContain("⚙️");
+            expect(html).toContain("🗑️");
         });
 
         it("should not contain any unwanted text content", () => {
