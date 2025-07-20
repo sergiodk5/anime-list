@@ -812,28 +812,34 @@ describe("Single Page Modal Integration", () => {
                 progress: undefined,
             };
 
-            // Show modal
-            showSinglePageModal(animeData, mockStatus);
+            // Use fake timers to control the modal timing precisely
+            vi.useFakeTimers();
 
-            // Wait for modal to be fully initialized (including opacity set to "1")
-            await new Promise((resolve) => setTimeout(resolve, 20));
+            try {
+                // Show modal (this will create element with opacity 0 and set timeout)
+                showSinglePageModal(animeData, mockStatus);
 
-            // Find the modal
-            const modalElement = document.querySelector('[style*="position: fixed"][style*="z-index: 10000"]');
-            expect(modalElement).toBeTruthy();
+                // Fast-forward past the 10ms timeout to make modal visible
+                vi.advanceTimersByTime(15);
 
-            // Verify modal is initially visible
-            expect((modalElement as HTMLElement).style.opacity).toBe("1");
+                // Now find the modal - it should be visible
+                const modalElement = document.querySelector(
+                    '[style*="position: fixed"][style*="z-index: 10000"]',
+                ) as HTMLElement;
+                expect(modalElement).toBeTruthy();
+                expect(modalElement.style.opacity).toBe("1");
 
-            // Simulate escape key press
-            const escapeEvent = new KeyboardEvent("keydown", { key: "Escape" });
-            document.dispatchEvent(escapeEvent);
+                // Simulate escape key press
+                const escapeEvent = new KeyboardEvent("keydown", { key: "Escape" });
+                document.dispatchEvent(escapeEvent);
 
-            // Wait for modal closing animation and verify
-            await new Promise((resolve) => setTimeout(resolve, 20));
+                // Fast-forward past the closing animation timeout (300ms)
+                vi.advanceTimersByTime(350);
 
-            if (modalElement) {
-                expect((modalElement as HTMLElement).style.opacity).toBe("0");
+                // Modal should now be closed (opacity 0)
+                expect(modalElement.style.opacity).toBe("0");
+            } finally {
+                vi.useRealTimers();
             }
         });
 
@@ -850,28 +856,35 @@ describe("Single Page Modal Integration", () => {
                 progress: undefined,
             };
 
-            // Show modal
-            showSinglePageModal(animeData, mockStatus);
+            // Use fake timers to control the modal timing precisely
+            vi.useFakeTimers();
 
-            // Wait for modal to be fully initialized
-            await new Promise((resolve) => setTimeout(resolve, 20));
+            try {
+                // Show modal (this will create element with opacity 0 and set timeout)
+                showSinglePageModal(animeData, mockStatus);
 
-            // Find the modal
-            const modalElement = document.querySelector('[style*="position: fixed"][style*="z-index: 10000"]');
-            expect(modalElement).toBeTruthy();
+                // Fast-forward past the 10ms timeout to make modal visible
+                vi.advanceTimersByTime(15);
 
-            // Verify modal is initially visible
-            expect((modalElement as HTMLElement).style.opacity).toBe("1");
+                // Now find the modal - it should be visible
+                const modalElement = document.querySelector(
+                    '[style*="position: fixed"][style*="z-index: 10000"]',
+                ) as HTMLElement;
+                expect(modalElement).toBeTruthy();
+                expect(modalElement.style.opacity).toBe("1");
 
-            // Simulate clicking the backdrop (modal itself, not its content)
-            if (modalElement) {
+                // Simulate clicking the backdrop (modal itself, not its content)
                 const clickEvent = new MouseEvent("click", { bubbles: true });
                 Object.defineProperty(clickEvent, "target", { value: modalElement });
                 modalElement.dispatchEvent(clickEvent);
 
-                // Wait for modal closing animation and verify
-                await new Promise((resolve) => setTimeout(resolve, 20));
-                expect((modalElement as HTMLElement).style.opacity).toBe("0");
+                // Fast-forward past the closing animation timeout (300ms)
+                vi.advanceTimersByTime(350);
+
+                // Modal should now be closed (opacity 0 or removed)
+                expect(modalElement.style.opacity).toBe("0");
+            } finally {
+                vi.useRealTimers();
             }
         });
     });
