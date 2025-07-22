@@ -8,20 +8,31 @@ const mockChromeStorage = {
         remove: vi.fn(),
         clear: vi.fn(),
     },
+    sync: {
+        get: vi.fn(),
+        set: vi.fn(),
+        remove: vi.fn(),
+        clear: vi.fn(),
+    },
+    onChanged: {
+        addListener: vi.fn(),
+    },
 };
 
 const mockChromeRuntime = {
-    lastError: null,
+    sendMessage: vi.fn(),
+    onMessage: {
+        addListener: vi.fn(),
+    },
 };
 
 // Global Chrome mock
-global.chrome = {
+vi.stubGlobal("chrome", {
     storage: mockChromeStorage,
     runtime: mockChromeRuntime,
-} as any;
+});
 
 // Reset mocks before each test
 beforeEach(() => {
     vi.clearAllMocks();
-    mockChromeRuntime.lastError = null;
 });

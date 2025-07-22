@@ -1,0 +1,329 @@
+/* Button-related styles for AnimeList Chrome Extension */
+
+/* Controls container */
+.anime-list-controls {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    z-index: 10;
+}
+
+/* State indicators for controls */
+.anime-list-controls.watching-state {
+    border-left: 3px solid #10b981; /* Green for watching */
+}
+
+.anime-list-controls.planned-state {
+    border-left: 3px solid #3b82f6; /* Blue for planned */
+}
+
+.anime-list-controls.clean-state {
+    border-left: 3px solid transparent;
+}
+
+/* Base button styles */
+.anime-list-plan-btn,
+.anime-list-hide-btn,
+.anime-list-start-watching-btn,
+.anime-list-stop-watching-btn,
+.anime-list-remove-plan-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    white-space: nowrap;
+}
+
+/* Plan button */
+.anime-list-plan-btn:hover {
+    border-color: rgba(59, 130, 246, 0.5);
+    background: rgba(59, 130, 246, 0.2);
+    color: white;
+}
+
+/* Hide button */
+.anime-list-hide-btn:hover {
+    border-color: rgba(239, 68, 68, 0.5);
+    background: rgba(239, 68, 68, 0.2);
+    color: white;
+}
+
+/* Start Watching button */
+.anime-list-start-watching-btn {
+    background: rgba(16, 185, 129, 0.2);
+    border-color: rgba(16, 185, 129, 0.3);
+    color: rgb(167, 243, 208);
+}
+
+.anime-list-start-watching-btn:hover {
+    background: rgba(16, 185, 129, 0.3);
+    border-color: rgba(16, 185, 129, 0.5);
+    color: white;
+}
+
+/* Stop Watching button */
+.anime-list-stop-watching-btn {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: rgb(252, 165, 165);
+}
+
+.anime-list-stop-watching-btn:hover {
+    background: rgba(239, 68, 68, 0.3);
+    border-color: rgba(239, 68, 68, 0.5);
+    color: white;
+}
+
+/* Remove Plan button */
+.anime-list-remove-plan-btn {
+    background: rgba(251, 146, 60, 0.2);
+    border-color: rgba(251, 146, 60, 0.3);
+    color: rgb(254, 215, 170);
+}
+
+.anime-list-remove-plan-btn:hover {
+    background: rgba(251, 146, 60, 0.3);
+    border-color: rgba(251, 146, 60, 0.5);
+    color: white;
+}
+
+/* Watching Controls */
+.anime-list-watching-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    border-radius: 8px;
+    color: rgb(167, 243, 208);
+}
+
+.anime-list-watching-controls .episode-display {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.anime-list-watching-controls .episode-label {
+    font-size: 10px;
+    font-weight: 500;
+}
+
+.anime-list-watching-controls .episode-btn {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    color: white;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: bold;
+    transition: all 0.2s ease;
+}
+
+.anime-list-watching-controls .episode-btn:hover {
+    background: rgba(16, 185, 129, 0.3);
+    border-color: rgba(16, 185, 129, 0.5);
+}
+
+.anime-list-watching-controls .episode-current {
+    width: 35px;
+    padding: 2px 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    color: white;
+    font-size: 10px;
+    text-align: center;
+}
+
+.anime-list-watching-controls .episode-current:focus {
+    outline: none;
+    border-color: rgba(16, 185, 129, 0.5);
+}
+
+/* Combined Watching Controls (episode visible, stop on hover) */
+.anime-list-combined-watching-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 6px 8px;
+    background: rgba(0, 0, 0, 0.7); /* Strong dark background for contrast */
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    border-radius: 8px;
+    color: rgb(167, 243, 208);
+    position: relative;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    width: auto;
+}
+
+/* On hover, darken background for better contrast */
+.anime-list-combined-watching-controls:hover {
+    background: rgba(0, 0, 0, 0.8);
+    border-color: rgba(16, 185, 129, 0.6);
+}
+
+.anime-list-combined-watching-controls .episode-display {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.3s ease;
+}
+
+.anime-list-combined-watching-controls .episode-label {
+    font-size: 10px;
+    font-weight: 500;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.anime-list-combined-watching-controls .episode-btn {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    color: white;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: bold;
+    transition: all 0.2s ease;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.anime-list-combined-watching-controls .episode-btn:hover {
+    background: rgba(16, 185, 129, 0.4);
+    border-color: rgba(16, 185, 129, 0.6);
+    transform: scale(1.05);
+}
+
+.anime-list-combined-watching-controls .episode-current {
+    width: 35px;
+    padding: 2px 4px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    color: white;
+    font-size: 10px;
+    text-align: center;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.anime-list-combined-watching-controls .episode-current:focus {
+    outline: none;
+    border-color: rgba(16, 185, 129, 0.6);
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Stop button - hidden by default, slides down from above on hover */
+.anime-list-combined-watching-controls .stop-watching-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 3px 8px;
+    background: rgba(239, 68, 68, 0.2);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 5px;
+    color: rgb(252, 165, 165);
+    cursor: pointer;
+    font-size: 9px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    margin-top: 0;
+}
+
+.anime-list-combined-watching-controls .stop-watching-btn .button-icon {
+    font-size: 8px;
+}
+
+.anime-list-combined-watching-controls .stop-watching-btn .button-text {
+    font-size: 8px;
+}
+
+.anime-list-combined-watching-controls .stop-watching-btn:hover {
+    background: rgba(239, 68, 68, 0.4);
+    border-color: rgba(239, 68, 68, 0.6);
+    color: white;
+}
+
+/* Show stop button sliding down on hover */
+.anime-list-combined-watching-controls:hover .stop-watching-btn {
+    max-height: 24px; /* Allow space for button */
+    opacity: 1;
+    margin-top: 2px;
+}
+
+/* Clear Hidden Button */
+.anime-list-clear-hidden-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-top: 24px;
+    padding: 16px;
+}
+
+.anime-list-clear-hidden-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.anime-list-clear-hidden-btn:hover {
+    border-color: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+.anime-list-clear-hidden-btn:active {
+    transform: scale(0.95);
+}
+
+/* Common button elements */
+.button-icon {
+    font-size: 14px;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+}
+
+.button-text {
+    font-family: inherit;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+}
