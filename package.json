@@ -16,7 +16,7 @@
         "test:unit:coverage": "vitest run --coverage",
         "test:unit:coverage:ui": "vitest run --coverage && open coverage/index.html",
         "test:e2e": "playwright test",
-        "type-check": "vue-tsc --build --force",
+        "type-check": "vue-tsc --build --force tsconfig.app.json tsconfig.node.json",
         "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
         "lint:check": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --ignore-path .gitignore",
         "format": "prettier --write src/",

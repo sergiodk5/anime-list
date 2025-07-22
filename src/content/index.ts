@@ -32,13 +32,6 @@ import { SinglePageController } from "./controllers/SinglePageController";
         contentController.initialize();
     }
 
-    /**
-     * Development and debugging utilities
-     */
-    if (import.meta.env.DEV) {
-        // Expose controller to global scope for debugging
-        (window as any).animeListController = contentController;
-        console.log("AnimeList Debug: Controller available as window.animeListController");
-        console.log("AnimeList Debug: Get status with animeListController.getStatus()");
-    }
+    // Extension initialization complete
+    console.log("AnimeList content script initialization complete");
 })();

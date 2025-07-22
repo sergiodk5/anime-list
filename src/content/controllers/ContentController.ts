@@ -1,6 +1,6 @@
 /**
  * Main ContentScript Controller
- * Orchestrates the entire content script functionality using the modular architecture
+ * Orchestrates the entire content script functionality using the modular architecture.
  */
 
 import { PageDetector } from "../services/PageDetector";
@@ -149,26 +149,15 @@ export class ContentController {
     }
 
     /**
-     * Handle navigation changes (for SPAs)
-     * Call this when the page content changes without a full reload
+     * Handle navigation events by re-initializing controllers
      */
     public async handleNavigation(): Promise<void> {
         // Reset initialization state
         this.initialized = false;
 
-        // Clean up current controllers
-        this.listPageController.destroy();
-        this.singlePageController.destroy();
-
-        // Get fresh instances
-        this.listPageController = ListPageController.getInstance();
-        this.singlePageController = SinglePageController.getInstance();
-
-        // Re-initialize
+        // Re-initialize controllers for the new page
         await this.initialize();
-    }
-
-    /**
+    } /**
      * Clean up all resources
      */
     public destroy(): void {
