@@ -1,11 +1,11 @@
 {
     "extends": "./tsconfig.app.json",
-    "include": ["test/**/*", "src/**/*"],
+    "include": ["test/**/*", "src/**/*", "test/vitest-globals.d.ts"],
     "exclude": [],
     "compilerOptions": {
         "composite": true,
         "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.vitest.tsbuildinfo",
-
+        "skipLibCheck": true,
         "lib": [],
         "types": ["node", "jsdom", "chrome", "vitest/globals"]
     }

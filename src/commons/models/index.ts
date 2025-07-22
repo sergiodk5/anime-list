@@ -31,6 +31,12 @@ export interface AnimeData {
     animeId: string;
     animeTitle: string;
     animeSlug: string;
+    debugInfo?: {
+        originalSlug?: string;
+        extractionStrategy?: string;
+        titleSelectorUsed?: string;
+        url?: string;
+    };
 }
 
 // Export architecture types
