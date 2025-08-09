@@ -34,50 +34,101 @@ A modern browser extension to enhance your anime viewing experience with beautif
 
 ### 🎯 Currently Implemented
 
-#### **Content Script Integration** ✅
+## 🚦 Current Status (Aug 2025)
 
-- **Plan to Watch List**: Add anime to your personal "plan to watch" list directly from anime listing pages
-- **Hide Anime System**: Hide anime you're not interested in with easy unhide functionality
-- **Seamless Integration**: UI elements injected directly into anime websites for native feel
+**🟢 Stable / Implemented:**
+
+- ✅ Content script integration (Watch / Hide / Plan actions on sites)
+- ✅ Popup dashboard navigation
+- ✅ Service–repository architecture (100% coverage, 613 tests)
+- ✅ Glass-morphism UI design system
+- ✅ Pinia store layer (watching / plan / hidden) with actions & optimistic updates
+- ✅ Cross‑context real-time sync (options ↔ content ↔ popup) via storage + runtime messaging
+- ✅ Aggregated smart statistics (throttled, cache-backed)
+- ✅ Offline action queue with persistence, conflict detection & metrics
+- ✅ Visibility / performance optimizations (throttled stats, visibility-aware refresh)
+- ✅ Undo system (bounded stack) for key mutations
+- ✅ Toast notifications, skeleton loaders, unified action helper & retry logic
+  **🟡 In Progress / Partial:**
+- 🔄 Additional list routes (Completed / On Hold / Dropped) still static placeholders
+- 🔄 Favorites route not yet implemented
+- 🔄 Episode progress detail UI (fine‑grained editing inside Options) pending
+- 🔄 Anime add/edit management screens not yet built
+  **🔴 Not Yet Implemented / Future:**
+- ❌ MyAnimeList (or external) metadata integration
+- ❌ Advanced analytics & recommendations
+- ❌ Import / Export & backup flows
+- ❌ Search / filtering across all lists
+- ❌ Accessibility polish & keyboard shortcuts (e.g., Cmd+Z for undo)
 - **Clear Hidden Button**: Reset all hidden anime with one click
-- **Visual Feedback**: Success/error notifications with glass-morphism styling
 
-#### **Modern Dashboard (Options Page)** ⚠️ _Static UI Only_
+#### **Modern Dashboard (Options Page)** ✅ _Dynamic Core Lists_
 
-- **🏠 Home Dashboard**: Beautiful anime-themed welcome page with glass-morphism design
+- **🏠 Home Dashboard**: Reactive counts & smart stats (watching / plan / hidden, completion %, trends)
+- **📺 Watch Lists Overview**: Dynamic counts for integrated lists; placeholders remain for future lists
+- **⚡ Real-Time Sync**: Updates within ~150ms after content script actions
+- **📶 Offline Resilience**: Queued actions with conflict avoidance & replay
+- **↩️ Undo Support**: Revert recent mutations (watching / plan / hidden operations)
+- **🎨 Glass-Morphism UI**: Anime-themed branding & gradients
+- **📱 Responsive Design**: Mobile-first across screen sizes
+- **🧭 Vue Router**: Core routes active (additional list/detail/favorites pending)
 - **📺 Watch Lists Overview**: Static view of anime list categories (Currently Watching, Completed, Plan to Watch, On Hold, Dropped)
-- **🎨 Glass-Morphism UI**: Modern design with anime-themed branding and purple-pink gradients
-- **📱 Responsive Design**: Mobile-first design that works across all screen sizes
-- **🧭 Vue Router Navigation**: Basic routing between Home and Watch Lists pages
 
-#### **Extension Popup** ✅
-
-- **🎌 Anime-Themed Branding**: Consistent anime icon and aesthetic
-- **⚙️ Quick Dashboard Access**: One-click navigation to full options page
-- **🎨 Modern Design**: Glass-morphism effects with animated background elements
-
-#### **Unified Storage System** ✅
+#### **Unified Storage & State System** ✅
 
 - **🏗️ Service Architecture**: Clean service-repository pattern for all anime operations
-- **🏪 Local-First Storage**: All data stored securely in browser's local storage
-- **📊 Comprehensive APIs**: Full CRUD operations via AnimeService
-- **🔄 Storage Layers**: `AnimeService`, `Repositories`, `StorageAdapter`
+- **🏪 Local-First Storage**: Chrome storage (MV3) behind typed adapter
+- **🗃️ Pinia Stores**: Watching / Plan / Hidden with optimistic actions + rollback
+- **� Real-Time Sync**: Debounced storage & runtime message bridge
+- **� Caching & Stats**: Smart composables (throttled, cache-aware)
 - **📈 Data Models**: Complete TypeScript interfaces for all anime data structures
 
 #### **Enterprise-Grade Testing** ✅
 
-- **🧪 100% Test Coverage**: Comprehensive unit tests for all components and services (370 tests)
+- **🧪 100% Test Coverage**: 613 passing tests (services, stores, composables, UI, offline, undo)
+- **🛡️ Type Safety**: Strict TypeScript everywhere
+- **📝 Data-TestId System**: Consistent for deterministic UI tests
+- **🔄 Scenario Coverage**: Cross-context sync, offline queue, undo, error handling
+
+#### **Unified Storage System** ✅
+
+#### **Current Integration Gaps**
+
+- **🔧 Remaining Static Areas**: Completed / On Hold / Dropped & Favorites routes not wired yet
+- **🧭 Missing Routes**: Favorites + individual list detail views
+- **➕ Anime Management UI**: Add / edit / remove screens not exposed in Options
+- **🎬 Episode Progress UI**: Rich per‑anime progress editor still pending (content script handles increments)
+- **🔍 Global Search & Filters**: Not yet implemented
+- **📈 Data Models**: Complete TypeScript interfaces for all anime data structures
+  **Immediate next steps:**
+
+1. Implement remaining list routes & Favorites page
+2. Build detail & management views (add/edit/remove anime)
+3. Episode progress management UI (inline + detail modal)
+4. Global search & filtering across lists
+5. Keyboard shortcuts (e.g., Undo) & accessibility polish
+6. Import / Export (backup) workflow
+
 - **🛡️ Type Safety**: Full TypeScript implementation with strict type checking
-- **📝 Data-TestId System**: Robust testing infrastructure for UI components
-- **⚡ Performance Testing**: Optimized for Chrome extension environment
+
+### � Project Structure (Highlights)
+
+- **🧭 Routing**: Vue Router (core routes active; favorites & others pending)
+- **🏪 State**: Service–repository + Pinia stores (watching / plan / hidden) + composables (stats, cache, offline queue)
+- **🛰️ Sync**: Debounced storage + runtime messaging bridge
+- **🛟 Offline**: Persistent action queue with conflict detection & backoff
+- **↩️ Undo**: Bounded snapshot-based undo manager + plugin
 
 ### 🔄 Architecture Overview
 
 The extension has a **clean service architecture** where:
 
-- **Content Script**: Uses `AnimeService` for all anime operations (Watch/Hide buttons)
-- **Dashboard UI**: Ready for integration with the same `AnimeService` backend
-- **Storage Layer**: Centralized through service-repository pattern with `StorageAdapter`
+### **Backend-Frontend Integration** (Progress Recap)
+
+- ✅ Reactive composables & stores implemented (watching / plan / hidden / stats / offline)
+- ✅ Real-time data replaces static numbers
+- 🔄 Pending interactive detail & editing views
+- 🔄 Episode progress detail UI (beyond increment/decrement) to build
 - **Testing**: Complete coverage ensuring reliability across all components
 
 ### 📋 Integration Status

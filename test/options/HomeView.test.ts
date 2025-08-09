@@ -1,10 +1,70 @@
 import HomeView from "@/options/views/HomeView.vue";
 import { mount } from "@vue/test-utils";
-import { describe, expect, it } from "vitest";
+import { createPinia, setActivePinia } from "pinia";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ref } from "vue";
+
+// Mock the stores
+import { useHiddenStore } from "@/options/stores/hiddenStore";
+import { usePlanToWatchStore } from "@/options/stores/planToWatchStore";
+import { useWatchingStore } from "@/options/stores/watchingStore";
+
+vi.mock("@/options/stores/watchingStore");
+vi.mock("@/options/stores/planToWatchStore");
+vi.mock("@/options/stores/hiddenStore");
 
 describe("HomeView", () => {
+    let pinia: ReturnType<typeof createPinia>;
+
+    const mockWatchingStore = {
+        count: ref(5),
+        isLoading: ref(false),
+        hasError: false,
+        init: vi.fn().mockResolvedValue(undefined),
+    };
+
+    const mockPlanToWatchStore = {
+        count: ref(12),
+        isLoading: ref(false),
+        hasError: false,
+        init: vi.fn().mockResolvedValue(undefined),
+    };
+
+    const mockHiddenStore = {
+        hasError: false,
+        init: vi.fn().mockResolvedValue(undefined),
+    };
+
+    beforeEach(() => {
+        pinia = createPinia();
+        setActivePinia(pinia);
+
+        // Reset mocks
+        vi.clearAllMocks();
+
+        // Reset reactive values
+        mockWatchingStore.count.value = 5;
+        mockWatchingStore.isLoading.value = false;
+        mockWatchingStore.hasError = false;
+
+        mockPlanToWatchStore.count.value = 12;
+        mockPlanToWatchStore.isLoading.value = false;
+        mockPlanToWatchStore.hasError = false;
+
+        mockHiddenStore.hasError = false;
+
+        // Mock store implementations
+        vi.mocked(useWatchingStore).mockReturnValue(mockWatchingStore as any);
+        vi.mocked(usePlanToWatchStore).mockReturnValue(mockPlanToWatchStore as any);
+        vi.mocked(useHiddenStore).mockReturnValue(mockHiddenStore as any);
+    });
+
     const createWrapper = () => {
-        return mount(HomeView);
+        return mount(HomeView, {
+            global: {
+                plugins: [pinia],
+            },
+        });
     };
 
     describe("Rendering", () => {
@@ -96,7 +156,7 @@ describe("HomeView", () => {
             expect(watchingCard.exists()).toBe(true);
             expect(watchingIcon.text()).toBe("▶️");
             expect(watchingTitle.text()).toBe("Currently Watching");
-            expect(watchingCount.text()).toBe("12");
+            expect(watchingCount.text()).toBe("5");
             expect(watchingCount.classes()).toContain("text-purple-200");
         });
 
@@ -124,7 +184,7 @@ describe("HomeView", () => {
             expect(plannedCard.exists()).toBe(true);
             expect(plannedIcon.text()).toBe("📋");
             expect(plannedTitle.text()).toBe("Plan to Watch");
-            expect(plannedCount.text()).toBe("34");
+            expect(plannedCount.text()).toBe("12");
             expect(plannedCount.classes()).toContain("text-blue-200");
         });
 
