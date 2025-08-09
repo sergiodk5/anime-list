@@ -1,10 +1,30 @@
 import type { AnimeData, AnimeStatus } from "@/commons/models";
+import { StorageKeys } from "@/commons/models";
 import { AnimeService } from "@/commons/services";
 
 /**
  * Content script for anime website integration
  * Adds Plan and Hide controls to anime cards with glass-morphism styling
  */
+
+/**
+ * Send runtime message to notify other contexts of anime state changes
+ */
+function notifyAnimeStateChange(storageKey: StorageKeys, animeId?: string): void {
+    try {
+        if (chrome?.runtime?.sendMessage) {
+            chrome.runtime.sendMessage({
+                type: "ANIME_STATE_CHANGED",
+                storageKey,
+                animeId,
+                timestamp: Date.now(),
+            });
+            console.log(`[ContentScript] Notified state change for ${storageKey}${animeId ? ` (${animeId})` : ""}`);
+        }
+    } catch (error) {
+        console.warn("[ContentScript] Failed to send runtime message:", error);
+    }
+}
 
 // Initialize the content script
 console.log("AnimeList content script loaded");
@@ -472,6 +492,8 @@ export async function handleStartWatchingClick(animeData: AnimeData): Promise<vo
 
         if (result.success) {
             showToast(`Started watching "${animeData.animeTitle}" from episode ${episodeNumber}`, "success");
+            // Notify other contexts of the state change
+            notifyAnimeStateChange(StorageKeys.EPISODE_PROGRESS, animeData.animeId);
             // Refresh the controls for this anime
             await refreshAnimeControls(animeData.animeId);
         } else {
@@ -502,6 +524,8 @@ export async function handleEpisodeIncrement(animeData: AnimeData, container: HT
         if (result.success) {
             episodeInput.value = newEpisode.toString();
             showToast(`Updated to episode ${newEpisode}`, "success");
+            // Notify other contexts of the episode progress change
+            notifyAnimeStateChange(StorageKeys.EPISODE_PROGRESS, animeData.animeId);
         } else {
             showToast(result.message, "error");
         }
@@ -530,6 +554,8 @@ export async function handleEpisodeDecrement(animeData: AnimeData, container: HT
         if (result.success) {
             episodeInput.value = newEpisode.toString();
             showToast(`Updated to episode ${newEpisode}`, "success");
+            // Notify other contexts of the episode progress change
+            notifyAnimeStateChange(StorageKeys.EPISODE_PROGRESS, animeData.animeId);
         } else {
             showToast(result.message, "error");
         }
@@ -559,6 +585,8 @@ export async function handleDirectEpisodeInput(animeData: AnimeData, container: 
 
         if (result.success) {
             showToast(`Updated to episode ${newEpisode}`, "success");
+            // Notify other contexts of the episode progress change
+            notifyAnimeStateChange(StorageKeys.EPISODE_PROGRESS, animeData.animeId);
         } else {
             showToast(result.message, "error");
             // Reset to previous value
@@ -587,6 +615,8 @@ export async function handleStopWatchingClick(animeData: AnimeData): Promise<voi
 
         if (result.success) {
             showToast(`Stopped watching "${animeData.animeTitle}"`, "info");
+            // Notify other contexts of the state change
+            notifyAnimeStateChange(StorageKeys.EPISODE_PROGRESS, animeData.animeId);
             // Refresh the controls for this anime
             await refreshAnimeControls(animeData.animeId);
         } else {
@@ -615,6 +645,8 @@ export async function handleRemovePlanClick(animeData: AnimeData): Promise<void>
 
         if (result.success) {
             showToast(`Removed "${animeData.animeTitle}" from plan`, "info");
+            // Notify other contexts of the state change
+            notifyAnimeStateChange(StorageKeys.PLAN_TO_WATCH, animeData.animeId);
             // Refresh the controls for this anime
             await refreshAnimeControls(animeData.animeId);
         } else {
@@ -666,6 +698,8 @@ export async function handlePlanClick(animeData: AnimeData): Promise<void> {
             const result = await animeService.removeFromPlanToWatch(animeData.animeId);
             if (result.success) {
                 showToast(`Removed "${animeData.animeTitle}" from plan`, "info");
+                // Notify other contexts of the state change
+                notifyAnimeStateChange(StorageKeys.PLAN_TO_WATCH, animeData.animeId);
                 await refreshAnimeControls(animeData.animeId);
             } else {
                 showToast(result.message, "error");
@@ -687,6 +721,8 @@ export async function handlePlanClick(animeData: AnimeData): Promise<void> {
             const result = await animeService.addToPlanToWatch(animeData);
             if (result.success) {
                 showToast(`Added "${animeData.animeTitle}" to plan`, "success");
+                // Notify other contexts of the state change
+                notifyAnimeStateChange(StorageKeys.PLAN_TO_WATCH, animeData.animeId);
                 await refreshAnimeControls(animeData.animeId);
             } else {
                 showToast(result.message, "error");
@@ -731,6 +767,8 @@ export async function handleHideClick(animeData: AnimeData, button: HTMLButtonEl
                 }, 300);
             }
             showToast(`Hidden "${animeData.animeTitle}"`, "success");
+            // Notify other contexts of the state change
+            notifyAnimeStateChange(StorageKeys.HIDDEN_ANIME, animeData.animeId);
         } else {
             showToast(result.message, "error");
         }
@@ -757,6 +795,8 @@ export async function handleClearHiddenClick(): Promise<void> {
             });
 
             showToast(result.message || "Cleared hidden anime", "success");
+            // Notify other contexts of the state change
+            notifyAnimeStateChange(StorageKeys.HIDDEN_ANIME);
         } else {
             showToast(result?.message || "Failed to clear hidden anime", "error");
         }

@@ -1,10 +1,60 @@
 import AllWatchLists from "@/options/views/AllWatchLists.vue";
 import { mount } from "@vue/test-utils";
-import { describe, expect, it } from "vitest";
+import { createPinia, setActivePinia } from "pinia";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ref } from "vue";
+
+// Mock the stores
+import { usePlanToWatchStore } from "@/options/stores/planToWatchStore";
+import { useWatchingStore } from "@/options/stores/watchingStore";
+
+vi.mock("@/options/stores/watchingStore");
+vi.mock("@/options/stores/planToWatchStore");
 
 describe("AllWatchLists", () => {
+    let pinia: ReturnType<typeof createPinia>;
+
+    const mockWatchingStore = {
+        count: ref(3),
+        isLoading: ref(false),
+        hasError: false,
+        init: vi.fn().mockResolvedValue(undefined),
+    };
+
+    const mockPlanToWatchStore = {
+        count: ref(7),
+        isLoading: ref(false),
+        hasError: false,
+        init: vi.fn().mockResolvedValue(undefined),
+    };
+
+    beforeEach(() => {
+        pinia = createPinia();
+        setActivePinia(pinia);
+
+        // Reset mocks
+        vi.clearAllMocks();
+
+        // Reset reactive values
+        mockWatchingStore.count.value = 3;
+        mockWatchingStore.isLoading.value = false;
+        mockWatchingStore.hasError = false;
+
+        mockPlanToWatchStore.count.value = 7;
+        mockPlanToWatchStore.isLoading.value = false;
+        mockPlanToWatchStore.hasError = false;
+
+        // Mock store implementations
+        vi.mocked(useWatchingStore).mockReturnValue(mockWatchingStore as any);
+        vi.mocked(usePlanToWatchStore).mockReturnValue(mockPlanToWatchStore as any);
+    });
+
     const createWrapper = () => {
-        return mount(AllWatchLists);
+        return mount(AllWatchLists, {
+            global: {
+                plugins: [pinia],
+            },
+        });
     };
 
     describe("Rendering", () => {
@@ -98,7 +148,7 @@ describe("AllWatchLists", () => {
             expect(watchingIcon.text()).toBe("▶️");
             expect(watchingTitle.text()).toBe("Currently Watching");
             expect(watchingDescription.text()).toBe("Anime you're actively following");
-            expect(watchingCount.text()).toBe("12 series");
+            expect(watchingCount.text()).toBe("3 series");
             expect(watchingCount.classes()).toContain("text-purple-200");
             expect(viewButton.text()).toBe("View →");
         });
@@ -134,7 +184,7 @@ describe("AllWatchLists", () => {
             expect(plannedIcon.text()).toBe("📋");
             expect(plannedTitle.text()).toBe("Plan to Watch");
             expect(plannedDescription.text()).toBe("Anime on your watchlist");
-            expect(plannedCount.text()).toBe("34 series");
+            expect(plannedCount.text()).toBe("7 series");
             expect(plannedCount.classes()).toContain("text-blue-200");
             expect(viewButton.text()).toBe("View →");
         });
@@ -323,9 +373,9 @@ describe("AllWatchLists", () => {
             const wrapper = createWrapper();
 
             const counts = [
-                { testid: "watching-count", expected: "12 series" },
+                { testid: "watching-count", expected: "3 series" },
                 { testid: "completed-count", expected: "87 series" },
-                { testid: "planned-count", expected: "34 series" },
+                { testid: "planned-count", expected: "7 series" },
                 { testid: "on-hold-count", expected: "5 series" },
                 { testid: "dropped-count", expected: "8 series" },
             ];

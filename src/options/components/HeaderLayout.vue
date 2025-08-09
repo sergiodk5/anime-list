@@ -34,6 +34,10 @@
             data-testid="user-menu"
             class="flex items-center space-x-4"
         >
+            <!-- Offline Queue Badge -->
+            <OfflineQueueBadge />
+            <!-- Undo Button -->
+            <UndoButton data-testid="undo-wrapper" />
             <button
                 data-testid="user-button"
                 class="group flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-white/90 backdrop-blur-xs transition-all duration-200 hover:border-white/30 hover:bg-white/20 hover:text-white hover:shadow-md hover:shadow-black/20 active:scale-95"
@@ -56,6 +60,8 @@
 </template>
 
 <script setup lang="ts">
+import OfflineQueueBadge from "@/options/components/OfflineQueueBadge.vue";
+import UndoButton from "@/options/components/UndoButton.vue";
 import { computed } from "vue";
 import { useRoute } from "vue-router";
 
