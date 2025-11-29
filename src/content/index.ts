@@ -2368,8 +2368,16 @@ async function handleDrop(e: DragEvent): Promise<void> {
     if (!draggedElement || draggedElement === target) return;
 
     // Determine drop position (before or after target)
+    // Detect orientation: horizontal if width > height, else vertical
     const targetRect = target.getBoundingClientRect();
-    const dropPosition = e.clientY < targetRect.top + targetRect.height / 2 ? "before" : "after";
+    const isHorizontal = targetRect.width > targetRect.height;
+    const dropPosition = isHorizontal
+        ? e.clientX < targetRect.left + targetRect.width / 2
+            ? "before"
+            : "after"
+        : e.clientY < targetRect.top + targetRect.height / 2
+          ? "before"
+          : "after";
 
     // Reorder in DOM
     const container = target.parentElement;

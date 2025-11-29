@@ -291,6 +291,7 @@ describe("Drag and Drop Tile Reordering", () => {
 
     describe("Reset Order", () => {
         it("should clear storage and reload page", async () => {
+            vi.useFakeTimers();
             mockRemove.mockResolvedValue(undefined);
 
             // Mock window.location.reload
@@ -304,9 +305,11 @@ describe("Drag and Drop Tile Reordering", () => {
 
             expect(mockRemove).toHaveBeenCalledWith(StorageKeys.TILE_ORDER);
 
-            // Wait for timeout
-            await new Promise((resolve) => setTimeout(resolve, 600));
+            // Advance timers to trigger reload
+            await vi.advanceTimersByTimeAsync(500);
             expect(reloadMock).toHaveBeenCalled();
+
+            vi.useRealTimers();
         });
     });
 
