@@ -1,6 +1,7 @@
-import type { AnimeData, AnimeStatus } from "@/commons/models";
+import type { AnimeData, AnimeStatus, TileOrder } from "@/commons/models";
 import { StorageKeys } from "@/commons/models";
 import { AnimeService } from "@/commons/services";
+import { StorageAdapter } from "@/commons/adapters/StorageAdapter";
 
 /**
  * Content script for anime website integration
@@ -940,6 +941,7 @@ export function setupObserver(): void {
     const observer = new MutationObserver((mutations) => {
         for (const mutation of mutations) {
             if (mutation.type === "childList") {
+                // Handle added nodes
                 mutation.addedNodes.forEach((node) => {
                     if (node.nodeType === Node.ELEMENT_NODE) {
                         const element = node as Element;
@@ -947,12 +949,43 @@ export function setupObserver(): void {
                         // Check if the added node is an anime item
                         if (element.matches(SELECTORS.ITEM)) {
                             addControlsToItem(element);
+                            // Make draggable if drag mode is active
+                            if (dragModeEnabled) {
+                                makeTileDraggable(element as HTMLElement);
+                            }
                         }
 
                         // Check if the added node contains anime items
                         const items = element.querySelectorAll?.(SELECTORS.ITEM);
                         if (items) {
-                            items.forEach(addControlsToItem);
+                            items.forEach((item) => {
+                                addControlsToItem(item);
+                                // Make draggable if drag mode is active
+                                if (dragModeEnabled) {
+                                    makeTileDraggable(item as HTMLElement);
+                                }
+                            });
+                        }
+                    }
+                });
+
+                // Handle removed nodes - clean up event listeners to prevent memory leaks
+                mutation.removedNodes.forEach((node) => {
+                    if (node.nodeType === 1) {
+                        // nodeType 1 = Element
+                        const element = node as Element;
+
+                        // Clean up if the removed node is an anime item
+                        if (element.matches?.(SELECTORS.ITEM)) {
+                            removeTileDraggable(element as HTMLElement);
+                        }
+
+                        // Clean up any anime items within the removed node
+                        const items = element.querySelectorAll?.(SELECTORS.ITEM);
+                        if (items) {
+                            items.forEach((item) => {
+                                removeTileDraggable(item as HTMLElement);
+                            });
                         }
                     }
                 });
@@ -1395,6 +1428,124 @@ function injectStyles(): void {
                 font-size: 13px;
             }
         }
+
+        /* Drag-and-Drop Toolbar */
+        .anime-list-drag-toolbar {
+            position: fixed !important;
+            bottom: 20px !important;
+            right: 20px !important;
+            z-index: 10000 !important;
+            display: flex !important;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(0, 0, 0, 0.9) !important;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+            visibility: visible !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
+        }
+
+        .drag-mode-toggle,
+        .drag-reset-order {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+        }
+
+        .drag-mode-toggle:hover,
+        .drag-reset-order:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .drag-mode-toggle.active {
+            background: rgba(139, 92, 246, 0.3);
+            border-color: rgba(139, 92, 246, 0.5);
+            color: white;
+        }
+
+        .drag-reset-order {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: rgb(252, 165, 165);
+        }
+
+        .drag-reset-order:hover {
+            background: rgba(239, 68, 68, 0.3);
+            border-color: rgba(239, 68, 68, 0.5);
+            color: white;
+        }
+
+        .drag-mode-toggle:focus,
+        .drag-mode-toggle:focus-visible,
+        .drag-reset-order:focus,
+        .drag-reset-order:focus-visible {
+            outline: 2px solid rgba(139, 92, 246, 0.8);
+            outline-offset: 2px;
+        }
+
+        /* Draggable tile styles */
+        .flw-item[draggable="true"] {
+            cursor: grab;
+            outline: 2px dashed rgba(139, 92, 246, 0.5);
+            outline-offset: -2px;
+            transition: outline 0.2s ease, outline-offset 0.2s ease, transform 0.2s ease, background 0.2s ease;
+        }
+
+        .flw-item[draggable="true"]:active {
+            cursor: grabbing;
+        }
+
+        .flw-item.drag-over {
+            outline: 2px solid rgba(139, 92, 246, 0.8);
+            outline-offset: -2px;
+            transform: scale(1.02);
+            background: rgba(139, 92, 246, 0.1);
+        }
+
+        .flw-item.dragging {
+            opacity: 0.5;
+            transform: scale(0.98);
+        }
+
+        /* Keyboard selection state */
+        .flw-item.keyboard-selected {
+            outline: 3px solid rgba(59, 130, 246, 0.8) !important;
+            outline-offset: 2px !important;
+            box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+        }
+
+        .flw-item[draggable="true"]:focus {
+            outline: 2px solid rgba(59, 130, 246, 0.6);
+            outline-offset: 2px;
+        }
+
+        /* Responsive adjustments for drag toolbar */
+        @media (max-width: 768px) {
+            .anime-list-drag-toolbar {
+                bottom: 10px;
+                right: 10px;
+                padding: 6px 10px;
+            }
+
+            .drag-mode-toggle,
+            .drag-reset-order {
+                padding: 6px 10px;
+                font-size: 11px;
+            }
+        }
     `;
 
     document.head.appendChild(style);
@@ -1419,6 +1570,9 @@ export async function init(): Promise<void> {
 
         // Setup observer for dynamic content
         setupObserver();
+
+        // Initialize drag-and-drop functionality
+        await initializeDragAndDrop();
     } catch (error) {
         console.error("Error initializing AnimeList content script:", error);
     }
@@ -1996,6 +2150,535 @@ export function initializeSinglePage(): void {
     if (animeData) {
         createSinglePageInfoButton(animeData);
     }
+}
+
+// =============================================================================
+// DRAG-AND-DROP TILE REORDERING
+// =============================================================================
+
+// Drag-and-drop state variables
+let dragModeEnabled = false;
+let draggedElement: HTMLElement | null = null;
+let dragToolbar: HTMLElement | null = null;
+let saveOrderTimeout: ReturnType<typeof setTimeout> | null = null;
+let keyboardSelectedElement: HTMLElement | null = null;
+
+/**
+ * Load tile order from storage
+ */
+export async function loadTileOrder(): Promise<TileOrder | null> {
+    try {
+        return await StorageAdapter.get<TileOrder>(StorageKeys.TILE_ORDER);
+    } catch (error) {
+        console.error("Error loading tile order:", error);
+        return null;
+    }
+}
+
+/**
+ * Save tile order to storage
+ * Note: Caller is responsible for debouncing to avoid excessive writes (see handleDrop)
+ */
+export async function saveTileOrder(animeIds: string[]): Promise<void> {
+    try {
+        const tileOrder: TileOrder = {
+            animeIds,
+            lastUpdated: new Date().toISOString(),
+        };
+        await StorageAdapter.set(StorageKeys.TILE_ORDER, tileOrder);
+        console.log("[ContentScript] Saved tile order:", animeIds.length, "items");
+    } catch (error) {
+        console.error("Error saving tile order:", error);
+    }
+}
+
+/**
+ * Clear tile order from storage
+ */
+export async function clearTileOrder(): Promise<void> {
+    try {
+        await StorageAdapter.remove(StorageKeys.TILE_ORDER);
+        console.log("[ContentScript] Cleared tile order");
+    } catch (error) {
+        console.error("Error clearing tile order:", error);
+    }
+}
+
+/**
+ * Get current tile order from DOM
+ */
+export function getCurrentTileOrder(): string[] {
+    const container = document.querySelector(SELECTORS.CONTAINER);
+    if (!container) return [];
+
+    const items = container.querySelectorAll(SELECTORS.ITEM);
+    const animeIds: string[] = [];
+
+    items.forEach((item) => {
+        const animeData = extractAnimeData(item);
+        if (animeData) {
+            animeIds.push(animeData.animeId);
+        }
+    });
+
+    return animeIds;
+}
+
+/**
+ * Create the drag toolbar element
+ */
+export function createDragToolbar(): HTMLDivElement {
+    const toolbar = document.createElement("div");
+    toolbar.className = "anime-list-drag-toolbar";
+    toolbar.setAttribute("data-testid", "drag-toolbar");
+
+    toolbar.innerHTML = `
+        <button class="drag-mode-toggle" data-testid="drag-mode-toggle" aria-label="Toggle tile reorder mode">
+            <span class="button-icon" aria-hidden="true">↕️</span>
+            <span class="button-text">Reorder</span>
+        </button>
+        <button class="drag-reset-order" data-testid="drag-reset-order" style="display: none;" aria-label="Reset tile order to default">
+            <span class="button-icon" aria-hidden="true">🔄</span>
+            <span class="button-text">Reset</span>
+        </button>
+    `;
+
+    // Toggle button handler
+    const toggleBtn = toolbar.querySelector(".drag-mode-toggle") as HTMLButtonElement;
+    toggleBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleDragMode();
+    });
+
+    // Reset button handler
+    const resetBtn = toolbar.querySelector(".drag-reset-order") as HTMLButtonElement;
+    resetBtn.addEventListener("click", async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        await resetTileOrder();
+    });
+
+    return toolbar;
+}
+
+/**
+ * Insert drag toolbar into the page
+ */
+export function insertDragToolbar(): void {
+    // Only insert if container exists and toolbar doesn't exist
+    const container = document.querySelector(SELECTORS.CONTAINER);
+    if (!container) return;
+
+    if (document.querySelector(".anime-list-drag-toolbar")) return;
+
+    dragToolbar = createDragToolbar();
+    document.body.appendChild(dragToolbar);
+}
+
+/**
+ * Toggle drag mode on/off
+ */
+export function toggleDragMode(): void {
+    if (dragModeEnabled) {
+        disableDragMode();
+    } else {
+        enableDragMode();
+    }
+}
+
+/**
+ * Handle keyboard navigation for tile reordering
+ */
+function handleTileKeydown(e: KeyboardEvent): void {
+    if (!dragModeEnabled) return;
+
+    const target = e.currentTarget as HTMLElement;
+    const container = target.parentElement;
+    if (!container) return;
+
+    const items = Array.from(container.querySelectorAll(SELECTORS.ITEM)) as HTMLElement[];
+    const currentIndex = items.indexOf(target);
+
+    // Space or Enter to select/deselect for moving
+    if (e.key === " " || e.key === "Enter") {
+        e.preventDefault();
+        if (keyboardSelectedElement === target) {
+            // Deselect
+            keyboardSelectedElement.classList.remove("keyboard-selected");
+            keyboardSelectedElement = null;
+            showToast("Tile deselected", "info");
+        } else if (keyboardSelectedElement) {
+            // Move selected element to current position
+            const selectedIndex = items.indexOf(keyboardSelectedElement);
+            if (selectedIndex !== -1 && selectedIndex !== currentIndex) {
+                if (currentIndex < selectedIndex) {
+                    container.insertBefore(keyboardSelectedElement, target);
+                } else {
+                    container.insertBefore(keyboardSelectedElement, target.nextSibling);
+                }
+                // Save order
+                debouncedSaveOrder();
+                showToast("Tile moved", "success");
+            }
+            keyboardSelectedElement.classList.remove("keyboard-selected");
+            keyboardSelectedElement = null;
+        } else {
+            // Select current element
+            keyboardSelectedElement = target;
+            target.classList.add("keyboard-selected");
+            showToast("Tile selected - use arrow keys and Enter to move", "info");
+        }
+        return;
+    }
+
+    // Arrow keys to navigate or move
+    if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
+        e.preventDefault();
+        if (keyboardSelectedElement === target && currentIndex > 0) {
+            // Move selected element up
+            container.insertBefore(target, items[currentIndex - 1]);
+            target.focus();
+            debouncedSaveOrder();
+        } else if (currentIndex > 0) {
+            // Navigate to previous item
+            items[currentIndex - 1].focus();
+        }
+    } else if (e.key === "ArrowDown" || e.key === "ArrowRight") {
+        e.preventDefault();
+        if (keyboardSelectedElement === target && currentIndex < items.length - 1) {
+            // Move selected element down
+            container.insertBefore(target, items[currentIndex + 2] || null);
+            target.focus();
+            debouncedSaveOrder();
+        } else if (currentIndex < items.length - 1) {
+            // Navigate to next item
+            items[currentIndex + 1].focus();
+        }
+    } else if (e.key === "Escape" && keyboardSelectedElement) {
+        // Cancel selection
+        keyboardSelectedElement.classList.remove("keyboard-selected");
+        keyboardSelectedElement = null;
+        showToast("Selection cancelled", "info");
+    }
+}
+
+/**
+ * Debounced save order helper
+ */
+function debouncedSaveOrder(): void {
+    if (saveOrderTimeout) {
+        clearTimeout(saveOrderTimeout);
+    }
+    saveOrderTimeout = setTimeout(async () => {
+        const newOrder = getCurrentTileOrder();
+        await saveTileOrder(newOrder);
+    }, 500);
+}
+
+/**
+ * Make a single tile draggable
+ */
+export function makeTileDraggable(element: HTMLElement): void {
+    // Check if already draggable to avoid duplicate listeners
+    if (element.getAttribute("draggable") === "true") return;
+
+    element.setAttribute("draggable", "true");
+    element.setAttribute("tabindex", "0");
+    element.setAttribute("role", "listitem");
+    element.addEventListener("dragstart", handleDragStart);
+    element.addEventListener("dragover", handleDragOver);
+    element.addEventListener("dragenter", handleDragEnter);
+    element.addEventListener("dragleave", handleDragLeave);
+    element.addEventListener("drop", handleDrop);
+    element.addEventListener("dragend", handleDragEnd);
+    element.addEventListener("keydown", handleTileKeydown);
+}
+
+/**
+ * Remove draggable from a single tile
+ */
+export function removeTileDraggable(element: HTMLElement): void {
+    element.removeAttribute("draggable");
+    element.removeAttribute("tabindex");
+    element.removeAttribute("role");
+    element.classList.remove("drag-over", "dragging", "keyboard-selected");
+    element.removeEventListener("dragstart", handleDragStart);
+    element.removeEventListener("dragover", handleDragOver);
+    element.removeEventListener("dragenter", handleDragEnter);
+    element.removeEventListener("dragleave", handleDragLeave);
+    element.removeEventListener("drop", handleDrop);
+    element.removeEventListener("dragend", handleDragEnd);
+    element.removeEventListener("keydown", handleTileKeydown);
+
+    // Clear keyboard selection if this element was selected
+    if (keyboardSelectedElement === element) {
+        keyboardSelectedElement = null;
+    }
+}
+
+/**
+ * Enable drag mode
+ */
+export function enableDragMode(): void {
+    dragModeEnabled = true;
+
+    const container = document.querySelector(SELECTORS.CONTAINER);
+    if (!container) return;
+
+    const items = container.querySelectorAll(SELECTORS.ITEM);
+    items.forEach((item) => {
+        makeTileDraggable(item as HTMLElement);
+    });
+
+    // Update toolbar UI
+    if (dragToolbar) {
+        const toggleBtn = dragToolbar.querySelector(".drag-mode-toggle") as HTMLButtonElement;
+        const resetBtn = dragToolbar.querySelector(".drag-reset-order") as HTMLButtonElement;
+
+        toggleBtn.classList.add("active");
+        const enableButtonText = toggleBtn.querySelector(".button-text");
+        if (enableButtonText) enableButtonText.textContent = "Done";
+        resetBtn.style.display = "flex";
+    }
+
+    showToast("Reorder mode: drag tiles or use Tab + Enter + Arrow keys", "info");
+}
+
+/**
+ * Disable drag mode
+ */
+export function disableDragMode(): void {
+    dragModeEnabled = false;
+
+    // Clear any pending save operations
+    if (saveOrderTimeout) {
+        clearTimeout(saveOrderTimeout);
+        saveOrderTimeout = null;
+    }
+
+    const container = document.querySelector(SELECTORS.CONTAINER);
+    if (!container) return;
+
+    const items = container.querySelectorAll(SELECTORS.ITEM);
+    items.forEach((item) => {
+        removeTileDraggable(item as HTMLElement);
+    });
+
+    // Update toolbar UI
+    if (dragToolbar) {
+        const toggleBtn = dragToolbar.querySelector(".drag-mode-toggle") as HTMLButtonElement;
+        const resetBtn = dragToolbar.querySelector(".drag-reset-order") as HTMLButtonElement;
+
+        toggleBtn.classList.remove("active");
+        const disableButtonText = toggleBtn.querySelector(".button-text");
+        if (disableButtonText) disableButtonText.textContent = "Reorder";
+        resetBtn.style.display = "none";
+    }
+
+    showToast("Drag mode disabled", "info");
+}
+
+/**
+ * Handle drag start event
+ */
+function handleDragStart(e: DragEvent): void {
+    const target = e.currentTarget as HTMLElement;
+    draggedElement = target;
+    target.classList.add("dragging");
+
+    // Set drag data
+    if (e.dataTransfer) {
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("text/plain", "");
+    }
+
+    // Prevent conflicts with page handlers
+    e.stopPropagation();
+}
+
+/**
+ * Handle drag over event
+ */
+function handleDragOver(e: DragEvent): void {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (e.dataTransfer) {
+        e.dataTransfer.dropEffect = "move";
+    }
+}
+
+/**
+ * Handle drag enter event
+ */
+function handleDragEnter(e: DragEvent): void {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const target = e.currentTarget as HTMLElement;
+    if (target !== draggedElement) {
+        target.classList.add("drag-over");
+    }
+}
+
+/**
+ * Handle drag leave event
+ */
+function handleDragLeave(e: DragEvent): void {
+    e.stopPropagation();
+
+    const target = e.currentTarget as HTMLElement;
+    const relatedTarget = e.relatedTarget as Node | null;
+
+    // Only remove class if we're actually leaving the element (not entering a child)
+    if (!relatedTarget || !target.contains(relatedTarget)) {
+        target.classList.remove("drag-over");
+    }
+}
+
+/**
+ * Handle drop event
+ */
+async function handleDrop(e: DragEvent): Promise<void> {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const target = e.currentTarget as HTMLElement;
+    target.classList.remove("drag-over");
+
+    if (!draggedElement || draggedElement === target) return;
+
+    // Determine drop position (before or after target)
+    // Detect orientation: horizontal if width > height, else vertical
+    const targetRect = target.getBoundingClientRect();
+    const isHorizontal = targetRect.width > targetRect.height;
+    let dropPosition: "before" | "after";
+    if (isHorizontal) {
+        dropPosition = e.clientX < targetRect.left + targetRect.width / 2 ? "before" : "after";
+    } else {
+        dropPosition = e.clientY < targetRect.top + targetRect.height / 2 ? "before" : "after";
+    }
+
+    // Reorder in DOM
+    const container = target.parentElement;
+    if (container) {
+        if (dropPosition === "before") {
+            container.insertBefore(draggedElement, target);
+        } else {
+            container.insertBefore(draggedElement, target.nextSibling);
+        }
+    }
+
+    // Save order (debounced)
+    if (saveOrderTimeout) {
+        clearTimeout(saveOrderTimeout);
+    }
+    saveOrderTimeout = setTimeout(async () => {
+        const newOrder = getCurrentTileOrder();
+        await saveTileOrder(newOrder);
+        showToast("Order saved", "success");
+    }, 500);
+}
+
+/**
+ * Handle drag end event
+ */
+function handleDragEnd(e: DragEvent): void {
+    e.stopPropagation();
+
+    if (draggedElement) {
+        draggedElement.classList.remove("dragging");
+        draggedElement = null;
+    }
+
+    // Clean up any remaining drag-over classes
+    const container = document.querySelector(SELECTORS.CONTAINER);
+    if (container) {
+        container.querySelectorAll(".drag-over").forEach((item) => {
+            item.classList.remove("drag-over");
+        });
+    }
+}
+
+/**
+ * Restore tile order from storage
+ */
+export async function restoreTileOrder(): Promise<void> {
+    const tileOrder = await loadTileOrder();
+    if (!tileOrder || tileOrder.animeIds.length === 0) return;
+
+    const container = document.querySelector(SELECTORS.CONTAINER);
+    if (!container) return;
+
+    const items = container.querySelectorAll(SELECTORS.ITEM);
+    const itemMap = new Map<string, Element>();
+
+    // Build map of anime ID to element
+    items.forEach((item) => {
+        const animeData = extractAnimeData(item);
+        if (animeData) {
+            itemMap.set(animeData.animeId, item);
+        }
+    });
+
+    // Reorder elements according to saved order
+    const orderedElements: Element[] = [];
+    const unorderedElements: Element[] = [];
+
+    // First, add elements in saved order
+    tileOrder.animeIds.forEach((animeId) => {
+        const element = itemMap.get(animeId);
+        if (element) {
+            orderedElements.push(element);
+            itemMap.delete(animeId);
+        }
+    });
+
+    // Then, add any remaining elements (new tiles not in saved order)
+    itemMap.forEach((element) => {
+        unorderedElements.push(element);
+    });
+
+    // Append elements in new order
+    const allElements = [...orderedElements, ...unorderedElements];
+    allElements.forEach((element) => {
+        container.appendChild(element);
+    });
+
+    console.log(
+        "[ContentScript] Restored tile order:",
+        orderedElements.length,
+        "ordered,",
+        unorderedElements.length,
+        "new",
+    );
+}
+
+/**
+ * Reset tile order to default
+ */
+export async function resetTileOrder(): Promise<void> {
+    await clearTileOrder();
+    showToast("Order reset - reloading page", "info");
+    setTimeout(() => {
+        window.location.reload();
+    }, 500);
+}
+
+/**
+ * Initialize drag-and-drop functionality
+ */
+export async function initializeDragAndDrop(): Promise<void> {
+    // Only initialize if container exists
+    const container = document.querySelector(SELECTORS.CONTAINER);
+    if (!container) return;
+
+    // Insert toolbar
+    insertDragToolbar();
+
+    // Restore saved order
+    await restoreTileOrder();
 }
 
 // Only auto-initialize if not in test environment

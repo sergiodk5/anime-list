@@ -8,6 +8,7 @@ export enum StorageKeys {
     EPISODE_PROGRESS = "episodeProgress",
     PLAN_TO_WATCH = "planToWatch",
     HIDDEN_ANIME = "hiddenAnime",
+    TILE_ORDER = "tileOrder",
 }
 
 export interface EpisodeProgress {
@@ -31,6 +32,11 @@ export interface AnimeData {
     animeId: string;
     animeTitle: string;
     animeSlug: string;
+}
+
+export interface TileOrder {
+    animeIds: string[];
+    lastUpdated: string;
 }
 
 // Export architecture types

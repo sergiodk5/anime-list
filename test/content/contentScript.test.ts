@@ -22,6 +22,15 @@ vi.mock("@/commons/services", () => ({
     AnimeService: vi.fn().mockImplementation(() => mockAnimeService),
 }));
 
+// Mock StorageAdapter for drag-and-drop functionality
+vi.mock("@/commons/adapters/StorageAdapter", () => ({
+    StorageAdapter: {
+        get: vi.fn().mockResolvedValue(null),
+        set: vi.fn().mockResolvedValue(undefined),
+        remove: vi.fn().mockResolvedValue(undefined),
+    },
+}));
+
 describe("Content Script", () => {
     beforeEach(() => {
         // Clear document body and setup DOM structure
