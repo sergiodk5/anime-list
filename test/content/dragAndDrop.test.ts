@@ -484,5 +484,368 @@ describe("Drag and Drop Tile Reordering", () => {
             const toolbar = document.querySelector(".anime-list-drag-toolbar");
             expect(toolbar).not.toBeNull();
         });
+
+        it("should not initialize if container does not exist", async () => {
+            document.body.innerHTML = "";
+            mockGet.mockResolvedValue(null);
+
+            await initializeDragAndDrop();
+
+            const toolbar = document.querySelector(".anime-list-drag-toolbar");
+            expect(toolbar).toBeNull();
+        });
+    });
+
+    describe("Keyboard Navigation", () => {
+        beforeEach(() => {
+            document.body.innerHTML = `
+                <div class="film_list-wrap">
+                    <div class="flw-item" id="item1">
+                        <div class="film-name"><a title="A" href="/watch/anime-a-111">A</a></div>
+                    </div>
+                    <div class="flw-item" id="item2">
+                        <div class="film-name"><a title="B" href="/watch/anime-b-222">B</a></div>
+                    </div>
+                    <div class="flw-item" id="item3">
+                        <div class="film-name"><a title="C" href="/watch/anime-c-333">C</a></div>
+                    </div>
+                </div>
+            `;
+            insertDragToolbar();
+            enableDragMode();
+        });
+
+        const createKeyboardEvent = (key: string) => {
+            return new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true });
+        };
+
+        it("should select tile on Enter key", () => {
+            const item = document.querySelector("#item1") as HTMLElement;
+            item.dispatchEvent(createKeyboardEvent("Enter"));
+            expect(item.classList.contains("keyboard-selected")).toBe(true);
+        });
+
+        it("should select tile on Space key", () => {
+            const item = document.querySelector("#item1") as HTMLElement;
+            item.dispatchEvent(createKeyboardEvent(" "));
+            expect(item.classList.contains("keyboard-selected")).toBe(true);
+        });
+
+        it("should deselect tile on second Enter", () => {
+            const item = document.querySelector("#item1") as HTMLElement;
+            item.dispatchEvent(createKeyboardEvent("Enter"));
+            expect(item.classList.contains("keyboard-selected")).toBe(true);
+
+            item.dispatchEvent(createKeyboardEvent("Enter"));
+            expect(item.classList.contains("keyboard-selected")).toBe(false);
+        });
+
+        it("should cancel selection on Escape", () => {
+            const item = document.querySelector("#item1") as HTMLElement;
+            item.dispatchEvent(createKeyboardEvent("Enter"));
+            expect(item.classList.contains("keyboard-selected")).toBe(true);
+
+            item.dispatchEvent(createKeyboardEvent("Escape"));
+            expect(item.classList.contains("keyboard-selected")).toBe(false);
+        });
+
+        it("should navigate with ArrowDown", () => {
+            const item1 = document.querySelector("#item1") as HTMLElement;
+            const item2 = document.querySelector("#item2") as HTMLElement;
+            const focusSpy = vi.spyOn(item2, "focus");
+
+            item1.dispatchEvent(createKeyboardEvent("ArrowDown"));
+
+            expect(focusSpy).toHaveBeenCalled();
+        });
+
+        it("should navigate with ArrowUp", () => {
+            const item1 = document.querySelector("#item1") as HTMLElement;
+            const item2 = document.querySelector("#item2") as HTMLElement;
+            const focusSpy = vi.spyOn(item1, "focus");
+
+            item2.dispatchEvent(createKeyboardEvent("ArrowUp"));
+
+            expect(focusSpy).toHaveBeenCalled();
+        });
+
+        it("should move selected tile with ArrowDown", async () => {
+            vi.useFakeTimers();
+            mockSet.mockResolvedValue(undefined);
+
+            const item1 = document.querySelector("#item1") as HTMLElement;
+
+            // Select item1
+            item1.dispatchEvent(createKeyboardEvent("Enter"));
+
+            // Move down
+            item1.dispatchEvent(createKeyboardEvent("ArrowDown"));
+
+            await vi.advanceTimersByTimeAsync(600);
+
+            const items = document.querySelectorAll(".flw-item");
+            expect(items[0].id).toBe("item2");
+            expect(items[1].id).toBe("item1");
+
+            vi.useRealTimers();
+        });
+
+        it("should not navigate past first item with ArrowUp", () => {
+            const item1 = document.querySelector("#item1") as HTMLElement;
+            const focusSpy = vi.spyOn(item1, "focus");
+
+            item1.dispatchEvent(createKeyboardEvent("ArrowUp"));
+
+            // Should not call focus since we're at the first item
+            expect(focusSpy).not.toHaveBeenCalled();
+        });
+
+        it("should not navigate past last item with ArrowDown", () => {
+            const item3 = document.querySelector("#item3") as HTMLElement;
+
+            // Store current focus state
+            item3.dispatchEvent(createKeyboardEvent("ArrowDown"));
+
+            // Item3 should still be in place (no crash)
+            expect(document.querySelector("#item3")).not.toBeNull();
+        });
+    });
+
+    describe("Drop with drag-over cleanup", () => {
+        beforeEach(() => {
+            document.body.innerHTML = `
+                <div class="film_list-wrap">
+                    <div class="flw-item" id="item1">
+                        <div class="film-name"><a title="A" href="/watch/anime-a-111">A</a></div>
+                    </div>
+                    <div class="flw-item" id="item2">
+                        <div class="film-name"><a title="B" href="/watch/anime-b-222">B</a></div>
+                    </div>
+                </div>
+            `;
+            insertDragToolbar();
+            enableDragMode();
+        });
+
+        it("should clean up drag-over classes on dragend", () => {
+            const item1 = document.querySelector("#item1") as HTMLElement;
+            const item2 = document.querySelector("#item2") as HTMLElement;
+
+            // Add drag-over to item2
+            item2.classList.add("drag-over");
+
+            // Start drag on item1
+            item1.dispatchEvent(new Event("dragstart", { bubbles: true }));
+
+            // End drag
+            item1.dispatchEvent(new Event("dragend", { bubbles: true }));
+
+            expect(item2.classList.contains("drag-over")).toBe(false);
+        });
+
+        it("should debounce multiple rapid drops", async () => {
+            vi.useFakeTimers();
+            mockSet.mockResolvedValue(undefined);
+
+            const item1 = document.querySelector("#item1") as HTMLElement;
+            const item2 = document.querySelector("#item2") as HTMLElement;
+
+            // First drag and drop
+            item1.dispatchEvent(new Event("dragstart", { bubbles: true }));
+            item2.dispatchEvent(new Event("drop", { bubbles: true }));
+
+            // Second drag and drop quickly (should clear previous timeout)
+            item2.dispatchEvent(new Event("dragstart", { bubbles: true }));
+            item1.dispatchEvent(new Event("drop", { bubbles: true }));
+
+            // Only one save should happen after debounce
+            await vi.advanceTimersByTimeAsync(600);
+
+            // Should have been called (debounced)
+            expect(mockSet).toHaveBeenCalled();
+
+            vi.useRealTimers();
+        });
+    });
+
+    describe("Move tile with Enter to another position", () => {
+        beforeEach(() => {
+            document.body.innerHTML = `
+                <div class="film_list-wrap">
+                    <div class="flw-item" id="item1">
+                        <div class="film-name"><a title="A" href="/watch/anime-a-111">A</a></div>
+                    </div>
+                    <div class="flw-item" id="item2">
+                        <div class="film-name"><a title="B" href="/watch/anime-b-222">B</a></div>
+                    </div>
+                    <div class="flw-item" id="item3">
+                        <div class="film-name"><a title="C" href="/watch/anime-c-333">C</a></div>
+                    </div>
+                </div>
+            `;
+            insertDragToolbar();
+            enableDragMode();
+        });
+
+        const createKeyboardEvent = (key: string) => {
+            return new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true });
+        };
+
+        it("should move selected tile to another position with Enter", async () => {
+            vi.useFakeTimers();
+            mockSet.mockResolvedValue(undefined);
+
+            const item1 = document.querySelector("#item1") as HTMLElement;
+            const item3 = document.querySelector("#item3") as HTMLElement;
+
+            // Select item1
+            item1.dispatchEvent(createKeyboardEvent("Enter"));
+            expect(item1.classList.contains("keyboard-selected")).toBe(true);
+
+            // Press Enter on item3 to move item1 there
+            item3.dispatchEvent(createKeyboardEvent("Enter"));
+
+            await vi.advanceTimersByTimeAsync(600);
+
+            // item1 should now be after item3
+            const items = document.querySelectorAll(".flw-item");
+            expect(items[2].id).toBe("item1");
+
+            vi.useRealTimers();
+        });
+
+        it("should handle ArrowLeft same as ArrowUp", () => {
+            const item2 = document.querySelector("#item2") as HTMLElement;
+            const item1 = document.querySelector("#item1") as HTMLElement;
+            const focusSpy = vi.spyOn(item1, "focus");
+
+            item2.dispatchEvent(createKeyboardEvent("ArrowLeft"));
+
+            expect(focusSpy).toHaveBeenCalled();
+        });
+
+        it("should handle ArrowRight same as ArrowDown", () => {
+            const item1 = document.querySelector("#item1") as HTMLElement;
+            const item2 = document.querySelector("#item2") as HTMLElement;
+            const focusSpy = vi.spyOn(item2, "focus");
+
+            item1.dispatchEvent(createKeyboardEvent("ArrowRight"));
+
+            expect(focusSpy).toHaveBeenCalled();
+        });
+
+        it("should move selected tile up with ArrowUp", async () => {
+            vi.useFakeTimers();
+            mockSet.mockResolvedValue(undefined);
+
+            const item2 = document.querySelector("#item2") as HTMLElement;
+
+            // Select item2
+            item2.dispatchEvent(createKeyboardEvent("Enter"));
+
+            // Move up
+            item2.dispatchEvent(createKeyboardEvent("ArrowUp"));
+
+            await vi.advanceTimersByTimeAsync(600);
+
+            const items = document.querySelectorAll(".flw-item");
+            expect(items[0].id).toBe("item2");
+            expect(items[1].id).toBe("item1");
+
+            vi.useRealTimers();
+        });
+    });
+
+    describe("Drop position calculations", () => {
+        beforeEach(() => {
+            document.body.innerHTML = `
+                <div class="film_list-wrap">
+                    <div class="flw-item" id="item1" style="width: 200px; height: 100px;">
+                        <div class="film-name"><a title="A" href="/watch/anime-a-111">A</a></div>
+                    </div>
+                    <div class="flw-item" id="item2" style="width: 200px; height: 100px;">
+                        <div class="film-name"><a title="B" href="/watch/anime-b-222">B</a></div>
+                    </div>
+                </div>
+            `;
+            insertDragToolbar();
+            enableDragMode();
+        });
+
+        it("should handle horizontal layout drop (before position)", async () => {
+            vi.useFakeTimers();
+            mockSet.mockResolvedValue(undefined);
+
+            const item1 = document.querySelector("#item1") as HTMLElement;
+            const item2 = document.querySelector("#item2") as HTMLElement;
+
+            // Mock getBoundingClientRect for horizontal layout (width > height)
+            vi.spyOn(item2, "getBoundingClientRect").mockReturnValue({
+                width: 200,
+                height: 100,
+                left: 100,
+                top: 0,
+                right: 300,
+                bottom: 100,
+                x: 100,
+                y: 0,
+                toJSON: () => ({}),
+            });
+
+            // Start drag on item1
+            item1.dispatchEvent(new Event("dragstart", { bubbles: true }));
+
+            // Create drop event with clientX in the left half (before position)
+            const dropEvent = new Event("drop", { bubbles: true, cancelable: true }) as any;
+            dropEvent.clientX = 150; // Left of center (100 + 200/2 = 200)
+            dropEvent.clientY = 50;
+            dropEvent.stopPropagation = vi.fn();
+            dropEvent.preventDefault = vi.fn();
+
+            item2.dispatchEvent(dropEvent);
+
+            await vi.advanceTimersByTimeAsync(600);
+            expect(mockSet).toHaveBeenCalled();
+
+            vi.useRealTimers();
+        });
+
+        it("should handle horizontal layout drop (after position)", async () => {
+            vi.useFakeTimers();
+            mockSet.mockResolvedValue(undefined);
+
+            const item1 = document.querySelector("#item1") as HTMLElement;
+            const item2 = document.querySelector("#item2") as HTMLElement;
+
+            // Mock getBoundingClientRect for horizontal layout (width > height)
+            vi.spyOn(item2, "getBoundingClientRect").mockReturnValue({
+                width: 200,
+                height: 100,
+                left: 100,
+                top: 0,
+                right: 300,
+                bottom: 100,
+                x: 100,
+                y: 0,
+                toJSON: () => ({}),
+            });
+
+            // Start drag on item1
+            item1.dispatchEvent(new Event("dragstart", { bubbles: true }));
+
+            // Create drop event with clientX in the right half (after position)
+            const dropEvent = new Event("drop", { bubbles: true, cancelable: true }) as any;
+            dropEvent.clientX = 250; // Right of center
+            dropEvent.clientY = 50;
+            dropEvent.stopPropagation = vi.fn();
+            dropEvent.preventDefault = vi.fn();
+
+            item2.dispatchEvent(dropEvent);
+
+            await vi.advanceTimersByTimeAsync(600);
+            expect(mockSet).toHaveBeenCalled();
+
+            vi.useRealTimers();
+        });
     });
 });
