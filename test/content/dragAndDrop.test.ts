@@ -10,6 +10,8 @@ import {
     initializeDragAndDrop,
     insertDragToolbar,
     loadTileOrder,
+    makeTileDraggable,
+    removeTileDraggable,
     resetTileOrder,
     restoreTileOrder,
     saveTileOrder,
@@ -293,6 +295,100 @@ describe("Drag and Drop Tile Reordering", () => {
 
             // Then trigger dragend to clean up
             item.dispatchEvent(createDragEvent("dragend"));
+            expect(item.classList.contains("dragging")).toBe(false);
+        });
+
+        it("should handle dragover event", () => {
+            const item = document.querySelector("#item1") as HTMLElement;
+            const event = createDragEvent("dragover");
+            const preventDefaultSpy = vi.spyOn(event, "preventDefault");
+            const stopPropagationSpy = vi.spyOn(event, "stopPropagation");
+
+            item.dispatchEvent(event);
+
+            expect(preventDefaultSpy).toHaveBeenCalled();
+            expect(stopPropagationSpy).toHaveBeenCalled();
+        });
+
+        it("should handle drop event on different element", async () => {
+            vi.useFakeTimers();
+            mockSet.mockResolvedValue(undefined);
+
+            const item1 = document.querySelector("#item1") as HTMLElement;
+            const item2 = document.querySelector("#item2") as HTMLElement;
+
+            // Start dragging item1
+            item1.dispatchEvent(createDragEvent("dragstart"));
+
+            // Drop on item2
+            const dropEvent = createDragEvent("drop");
+            item2.dispatchEvent(dropEvent);
+
+            // Advance timers to trigger debounced save
+            await vi.advanceTimersByTimeAsync(600);
+
+            expect(mockSet).toHaveBeenCalled();
+            vi.useRealTimers();
+        });
+
+        it("should not reorder when dropping on same element", () => {
+            const item1 = document.querySelector("#item1") as HTMLElement;
+            const container = document.querySelector(".film_list-wrap") as HTMLElement;
+            const initialOrder = Array.from(container.children).map((el) => el.id);
+
+            // Start dragging item1
+            item1.dispatchEvent(createDragEvent("dragstart"));
+
+            // Drop on same element
+            item1.dispatchEvent(createDragEvent("drop"));
+
+            const finalOrder = Array.from(container.children).map((el) => el.id);
+            expect(finalOrder).toEqual(initialOrder);
+        });
+    });
+
+    describe("makeTileDraggable and removeTileDraggable", () => {
+        beforeEach(() => {
+            // Disable any existing drag mode first
+            disableDragMode();
+            document.body.innerHTML = `
+                <div class="film_list-wrap">
+                    <div class="flw-item" id="item1">
+                        <div class="film-name"><a title="A" href="/watch/anime-a-111">A</a></div>
+                    </div>
+                </div>
+            `;
+        });
+
+        it("should make element draggable", () => {
+            const item = document.querySelector("#item1") as HTMLElement;
+            // Fresh element should not be draggable
+            expect(item.hasAttribute("draggable")).toBe(false);
+
+            makeTileDraggable(item);
+
+            expect(item.getAttribute("draggable")).toBe("true");
+        });
+
+        it("should not add duplicate listeners when called twice", () => {
+            const item = document.querySelector("#item1") as HTMLElement;
+
+            makeTileDraggable(item);
+            makeTileDraggable(item); // Call again - should be no-op due to guard
+
+            // Should still only have draggable="true" once
+            expect(item.getAttribute("draggable")).toBe("true");
+        });
+
+        it("should remove draggable attribute and classes", () => {
+            const item = document.querySelector("#item1") as HTMLElement;
+            makeTileDraggable(item);
+            item.classList.add("drag-over", "dragging");
+
+            removeTileDraggable(item);
+
+            expect(item.getAttribute("draggable")).toBeNull();
+            expect(item.classList.contains("drag-over")).toBe(false);
             expect(item.classList.contains("dragging")).toBe(false);
         });
     });

@@ -1439,7 +1439,7 @@ function injectStyles(): void {
             font-size: 12px;
             font-weight: 500;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
         }
 
         .drag-mode-toggle:hover,
@@ -1471,7 +1471,7 @@ function injectStyles(): void {
             cursor: grab;
             outline: 2px dashed rgba(139, 92, 246, 0.5);
             outline-offset: -2px;
-            transition: all 0.2s ease;
+            transition: outline 0.2s ease, outline-offset 0.2s ease, transform 0.2s ease, background 0.2s ease;
         }
 
         .flw-item[draggable="true"]:active {
@@ -2134,7 +2134,7 @@ export async function loadTileOrder(): Promise<TileOrder | null> {
 
 /**
  * Save tile order to storage
- * Note: Should be called through a debounced mechanism to avoid excessive writes
+ * Note: Caller is responsible for debouncing to avoid excessive writes (see handleDrop)
  */
 export async function saveTileOrder(animeIds: string[]): Promise<void> {
     try {
@@ -2408,13 +2408,12 @@ async function handleDrop(e: DragEvent): Promise<void> {
     // Detect orientation: horizontal if width > height, else vertical
     const targetRect = target.getBoundingClientRect();
     const isHorizontal = targetRect.width > targetRect.height;
-    const dropPosition = isHorizontal
-        ? e.clientX < targetRect.left + targetRect.width / 2
-            ? "before"
-            : "after"
-        : e.clientY < targetRect.top + targetRect.height / 2
-          ? "before"
-          : "after";
+    let dropPosition: "before" | "after";
+    if (isHorizontal) {
+        dropPosition = e.clientX < targetRect.left + targetRect.width / 2 ? "before" : "after";
+    } else {
+        dropPosition = e.clientY < targetRect.top + targetRect.height / 2 ? "before" : "after";
+    }
 
     // Reorder in DOM
     const container = target.parentElement;
