@@ -1488,6 +1488,14 @@ function injectStyles(): void {
             color: white;
         }
 
+        .drag-mode-toggle:focus,
+        .drag-mode-toggle:focus-visible,
+        .drag-reset-order:focus,
+        .drag-reset-order:focus-visible {
+            outline: 2px solid rgba(139, 92, 246, 0.8);
+            outline-offset: 2px;
+        }
+
         /* Draggable tile styles */
         .flw-item[draggable="true"] {
             cursor: grab;
@@ -2429,7 +2437,8 @@ export function enableDragMode(): void {
         const resetBtn = dragToolbar.querySelector(".drag-reset-order") as HTMLButtonElement;
 
         toggleBtn.classList.add("active");
-        toggleBtn.querySelector(".button-text")!.textContent = "Done";
+        const enableButtonText = toggleBtn.querySelector(".button-text");
+        if (enableButtonText) enableButtonText.textContent = "Done";
         resetBtn.style.display = "flex";
     }
 
@@ -2462,7 +2471,8 @@ export function disableDragMode(): void {
         const resetBtn = dragToolbar.querySelector(".drag-reset-order") as HTMLButtonElement;
 
         toggleBtn.classList.remove("active");
-        toggleBtn.querySelector(".button-text")!.textContent = "Reorder";
+        const disableButtonText = toggleBtn.querySelector(".button-text");
+        if (disableButtonText) disableButtonText.textContent = "Reorder";
         resetBtn.style.display = "none";
     }
 
@@ -2660,6 +2670,10 @@ export async function resetTileOrder(): Promise<void> {
  * Initialize drag-and-drop functionality
  */
 export async function initializeDragAndDrop(): Promise<void> {
+    // Only initialize if container exists
+    const container = document.querySelector(SELECTORS.CONTAINER);
+    if (!container) return;
+
     // Insert toolbar
     insertDragToolbar();
 
