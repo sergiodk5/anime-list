@@ -73,10 +73,14 @@ describe("Drag and Drop Tile Reordering", () => {
         });
 
         it("should handle storage errors when saving", async () => {
+            const consoleErrorSpy = vi.spyOn(console, "error");
             mockSet.mockRejectedValue(new Error("Storage error"));
 
             // Should not throw
             await expect(saveTileOrder(["123"])).resolves.not.toThrow();
+
+            // Should log the error
+            expect(consoleErrorSpy).toHaveBeenCalledWith("Error saving tile order:", expect.any(Error));
         });
 
         it("should clear tile order from storage", async () => {
@@ -88,10 +92,14 @@ describe("Drag and Drop Tile Reordering", () => {
         });
 
         it("should handle storage errors when clearing", async () => {
+            const consoleErrorSpy = vi.spyOn(console, "error");
             mockRemove.mockRejectedValue(new Error("Storage error"));
 
             // Should not throw
             await expect(clearTileOrder()).resolves.not.toThrow();
+
+            // Should log the error
+            expect(consoleErrorSpy).toHaveBeenCalledWith("Error clearing tile order:", expect.any(Error));
         });
     });
 
@@ -225,6 +233,59 @@ describe("Drag and Drop Tile Reordering", () => {
 
             toggleDragMode();
             expect(document.querySelector(".flw-item")?.getAttribute("draggable")).toBeNull();
+        });
+    });
+
+    describe("Drag Event Handlers", () => {
+        beforeEach(() => {
+            document.body.innerHTML = `
+                <div class="film_list-wrap">
+                    <div class="flw-item" id="item1">
+                        <div class="film-name"><a title="A" href="/watch/anime-a-111">A</a></div>
+                    </div>
+                    <div class="flw-item" id="item2">
+                        <div class="film-name"><a title="B" href="/watch/anime-b-222">B</a></div>
+                    </div>
+                </div>
+            `;
+            insertDragToolbar();
+            enableDragMode();
+        });
+
+        // Helper to create drag events (DragEvent not available in jsdom)
+        const createDragEvent = (type: string) => {
+            const event = new Event(type, { bubbles: true, cancelable: true });
+            return event;
+        };
+
+        it("should add dragging class on dragstart", () => {
+            const item = document.querySelector("#item1") as HTMLElement;
+            item.dispatchEvent(createDragEvent("dragstart"));
+            expect(item.classList.contains("dragging")).toBe(true);
+        });
+
+        it("should add drag-over class on dragenter", () => {
+            const item = document.querySelector("#item2") as HTMLElement;
+            item.dispatchEvent(createDragEvent("dragenter"));
+            expect(item.classList.contains("drag-over")).toBe(true);
+        });
+
+        it("should remove drag-over class on dragleave", () => {
+            const item = document.querySelector("#item2") as HTMLElement;
+            item.classList.add("drag-over");
+            item.dispatchEvent(createDragEvent("dragleave"));
+            expect(item.classList.contains("drag-over")).toBe(false);
+        });
+
+        it("should remove dragging class on dragend", () => {
+            const item = document.querySelector("#item1") as HTMLElement;
+            // First trigger dragstart to set draggedElement
+            item.dispatchEvent(createDragEvent("dragstart"));
+            expect(item.classList.contains("dragging")).toBe(true);
+
+            // Then trigger dragend to clean up
+            item.dispatchEvent(createDragEvent("dragend"));
+            expect(item.classList.contains("dragging")).toBe(false);
         });
     });
 
