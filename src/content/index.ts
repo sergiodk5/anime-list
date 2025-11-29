@@ -941,6 +941,7 @@ export function setupObserver(): void {
     const observer = new MutationObserver((mutations) => {
         for (const mutation of mutations) {
             if (mutation.type === "childList") {
+                // Handle added nodes
                 mutation.addedNodes.forEach((node) => {
                     if (node.nodeType === Node.ELEMENT_NODE) {
                         const element = node as Element;
@@ -963,6 +964,27 @@ export function setupObserver(): void {
                                 if (dragModeEnabled) {
                                     makeTileDraggable(item as HTMLElement);
                                 }
+                            });
+                        }
+                    }
+                });
+
+                // Handle removed nodes - clean up event listeners to prevent memory leaks
+                mutation.removedNodes.forEach((node) => {
+                    if (node.nodeType === 1) {
+                        // nodeType 1 = Element
+                        const element = node as Element;
+
+                        // Clean up if the removed node is an anime item
+                        if (element.matches?.(SELECTORS.ITEM)) {
+                            removeTileDraggable(element as HTMLElement);
+                        }
+
+                        // Clean up any anime items within the removed node
+                        const items = element.querySelectorAll?.(SELECTORS.ITEM);
+                        if (items) {
+                            items.forEach((item) => {
+                                removeTileDraggable(item as HTMLElement);
                             });
                         }
                     }
@@ -1488,6 +1510,18 @@ function injectStyles(): void {
         .flw-item.dragging {
             opacity: 0.5;
             transform: scale(0.98);
+        }
+
+        /* Keyboard selection state */
+        .flw-item.keyboard-selected {
+            outline: 3px solid rgba(59, 130, 246, 0.8) !important;
+            outline-offset: 2px !important;
+            box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+        }
+
+        .flw-item[draggable="true"]:focus {
+            outline: 2px solid rgba(59, 130, 246, 0.6);
+            outline-offset: 2px;
         }
 
         /* Responsive adjustments for drag toolbar */
@@ -2119,6 +2153,7 @@ let dragModeEnabled = false;
 let draggedElement: HTMLElement | null = null;
 let dragToolbar: HTMLElement | null = null;
 let saveOrderTimeout: ReturnType<typeof setTimeout> | null = null;
+let keyboardSelectedElement: HTMLElement | null = null;
 
 /**
  * Load tile order from storage
@@ -2245,6 +2280,95 @@ export function toggleDragMode(): void {
 }
 
 /**
+ * Handle keyboard navigation for tile reordering
+ */
+function handleTileKeydown(e: KeyboardEvent): void {
+    if (!dragModeEnabled) return;
+
+    const target = e.currentTarget as HTMLElement;
+    const container = target.parentElement;
+    if (!container) return;
+
+    const items = Array.from(container.querySelectorAll(SELECTORS.ITEM)) as HTMLElement[];
+    const currentIndex = items.indexOf(target);
+
+    // Space or Enter to select/deselect for moving
+    if (e.key === " " || e.key === "Enter") {
+        e.preventDefault();
+        if (keyboardSelectedElement === target) {
+            // Deselect
+            keyboardSelectedElement.classList.remove("keyboard-selected");
+            keyboardSelectedElement = null;
+            showToast("Tile deselected", "info");
+        } else if (keyboardSelectedElement) {
+            // Move selected element to current position
+            const selectedIndex = items.indexOf(keyboardSelectedElement);
+            if (selectedIndex !== -1 && selectedIndex !== currentIndex) {
+                if (currentIndex < selectedIndex) {
+                    container.insertBefore(keyboardSelectedElement, target);
+                } else {
+                    container.insertBefore(keyboardSelectedElement, target.nextSibling);
+                }
+                // Save order
+                debouncedSaveOrder();
+                showToast("Tile moved", "success");
+            }
+            keyboardSelectedElement.classList.remove("keyboard-selected");
+            keyboardSelectedElement = null;
+        } else {
+            // Select current element
+            keyboardSelectedElement = target;
+            target.classList.add("keyboard-selected");
+            showToast("Tile selected - use arrow keys and Enter to move", "info");
+        }
+        return;
+    }
+
+    // Arrow keys to navigate or move
+    if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
+        e.preventDefault();
+        if (keyboardSelectedElement === target && currentIndex > 0) {
+            // Move selected element up
+            container.insertBefore(target, items[currentIndex - 1]);
+            target.focus();
+            debouncedSaveOrder();
+        } else if (currentIndex > 0) {
+            // Navigate to previous item
+            items[currentIndex - 1].focus();
+        }
+    } else if (e.key === "ArrowDown" || e.key === "ArrowRight") {
+        e.preventDefault();
+        if (keyboardSelectedElement === target && currentIndex < items.length - 1) {
+            // Move selected element down
+            container.insertBefore(target, items[currentIndex + 2] || null);
+            target.focus();
+            debouncedSaveOrder();
+        } else if (currentIndex < items.length - 1) {
+            // Navigate to next item
+            items[currentIndex + 1].focus();
+        }
+    } else if (e.key === "Escape" && keyboardSelectedElement) {
+        // Cancel selection
+        keyboardSelectedElement.classList.remove("keyboard-selected");
+        keyboardSelectedElement = null;
+        showToast("Selection cancelled", "info");
+    }
+}
+
+/**
+ * Debounced save order helper
+ */
+function debouncedSaveOrder(): void {
+    if (saveOrderTimeout) {
+        clearTimeout(saveOrderTimeout);
+    }
+    saveOrderTimeout = setTimeout(async () => {
+        const newOrder = getCurrentTileOrder();
+        await saveTileOrder(newOrder);
+    }, 500);
+}
+
+/**
  * Make a single tile draggable
  */
 export function makeTileDraggable(element: HTMLElement): void {
@@ -2252,12 +2376,15 @@ export function makeTileDraggable(element: HTMLElement): void {
     if (element.getAttribute("draggable") === "true") return;
 
     element.setAttribute("draggable", "true");
+    element.setAttribute("tabindex", "0");
+    element.setAttribute("role", "listitem");
     element.addEventListener("dragstart", handleDragStart);
     element.addEventListener("dragover", handleDragOver);
     element.addEventListener("dragenter", handleDragEnter);
     element.addEventListener("dragleave", handleDragLeave);
     element.addEventListener("drop", handleDrop);
     element.addEventListener("dragend", handleDragEnd);
+    element.addEventListener("keydown", handleTileKeydown);
 }
 
 /**
@@ -2265,13 +2392,21 @@ export function makeTileDraggable(element: HTMLElement): void {
  */
 export function removeTileDraggable(element: HTMLElement): void {
     element.removeAttribute("draggable");
-    element.classList.remove("drag-over", "dragging");
+    element.removeAttribute("tabindex");
+    element.removeAttribute("role");
+    element.classList.remove("drag-over", "dragging", "keyboard-selected");
     element.removeEventListener("dragstart", handleDragStart);
     element.removeEventListener("dragover", handleDragOver);
     element.removeEventListener("dragenter", handleDragEnter);
     element.removeEventListener("dragleave", handleDragLeave);
     element.removeEventListener("drop", handleDrop);
     element.removeEventListener("dragend", handleDragEnd);
+    element.removeEventListener("keydown", handleTileKeydown);
+
+    // Clear keyboard selection if this element was selected
+    if (keyboardSelectedElement === element) {
+        keyboardSelectedElement = null;
+    }
 }
 
 /**
@@ -2298,7 +2433,7 @@ export function enableDragMode(): void {
         resetBtn.style.display = "flex";
     }
 
-    showToast("Drag mode enabled - drag tiles to reorder", "info");
+    showToast("Reorder mode: drag tiles or use Tab + Enter + Arrow keys", "info");
 }
 
 /**
