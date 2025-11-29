@@ -89,6 +89,7 @@ describe("Drag and Drop Tile Reordering", () => {
 
             // Should log the error
             expect(consoleErrorSpy).toHaveBeenCalledWith("Error saving tile order:", expect.any(Error));
+            consoleErrorSpy.mockRestore();
         });
 
         it("should clear tile order from storage", async () => {
@@ -108,6 +109,7 @@ describe("Drag and Drop Tile Reordering", () => {
 
             // Should log the error
             expect(consoleErrorSpy).toHaveBeenCalledWith("Error clearing tile order:", expect.any(Error));
+            consoleErrorSpy.mockRestore();
         });
     });
 
@@ -117,7 +119,7 @@ describe("Drag and Drop Tile Reordering", () => {
             expect(result).toEqual([]);
         });
 
-        it("should extract anime IDs from DOM elements", () => {
+        it("should extract anime IDs from DOM elements in order", () => {
             document.body.innerHTML = `
                 <div class="film_list-wrap">
                     <div class="flw-item">
@@ -131,9 +133,7 @@ describe("Drag and Drop Tile Reordering", () => {
 
             const result = getCurrentTileOrder();
 
-            expect(result).toHaveLength(2);
-            expect(result).toContain("123");
-            expect(result).toContain("456");
+            expect(result).toEqual(["123", "456"]);
         });
     });
 

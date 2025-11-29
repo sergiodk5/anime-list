@@ -1412,7 +1412,7 @@ function injectStyles(): void {
             position: fixed !important;
             bottom: 20px !important;
             right: 20px !important;
-            z-index: 2147483647 !important;
+            z-index: 10000 !important;
             display: flex !important;
             gap: 8px;
             padding: 8px 12px;
@@ -2248,6 +2248,9 @@ export function toggleDragMode(): void {
  * Make a single tile draggable
  */
 export function makeTileDraggable(element: HTMLElement): void {
+    // Check if already draggable to avoid duplicate listeners
+    if (element.getAttribute("draggable") === "true") return;
+
     element.setAttribute("draggable", "true");
     element.addEventListener("dragstart", handleDragStart);
     element.addEventListener("dragover", handleDragOver);
@@ -2303,6 +2306,12 @@ export function enableDragMode(): void {
  */
 export function disableDragMode(): void {
     dragModeEnabled = false;
+
+    // Clear any pending save operations
+    if (saveOrderTimeout) {
+        clearTimeout(saveOrderTimeout);
+        saveOrderTimeout = null;
+    }
 
     const container = document.querySelector(SELECTORS.CONTAINER);
     if (!container) return;
