@@ -1,6 +1,7 @@
 import type { AnimeData, AnimeStatus, TileOrder } from "@/commons/models";
 import { StorageKeys } from "@/commons/models";
 import { AnimeService } from "@/commons/services";
+import { StorageAdapter } from "@/commons/adapters/StorageAdapter";
 
 /**
  * Content script for anime website integration
@@ -947,12 +948,22 @@ export function setupObserver(): void {
                         // Check if the added node is an anime item
                         if (element.matches(SELECTORS.ITEM)) {
                             addControlsToItem(element);
+                            // Make draggable if drag mode is active
+                            if (dragModeEnabled) {
+                                makeTileDraggable(element as HTMLElement);
+                            }
                         }
 
                         // Check if the added node contains anime items
                         const items = element.querySelectorAll?.(SELECTORS.ITEM);
                         if (items) {
-                            items.forEach(addControlsToItem);
+                            items.forEach((item) => {
+                                addControlsToItem(item);
+                                // Make draggable if drag mode is active
+                                if (dragModeEnabled) {
+                                    makeTileDraggable(item as HTMLElement);
+                                }
+                            });
                         }
                     }
                 });
@@ -2114,8 +2125,7 @@ let saveOrderTimeout: ReturnType<typeof setTimeout> | null = null;
  */
 export async function loadTileOrder(): Promise<TileOrder | null> {
     try {
-        const result = await chrome.storage.local.get(StorageKeys.TILE_ORDER);
-        return result[StorageKeys.TILE_ORDER] || null;
+        return await StorageAdapter.get<TileOrder>(StorageKeys.TILE_ORDER);
     } catch (error) {
         console.error("Error loading tile order:", error);
         return null;
@@ -2123,7 +2133,8 @@ export async function loadTileOrder(): Promise<TileOrder | null> {
 }
 
 /**
- * Save tile order to storage (debounced)
+ * Save tile order to storage
+ * Note: Should be called through a debounced mechanism to avoid excessive writes
  */
 export async function saveTileOrder(animeIds: string[]): Promise<void> {
     try {
@@ -2131,7 +2142,7 @@ export async function saveTileOrder(animeIds: string[]): Promise<void> {
             animeIds,
             lastUpdated: new Date().toISOString(),
         };
-        await chrome.storage.local.set({ [StorageKeys.TILE_ORDER]: tileOrder });
+        await StorageAdapter.set(StorageKeys.TILE_ORDER, tileOrder);
         console.log("[ContentScript] Saved tile order:", animeIds.length, "items");
     } catch (error) {
         console.error("Error saving tile order:", error);
@@ -2143,7 +2154,7 @@ export async function saveTileOrder(animeIds: string[]): Promise<void> {
  */
 export async function clearTileOrder(): Promise<void> {
     try {
-        await chrome.storage.local.remove(StorageKeys.TILE_ORDER as string);
+        await StorageAdapter.remove(StorageKeys.TILE_ORDER);
         console.log("[ContentScript] Cleared tile order");
     } catch (error) {
         console.error("Error clearing tile order:", error);
@@ -2179,12 +2190,12 @@ export function createDragToolbar(): HTMLDivElement {
     toolbar.setAttribute("data-testid", "drag-toolbar");
 
     toolbar.innerHTML = `
-        <button class="drag-mode-toggle" data-testid="drag-mode-toggle">
-            <span class="button-icon">↕️</span>
+        <button class="drag-mode-toggle" data-testid="drag-mode-toggle" aria-label="Toggle tile reorder mode">
+            <span class="button-icon" aria-hidden="true">↕️</span>
             <span class="button-text">Reorder</span>
         </button>
-        <button class="drag-reset-order" data-testid="drag-reset-order" style="display: none;">
-            <span class="button-icon">🔄</span>
+        <button class="drag-reset-order" data-testid="drag-reset-order" style="display: none;" aria-label="Reset tile order to default">
+            <span class="button-icon" aria-hidden="true">🔄</span>
             <span class="button-text">Reset</span>
         </button>
     `;
@@ -2234,6 +2245,33 @@ export function toggleDragMode(): void {
 }
 
 /**
+ * Make a single tile draggable
+ */
+export function makeTileDraggable(element: HTMLElement): void {
+    element.setAttribute("draggable", "true");
+    element.addEventListener("dragstart", handleDragStart);
+    element.addEventListener("dragover", handleDragOver);
+    element.addEventListener("dragenter", handleDragEnter);
+    element.addEventListener("dragleave", handleDragLeave);
+    element.addEventListener("drop", handleDrop);
+    element.addEventListener("dragend", handleDragEnd);
+}
+
+/**
+ * Remove draggable from a single tile
+ */
+export function removeTileDraggable(element: HTMLElement): void {
+    element.removeAttribute("draggable");
+    element.classList.remove("drag-over", "dragging");
+    element.removeEventListener("dragstart", handleDragStart);
+    element.removeEventListener("dragover", handleDragOver);
+    element.removeEventListener("dragenter", handleDragEnter);
+    element.removeEventListener("dragleave", handleDragLeave);
+    element.removeEventListener("drop", handleDrop);
+    element.removeEventListener("dragend", handleDragEnd);
+}
+
+/**
  * Enable drag mode
  */
 export function enableDragMode(): void {
@@ -2244,14 +2282,7 @@ export function enableDragMode(): void {
 
     const items = container.querySelectorAll(SELECTORS.ITEM);
     items.forEach((item) => {
-        const element = item as HTMLElement;
-        element.setAttribute("draggable", "true");
-        element.addEventListener("dragstart", handleDragStart);
-        element.addEventListener("dragover", handleDragOver);
-        element.addEventListener("dragenter", handleDragEnter);
-        element.addEventListener("dragleave", handleDragLeave);
-        element.addEventListener("drop", handleDrop);
-        element.addEventListener("dragend", handleDragEnd);
+        makeTileDraggable(item as HTMLElement);
     });
 
     // Update toolbar UI
@@ -2278,15 +2309,7 @@ export function disableDragMode(): void {
 
     const items = container.querySelectorAll(SELECTORS.ITEM);
     items.forEach((item) => {
-        const element = item as HTMLElement;
-        element.removeAttribute("draggable");
-        element.classList.remove("drag-over", "dragging");
-        element.removeEventListener("dragstart", handleDragStart);
-        element.removeEventListener("dragover", handleDragOver);
-        element.removeEventListener("dragenter", handleDragEnter);
-        element.removeEventListener("dragleave", handleDragLeave);
-        element.removeEventListener("drop", handleDrop);
-        element.removeEventListener("dragend", handleDragEnd);
+        removeTileDraggable(item as HTMLElement);
     });
 
     // Update toolbar UI
@@ -2352,7 +2375,12 @@ function handleDragLeave(e: DragEvent): void {
     e.stopPropagation();
 
     const target = e.currentTarget as HTMLElement;
-    target.classList.remove("drag-over");
+    const relatedTarget = e.relatedTarget as Node | null;
+
+    // Only remove class if we're actually leaving the element (not entering a child)
+    if (!relatedTarget || !target.contains(relatedTarget)) {
+        target.classList.remove("drag-over");
+    }
 }
 
 /**

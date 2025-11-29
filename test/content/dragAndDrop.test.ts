@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { StorageKeys } from "../../src/commons/models";
+import { StorageAdapter } from "../../src/commons/adapters/StorageAdapter";
 import {
     clearTileOrder,
     createDragToolbar,
@@ -15,10 +16,18 @@ import {
     toggleDragMode,
 } from "../../src/content/index";
 
-// Type-safe chrome storage mock helper
-const mockGet = chrome.storage.local.get as ReturnType<typeof vi.fn>;
-const mockSet = chrome.storage.local.set as ReturnType<typeof vi.fn>;
-const mockRemove = chrome.storage.local.remove as ReturnType<typeof vi.fn>;
+// Mock StorageAdapter
+vi.mock("../../src/commons/adapters/StorageAdapter", () => ({
+    StorageAdapter: {
+        get: vi.fn(),
+        set: vi.fn(),
+        remove: vi.fn(),
+    },
+}));
+
+const mockGet = StorageAdapter.get as ReturnType<typeof vi.fn>;
+const mockSet = StorageAdapter.set as ReturnType<typeof vi.fn>;
+const mockRemove = StorageAdapter.remove as ReturnType<typeof vi.fn>;
 
 describe("Drag and Drop Tile Reordering", () => {
     beforeEach(() => {
@@ -32,9 +41,7 @@ describe("Drag and Drop Tile Reordering", () => {
                 animeIds: ["123", "456", "789"],
                 lastUpdated: "2024-01-01T00:00:00.000Z",
             };
-            mockGet.mockResolvedValue({
-                [StorageKeys.TILE_ORDER]: mockOrder,
-            });
+            mockGet.mockResolvedValue(mockOrder);
 
             const result = await loadTileOrder();
 
@@ -43,7 +50,7 @@ describe("Drag and Drop Tile Reordering", () => {
         });
 
         it("should return null when no tile order exists", async () => {
-            mockGet.mockResolvedValue({});
+            mockGet.mockResolvedValue(null);
 
             const result = await loadTileOrder();
 
@@ -64,12 +71,13 @@ describe("Drag and Drop Tile Reordering", () => {
 
             await saveTileOrder(animeIds);
 
-            expect(mockSet).toHaveBeenCalledWith({
-                [StorageKeys.TILE_ORDER]: expect.objectContaining({
+            expect(mockSet).toHaveBeenCalledWith(
+                StorageKeys.TILE_ORDER,
+                expect.objectContaining({
                     animeIds,
                     lastUpdated: expect.any(String),
                 }),
-            });
+            );
         });
 
         it("should handle storage errors when saving", async () => {
@@ -77,7 +85,7 @@ describe("Drag and Drop Tile Reordering", () => {
             mockSet.mockRejectedValue(new Error("Storage error"));
 
             // Should not throw
-            await expect(saveTileOrder(["123"])).resolves.not.toThrow();
+            await saveTileOrder(["123"]);
 
             // Should log the error
             expect(consoleErrorSpy).toHaveBeenCalledWith("Error saving tile order:", expect.any(Error));
@@ -96,7 +104,7 @@ describe("Drag and Drop Tile Reordering", () => {
             mockRemove.mockRejectedValue(new Error("Storage error"));
 
             // Should not throw
-            await expect(clearTileOrder()).resolves.not.toThrow();
+            await clearTileOrder();
 
             // Should log the error
             expect(consoleErrorSpy).toHaveBeenCalledWith("Error clearing tile order:", expect.any(Error));
@@ -307,7 +315,7 @@ describe("Drag and Drop Tile Reordering", () => {
         });
 
         it("should not change order when no saved order exists", async () => {
-            mockGet.mockResolvedValue({});
+            mockGet.mockResolvedValue(null);
 
             await restoreTileOrder();
 
@@ -319,10 +327,8 @@ describe("Drag and Drop Tile Reordering", () => {
 
         it("should restore order from saved order", async () => {
             mockGet.mockResolvedValue({
-                [StorageKeys.TILE_ORDER]: {
-                    animeIds: ["333", "111", "222"],
-                    lastUpdated: "2024-01-01T00:00:00.000Z",
-                },
+                animeIds: ["333", "111", "222"],
+                lastUpdated: "2024-01-01T00:00:00.000Z",
             });
 
             await restoreTileOrder();
@@ -335,10 +341,8 @@ describe("Drag and Drop Tile Reordering", () => {
 
         it("should place new tiles at the end", async () => {
             mockGet.mockResolvedValue({
-                [StorageKeys.TILE_ORDER]: {
-                    animeIds: ["333", "111"], // 222 is not in saved order
-                    lastUpdated: "2024-01-01T00:00:00.000Z",
-                },
+                animeIds: ["333", "111"], // 222 is not in saved order
+                lastUpdated: "2024-01-01T00:00:00.000Z",
             });
 
             await restoreTileOrder();
@@ -377,7 +381,7 @@ describe("Drag and Drop Tile Reordering", () => {
     describe("Initialize Drag and Drop", () => {
         it("should insert toolbar and restore order", async () => {
             document.body.innerHTML = '<div class="film_list-wrap"></div>';
-            mockGet.mockResolvedValue({});
+            mockGet.mockResolvedValue(null);
 
             await initializeDragAndDrop();
 
