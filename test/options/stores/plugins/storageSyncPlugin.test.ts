@@ -144,4 +144,166 @@ describe("storageSyncPlugin", () => {
         expect(mockChromeStorage.onChanged.addListener).toHaveBeenCalled();
         expect(mockChromeRuntime.onMessage.addListener).toHaveBeenCalled();
     });
+
+    describe("storage change handling", () => {
+        it("should ignore non-local storage changes", () => {
+            vi.useFakeTimers();
+            const mockRefresh = vi.fn();
+            const useTestStore = defineStore("watching", () => ({
+                data: [] as any[],
+                refreshFromStorage: mockRefresh,
+            }));
+
+            useTestStore();
+
+            // Simulate sync storage change (should be ignored)
+            mockStorageListener({ episodeProgress: { newValue: {} } }, "sync");
+
+            // Give debounce time
+            vi.advanceTimersByTime(200);
+
+            expect(mockRefresh).not.toHaveBeenCalled();
+            vi.useRealTimers();
+        });
+
+        it("should handle episodeProgress storage changes for watching store", async () => {
+            vi.useFakeTimers();
+            const mockRefresh = vi.fn();
+            const useTestStore = defineStore("watching", () => ({
+                data: [] as any[],
+                refreshFromStorage: mockRefresh,
+            }));
+
+            useTestStore();
+
+            // Simulate local storage change for episodeProgress
+            mockStorageListener({ episodeProgress: { newValue: {}, oldValue: null } }, "local");
+
+            // Advance timers to trigger debounced handler
+            vi.advanceTimersByTime(600);
+
+            expect(mockRefresh).toHaveBeenCalled();
+            vi.useRealTimers();
+        });
+
+        it("should handle planToWatch storage changes", async () => {
+            vi.useFakeTimers();
+            const mockRefresh = vi.fn();
+            const useTestStore = defineStore("planToWatch", () => ({
+                data: [] as any[],
+                refreshFromStorage: mockRefresh,
+            }));
+
+            useTestStore();
+
+            // Simulate local storage change for planToWatch
+            mockStorageListener({ planToWatch: { newValue: [], oldValue: null } }, "local");
+
+            vi.advanceTimersByTime(600);
+
+            expect(mockRefresh).toHaveBeenCalled();
+            vi.useRealTimers();
+        });
+
+        it("should handle hiddenAnime storage changes", async () => {
+            vi.useFakeTimers();
+            const mockRefresh = vi.fn();
+            const useTestStore = defineStore("hidden", () => ({
+                data: [] as any[],
+                refreshFromStorage: mockRefresh,
+            }));
+
+            useTestStore();
+
+            // Simulate local storage change for hiddenAnime
+            mockStorageListener({ hiddenAnime: { newValue: [], oldValue: null } }, "local");
+
+            vi.advanceTimersByTime(600);
+
+            expect(mockRefresh).toHaveBeenCalled();
+            vi.useRealTimers();
+        });
+
+        it("should ignore unknown storage keys", async () => {
+            vi.useFakeTimers();
+            const mockRefresh = vi.fn();
+            const useTestStore = defineStore("watching", () => ({
+                data: [] as any[],
+                refreshFromStorage: mockRefresh,
+            }));
+
+            useTestStore();
+
+            // Simulate local storage change for unknown key
+            mockStorageListener({ unknownKey: { newValue: {}, oldValue: null } }, "local");
+
+            vi.advanceTimersByTime(600);
+
+            expect(mockRefresh).not.toHaveBeenCalled();
+            vi.useRealTimers();
+        });
+    });
+
+    describe("runtime message handling", () => {
+        it("should handle ANIME_STATE_CHANGED messages for episodeProgress", async () => {
+            vi.useFakeTimers();
+            const mockRefresh = vi.fn();
+            const useTestStore = defineStore("watching", () => ({
+                data: [] as any[],
+                refreshFromStorage: mockRefresh,
+            }));
+
+            useTestStore();
+
+            // Simulate runtime message
+            mockMessageListener(
+                { type: "ANIME_STATE_CHANGED", storageKey: "episodeProgress" },
+                { tab: { id: 1 } },
+            );
+
+            vi.advanceTimersByTime(600);
+
+            expect(mockRefresh).toHaveBeenCalled();
+            vi.useRealTimers();
+        });
+
+        it("should ignore non-ANIME_STATE_CHANGED messages", async () => {
+            vi.useFakeTimers();
+            const mockRefresh = vi.fn();
+            const useTestStore = defineStore("watching", () => ({
+                data: [] as any[],
+                refreshFromStorage: mockRefresh,
+            }));
+
+            useTestStore();
+
+            // Simulate runtime message with different type
+            mockMessageListener({ type: "OTHER_MESSAGE", storageKey: "episodeProgress" }, { tab: { id: 1 } });
+
+            vi.advanceTimersByTime(600);
+
+            expect(mockRefresh).not.toHaveBeenCalled();
+            vi.useRealTimers();
+        });
+    });
+
+    describe("store action hooks", () => {
+        it("should hook into store actions for write tracking", async () => {
+            const useTestStore = defineStore("test", {
+                state: () => ({ data: [] as any[] }),
+                actions: {
+                    startWatching() {
+                        this.data.push({ id: 1 });
+                    },
+                },
+            });
+
+            const store = useTestStore();
+
+            // Action should work without errors
+            await store.startWatching();
+
+            expect(store.data.length).toBe(1);
+        });
+    });
 });
