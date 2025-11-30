@@ -2442,8 +2442,10 @@ export function createFolderElement(folder: Folder): HTMLElement {
     folderEl.setAttribute("data-folder-id", folder.id);
     folderEl.setAttribute("data-testid", "anime-folder");
     folderEl.setAttribute("role", "region");
-    folderEl.setAttribute("aria-label", `Folder: ${folder.name}`);
-    folderEl.style.border = `3px solid ${folder.borderColor}`;
+    folderEl.setAttribute("aria-label", `Folder: ${escapeHtml(folder.name)}`);
+    if (isValidHexColor(folder.borderColor)) {
+        folderEl.style.border = `3px solid ${folder.borderColor}`;
+    }
 
     folderEl.innerHTML = `
         <div class="anime-folder-header" data-testid="folder-header" role="toolbar" aria-label="Folder controls">
@@ -2494,6 +2496,13 @@ function escapeHtml(text: string): string {
     const div = document.createElement("div");
     div.textContent = text;
     return div.innerHTML;
+}
+
+/**
+ * Validate hex color format to prevent CSS injection
+ */
+function isValidHexColor(color: string): boolean {
+    return /^#[0-9A-Fa-f]{6}$/.test(color);
 }
 
 /**
@@ -2678,7 +2687,7 @@ export async function renameFolder(folderId: string, newName: string): Promise<v
     // Update aria-label on folder element
     const folderEl = document.querySelector(`[data-folder-id="${folderId}"]`);
     if (folderEl) {
-        folderEl.setAttribute("aria-label", `Folder: ${newName}`);
+        folderEl.setAttribute("aria-label", `Folder: ${escapeHtml(newName)}`);
     }
 
     console.log(`[ContentScript] Renamed folder ${folderId} to "${newName}"`);
@@ -2691,6 +2700,8 @@ export async function changeFolderColor(folderId: string, newColor: string): Pro
     const folderOrder = await loadFolderOrder();
     const folder = folderOrder.folders.find((f) => f.id === folderId);
     if (!folder) return;
+
+    if (!isValidHexColor(newColor)) return;
 
     folder.borderColor = newColor;
     await saveFolderOrder(folderOrder);
@@ -3049,6 +3060,8 @@ let dragModeEnabled = false;
 let draggedElement: HTMLElement | null = null;
 let dragToolbar: HTMLElement | null = null;
 let saveOrderTimeout: ReturnType<typeof setTimeout> | null = null;
+let saveFolderOrderTimeout: ReturnType<typeof setTimeout> | null = null;
+let saveRootOrderTimeout: ReturnType<typeof setTimeout> | null = null;
 let keyboardSelectedElement: HTMLElement | null = null;
 
 /**
@@ -3548,10 +3561,10 @@ async function handleDrop(e: DragEvent): Promise<void> {
  * Debounced save for folder contents order
  */
 function debouncedSaveFolderOrder(folderId: string): void {
-    if (saveOrderTimeout) {
-        clearTimeout(saveOrderTimeout);
+    if (saveFolderOrderTimeout) {
+        clearTimeout(saveFolderOrderTimeout);
     }
-    saveOrderTimeout = setTimeout(async () => {
+    saveFolderOrderTimeout = setTimeout(async () => {
         const folderOrder = await loadFolderOrder();
         const folderContent = document.querySelector(`[data-folder-id="${folderId}"] .anime-folder-content`);
         if (folderContent) {
@@ -3572,10 +3585,10 @@ function debouncedSaveFolderOrder(folderId: string): void {
  * Debounced save for root level order
  */
 function debouncedSaveRootOrder(): void {
-    if (saveOrderTimeout) {
-        clearTimeout(saveOrderTimeout);
+    if (saveRootOrderTimeout) {
+        clearTimeout(saveRootOrderTimeout);
     }
-    saveOrderTimeout = setTimeout(async () => {
+    saveRootOrderTimeout = setTimeout(async () => {
         const folderOrder = await loadFolderOrder();
         const container = document.querySelector(SELECTORS.CONTAINER);
         if (container) {

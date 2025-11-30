@@ -872,4 +872,105 @@ describe("Folder Functionality", () => {
             expect(folderEl?.getAttribute("aria-label")).toContain("Folder:");
         });
     });
+
+    describe("security validations", () => {
+        it("should escape HTML in folder name for aria-label", () => {
+            const folder: Folder = {
+                id: "folder-xss",
+                name: '<script>alert("xss")</script>',
+                borderColor: "#FFD700",
+                createdAt: new Date().toISOString(),
+            };
+
+            const element = createFolderElement(folder);
+            const ariaLabel = element.getAttribute("aria-label");
+
+            expect(ariaLabel).not.toContain("<script>");
+            expect(ariaLabel).toContain("&lt;script&gt;");
+        });
+
+        it("should escape HTML in folder name input value", () => {
+            const folder: Folder = {
+                id: "folder-xss-input",
+                name: '"><img src=x onerror=alert(1)>',
+                borderColor: "#FFD700",
+                createdAt: new Date().toISOString(),
+            };
+
+            const element = createFolderElement(folder);
+            const input = element.querySelector(".anime-folder-name-input") as HTMLInputElement;
+
+            // The input value should be escaped
+            expect(input.value).not.toContain("<img");
+        });
+
+        it("should not apply border color for invalid hex color", () => {
+            const folder: Folder = {
+                id: "folder-invalid-color",
+                name: "Invalid Color",
+                borderColor: "javascript:alert(1)",
+                createdAt: new Date().toISOString(),
+            };
+
+            const element = createFolderElement(folder);
+
+            // Border should not be set for invalid color
+            expect(element.style.border).toBe("");
+        });
+
+        it("should apply border color for valid hex color", () => {
+            const folder: Folder = {
+                id: "folder-valid-color",
+                name: "Valid Color",
+                borderColor: "#FF6B6B",
+                createdAt: new Date().toISOString(),
+            };
+
+            const element = createFolderElement(folder);
+
+            expect(element.style.border).toContain("rgb(255, 107, 107)");
+        });
+
+        it("should reject invalid hex colors in changeFolderColor", async () => {
+            mockStorage["folderOrder"] = {
+                folders: [{ id: "folder-reject", name: "Reject", borderColor: "#FFD700", createdAt: "2024-01-01" }],
+                rootItems: ["folder:folder-reject"],
+                folderContents: {},
+                lastUpdated: "2024-01-01",
+            };
+
+            await changeFolderColor("folder-reject", "not-a-color");
+
+            // Storage should not have been updated with the invalid color
+            const stored = mockStorage["folderOrder"] as FolderOrder;
+            expect(stored.folders[0].borderColor).toBe("#FFD700");
+        });
+
+        it("should accept valid hex colors in changeFolderColor", async () => {
+            const folder: Folder = {
+                id: "folder-accept",
+                name: "Accept",
+                borderColor: "#FFD700",
+                createdAt: "2024-01-01",
+            };
+
+            mockStorage["folderOrder"] = {
+                folders: [folder],
+                rootItems: ["folder:folder-accept"],
+                folderContents: {},
+                lastUpdated: "2024-01-01",
+            };
+
+            const element = createFolderElement(folder);
+            element.setAttribute("data-folder-id", "folder-accept");
+            document.body.appendChild(element);
+
+            await changeFolderColor("folder-accept", "#4ECDC4");
+
+            const stored = mockStorage["folderOrder"] as FolderOrder;
+            expect(stored.folders[0].borderColor).toBe("#4ECDC4");
+
+            document.body.removeChild(element);
+        });
+    });
 });
