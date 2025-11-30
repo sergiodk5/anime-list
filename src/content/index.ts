@@ -2416,7 +2416,7 @@ export async function saveFolderOrder(folderOrder: FolderOrder): Promise<void> {
 /**
  * Update folder empty state based on item count
  */
-export function updateFolderSpan(folderId: string): void {
+export function updateFolderEmptyState(folderId: string): void {
     const folder = document.querySelector(`[data-folder-id="${folderId}"]`) as HTMLElement;
     if (!folder) return;
 
@@ -2606,12 +2606,28 @@ function showColorPicker(folderId: string, anchorElement: HTMLElement): void {
                      tabindex="${index === 0 ? "0" : "-1"}"></button>`,
     ).join("");
 
-    // Position near the button
+    // Position near the button with viewport boundary checks
     const rect = anchorElement.getBoundingClientRect();
     picker.style.position = "fixed";
-    picker.style.top = `${rect.bottom + 5}px`;
-    picker.style.left = `${rect.left}px`;
     picker.style.zIndex = "10002";
+
+    // Estimate picker size
+    const pickerHeight = 50;
+    const pickerWidth = 200;
+    let top = rect.bottom + 5;
+    let left = rect.left;
+
+    // Adjust if too close to bottom
+    if (top + pickerHeight > window.innerHeight) {
+        top = rect.top - pickerHeight - 5;
+    }
+    // Adjust if too close to right edge
+    if (left + pickerWidth > window.innerWidth) {
+        left = window.innerWidth - pickerWidth - 10;
+    }
+
+    picker.style.top = `${top}px`;
+    picker.style.left = `${left}px`;
 
     // Handle color selection
     picker.addEventListener("click", async (e) => {
@@ -2640,7 +2656,7 @@ function showColorPicker(folderId: string, anchorElement: HTMLElement): void {
  */
 export async function createFolder(): Promise<Folder> {
     const folder: Folder = {
-        id: `folder-${Date.now()}`,
+        id: `folder-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
         name: "New Folder",
         borderColor: DEFAULT_FOLDER_COLORS[Math.floor(Math.random() * DEFAULT_FOLDER_COLORS.length)],
         createdAt: new Date().toISOString(),
@@ -2781,7 +2797,7 @@ async function handleDropIntoFolder(tile: HTMLElement, folderId: string): Promis
     const folderContent = document.querySelector(`[data-folder-id="${folderId}"] .anime-folder-content`);
     folderContent?.appendChild(tile);
 
-    updateFolderSpan(folderId);
+    updateFolderEmptyState(folderId);
     showToast("Moved to folder", "success");
 }
 
@@ -2838,7 +2854,7 @@ async function handleDropFromFolderToRoot(tile: HTMLElement, insertBeforeElement
 
     // Update source folder span
     if (sourceFolderId) {
-        updateFolderSpan(sourceFolderId);
+        updateFolderEmptyState(sourceFolderId);
     }
 
     showToast("Moved to root", "success");
@@ -3039,7 +3055,7 @@ export async function restoreFolderOrder(): Promise<void> {
 
     // Update folder spans AFTER all folders are in the DOM
     for (const folder of folderOrder.folders) {
-        updateFolderSpan(folder.id);
+        updateFolderEmptyState(folder.id);
     }
 
     console.log(

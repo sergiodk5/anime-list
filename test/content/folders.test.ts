@@ -46,7 +46,7 @@ import {
     deleteFolder,
     loadFolderOrder,
     saveFolderOrder,
-    updateFolderSpan,
+    updateFolderEmptyState,
     makeFolderDraggable,
     removeFolderDraggable,
     restoreFolderOrder,
@@ -276,7 +276,7 @@ describe("Folder Functionality", () => {
         it("should create a new folder with default values", async () => {
             const folder = await createFolder();
 
-            expect(folder.id).toMatch(/^folder-\d+$/);
+            expect(folder.id).toMatch(/^folder-\d+-[a-z0-9]+$/);
             expect(folder.name).toBe("New Folder");
             expect(folder.borderColor).toMatch(/^#[A-F0-9]{6}$/i);
             expect(folder.createdAt).toBeTruthy();
@@ -468,7 +468,7 @@ describe("Folder Functionality", () => {
         });
     });
 
-    describe("updateFolderSpan", () => {
+    describe("updateFolderEmptyState", () => {
         it("should show placeholder for empty folder", () => {
             const container = document.querySelector(".film_list-wrap");
             const folderEl = document.createElement("div");
@@ -477,7 +477,7 @@ describe("Folder Functionality", () => {
             folderEl.innerHTML = '<div class="anime-folder-content"><div class="folder-empty-placeholder" style="display: none;">Drop here</div></div>';
             container?.appendChild(folderEl);
 
-            updateFolderSpan("folder-empty");
+            updateFolderEmptyState("folder-empty");
 
             const placeholder = folderEl.querySelector(".folder-empty-placeholder") as HTMLElement;
             expect(placeholder.style.display).toBe("flex");
@@ -491,7 +491,7 @@ describe("Folder Functionality", () => {
             folderEl.innerHTML = '<div class="anime-folder-content"><div class="folder-empty-placeholder">Drop here</div></div>';
             container?.appendChild(folderEl);
 
-            updateFolderSpan("folder-empty-class");
+            updateFolderEmptyState("folder-empty-class");
 
             const content = folderEl.querySelector(".anime-folder-content");
             expect(content?.classList.contains("empty-state")).toBe(true);
@@ -511,7 +511,7 @@ describe("Folder Functionality", () => {
             `;
             container?.appendChild(folderEl);
 
-            updateFolderSpan("folder-with-items");
+            updateFolderEmptyState("folder-with-items");
 
             const placeholder = folderEl.querySelector(".folder-empty-placeholder") as HTMLElement;
             expect(placeholder.style.display).toBe("none");
@@ -530,7 +530,7 @@ describe("Folder Functionality", () => {
             `;
             container?.appendChild(folderEl);
 
-            updateFolderSpan("folder-items-class");
+            updateFolderEmptyState("folder-items-class");
 
             const content = folderEl.querySelector(".anime-folder-content");
             expect(content?.classList.contains("empty-state")).toBe(false);
