@@ -59,4 +59,30 @@ StorageAdapter (commons/adapters/) → chrome.storage.local
 
 ## Commits
 
-Conventional commits: `feat:`, `fix:`, `docs:`, `test:` (72 char max title)
+Conventional commits: `feat:`, `fix:`, `docs:`, `test:`, `chore:` (72 char max title)
+
+## Pull Requests
+
+**Before creating a PR:**
+1. Check modified files: `git status` and `git diff`
+2. Ensure you're on a feature branch, not `master`
+3. Run pre-commit checks: `npm run format && npm run lint && npm run test:unit`
+
+**Branch naming:**
+- `feature/` - New functionality
+- `fix/` - Bug fixes
+- `docs/` - Documentation changes
+- `chore/` - Maintenance, dependencies, config
+
+**Commit message prefixes:** Match branch type (`feat:`, `fix:`, `docs:`, `chore:`)
+
+**PR description format:**
+```
+## Problem
+[What issue or limitation exists? Why is this change needed?]
+
+## Solution
+[High-level description of the approach taken. No code details—focus on the "what" and "why"]
+```
+
+Keep descriptions concise and reviewer-friendly. Explain context at a higher level without referencing specific code changes.

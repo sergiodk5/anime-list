@@ -1,4 +1,4 @@
-import type { AnimeData, AnimeStatus, TileOrder } from "@/commons/models";
+import type { AnimeData, AnimeStatus, TileOrder, Folder, FolderOrder } from "@/commons/models";
 import { StorageKeys } from "@/commons/models";
 import { AnimeService } from "@/commons/services";
 import { StorageAdapter } from "@/commons/adapters/StorageAdapter";
@@ -1546,6 +1546,218 @@ function injectStyles(): void {
                 font-size: 11px;
             }
         }
+
+        /* ========================================
+           FOLDER STYLES
+           ======================================== */
+
+        /* Folder container - full width row */
+        .anime-folder {
+            position: relative;
+            border-radius: 12px;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px);
+            min-height: 180px;
+            transition: all 0.2s ease;
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
+            margin: 8px 0;
+        }
+
+        .anime-folder.drag-over {
+            background: rgba(139, 92, 246, 0.15);
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+        }
+
+        .anime-folder.dragging {
+            opacity: 0.5;
+            transform: scale(0.98);
+        }
+
+        .anime-folder[draggable="true"] {
+            cursor: grab;
+            outline: 2px dashed rgba(139, 92, 246, 0.5);
+            outline-offset: -2px;
+        }
+
+        .anime-folder[draggable="true"]:active {
+            cursor: grabbing;
+        }
+
+        /* Folder header with name tab effect */
+        .anime-folder-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 10px;
+            margin: -8px -8px 8px -8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px 8px 0 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .anime-folder-name-input {
+            background: transparent;
+            border: none;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+            outline: none;
+            flex: 1;
+            min-width: 0;
+            padding: 4px;
+            border-radius: 4px;
+            transition: background 0.2s ease;
+        }
+
+        .anime-folder-name-input:focus {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .anime-folder-name-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* Folder action buttons */
+        .anime-folder-actions {
+            display: flex;
+            gap: 4px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .anime-folder:hover .anime-folder-actions {
+            opacity: 1;
+        }
+
+        .folder-color-btn,
+        .folder-delete-btn {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            color: rgba(255, 255, 255, 0.8);
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .folder-color-btn:hover {
+            background: rgba(59, 130, 246, 0.3);
+            border-color: rgba(59, 130, 246, 0.5);
+        }
+
+        .folder-delete-btn:hover {
+            background: rgba(239, 68, 68, 0.3);
+            border-color: rgba(239, 68, 68, 0.5);
+        }
+
+        /* Folder content grid - exactly 6 columns to match host website */
+        .anime-folder-content {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 24px 16px;
+            min-height: 100px;
+            padding: 8px 0;
+        }
+
+        /* Ensure tiles inside folders display correctly */
+        .anime-folder-content .flw-item {
+            width: 100% !important;
+            display: block !important;
+            min-width: 0;
+            max-width: 100%;
+            margin: 0 !important;
+        }
+
+        .anime-folder-content.empty-state {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Empty folder placeholder */
+        .folder-empty-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 12px;
+            grid-column: 1 / -1;
+            min-height: 80px;
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+        }
+
+        /* Color picker */
+        .folder-color-picker {
+            display: flex;
+            gap: 6px;
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+        }
+
+        .folder-color-picker .color-option {
+            width: 28px;
+            height: 28px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .folder-color-picker .color-option:hover {
+            transform: scale(1.15);
+            border-color: white;
+        }
+
+        /* Create folder button in toolbar */
+        .create-folder-btn {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 12px;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 8px;
+            background: rgba(59, 130, 246, 0.2);
+            color: rgb(147, 197, 253);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .create-folder-btn:hover {
+            background: rgba(59, 130, 246, 0.3);
+            border-color: rgba(59, 130, 246, 0.5);
+            color: white;
+        }
+
+        /* Responsive adjustments for folders */
+        @media (max-width: 768px) {
+            .anime-folder {
+                min-height: 150px;
+            }
+
+            .anime-folder-content {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+                gap: 6px;
+            }
+
+            .anime-folder-name-input {
+                font-size: 13px;
+            }
+        }
     `;
 
     document.head.appendChild(style);
@@ -2153,6 +2365,682 @@ export function initializeSinglePage(): void {
 }
 
 // =============================================================================
+// FOLDER FUNCTIONALITY
+// =============================================================================
+
+// Default folder colors for quick selection
+const DEFAULT_FOLDER_COLORS = ["#FFD700", "#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#9B59B6"];
+
+/**
+ * Load folder order from storage (with migration from old tileOrder)
+ */
+export async function loadFolderOrder(): Promise<FolderOrder> {
+    try {
+        const stored = await StorageAdapter.get<FolderOrder>(StorageKeys.FOLDER_ORDER);
+        if (stored) return stored;
+
+        // Migrate from existing tileOrder if no folderOrder exists
+        const tileOrder = await loadTileOrder();
+        return {
+            folders: [],
+            rootItems: tileOrder?.animeIds || [],
+            folderContents: {},
+            lastUpdated: new Date().toISOString(),
+        };
+    } catch (error) {
+        console.error("Error loading folder order:", error);
+        return {
+            folders: [],
+            rootItems: [],
+            folderContents: {},
+            lastUpdated: new Date().toISOString(),
+        };
+    }
+}
+
+/**
+ * Save folder order to storage
+ */
+export async function saveFolderOrder(folderOrder: FolderOrder): Promise<void> {
+    try {
+        folderOrder.lastUpdated = new Date().toISOString();
+        await StorageAdapter.set(StorageKeys.FOLDER_ORDER, folderOrder);
+        console.log("[ContentScript] Saved folder order");
+        // Notify other contexts
+        notifyAnimeStateChange(StorageKeys.FOLDER_ORDER);
+    } catch (error) {
+        console.error("Error saving folder order:", error);
+    }
+}
+
+/**
+ * Update folder empty state based on item count
+ */
+export function updateFolderSpan(folderId: string): void {
+    const folder = document.querySelector(`[data-folder-id="${folderId}"]`) as HTMLElement;
+    if (!folder) return;
+
+    const itemCount = folder.querySelectorAll(SELECTORS.ITEM).length;
+
+    // Update empty state
+    const content = folder.querySelector(".anime-folder-content") as HTMLElement;
+    const placeholder = folder.querySelector(".folder-empty-placeholder") as HTMLElement;
+    if (placeholder) {
+        placeholder.style.display = itemCount === 0 ? "flex" : "none";
+    }
+    if (content) {
+        content.classList.toggle("empty-state", itemCount === 0);
+    }
+}
+
+/**
+ * Create folder DOM element
+ */
+export function createFolderElement(folder: Folder): HTMLElement {
+    const folderEl = document.createElement("div");
+    folderEl.className = "anime-folder";
+    folderEl.setAttribute("data-folder-id", folder.id);
+    folderEl.setAttribute("data-testid", "anime-folder");
+    folderEl.setAttribute("role", "region");
+    folderEl.setAttribute("aria-label", `Folder: ${folder.name}`);
+    folderEl.style.border = `3px solid ${folder.borderColor}`;
+
+    folderEl.innerHTML = `
+        <div class="anime-folder-header" data-testid="folder-header" role="toolbar" aria-label="Folder controls">
+            <input class="anime-folder-name-input"
+                   data-testid="folder-name-input"
+                   value="${escapeHtml(folder.name)}"
+                   placeholder="Folder name"
+                   aria-label="Edit folder name"
+                   type="text"
+                   maxlength="50" />
+            <div class="anime-folder-actions" role="group" aria-label="Folder actions">
+                <button class="folder-color-btn"
+                        data-testid="folder-color-btn"
+                        type="button"
+                        title="Change folder color"
+                        aria-label="Change folder color"
+                        aria-haspopup="true">
+                    <span aria-hidden="true">🎨</span>
+                </button>
+                <button class="folder-delete-btn"
+                        data-testid="folder-delete-btn"
+                        type="button"
+                        title="Delete folder"
+                        aria-label="Delete folder">
+                    <span aria-hidden="true">✕</span>
+                </button>
+            </div>
+        </div>
+        <div class="anime-folder-content"
+             data-testid="folder-content"
+             role="list"
+             aria-label="Folder contents"
+             aria-dropeffect="move">
+            <div class="folder-empty-placeholder" aria-live="polite">Drop anime here</div>
+        </div>
+    `;
+
+    // Setup event handlers
+    setupFolderEventHandlers(folderEl, folder.id);
+
+    return folderEl;
+}
+
+/**
+ * Escape HTML to prevent XSS
+ */
+function escapeHtml(text: string): string {
+    const div = document.createElement("div");
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+/**
+ * Setup event handlers for a folder element
+ */
+function setupFolderEventHandlers(folderEl: HTMLElement, folderId: string): void {
+    const nameInput = folderEl.querySelector(".anime-folder-name-input") as HTMLInputElement;
+    const colorBtn = folderEl.querySelector(".folder-color-btn") as HTMLButtonElement;
+    const deleteBtn = folderEl.querySelector(".folder-delete-btn") as HTMLButtonElement;
+    const content = folderEl.querySelector(".anime-folder-content") as HTMLElement;
+
+    // Rename on blur or enter
+    nameInput.addEventListener("blur", async () => {
+        await renameFolder(folderId, nameInput.value.trim() || "Untitled");
+    });
+
+    nameInput.addEventListener("keydown", async (e) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            nameInput.blur();
+        }
+    });
+
+    // Prevent drag when editing name
+    nameInput.addEventListener("mousedown", (e) => e.stopPropagation());
+    nameInput.addEventListener("click", (e) => e.stopPropagation());
+
+    // Color picker
+    colorBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        showColorPicker(folderId, colorBtn);
+    });
+
+    // Delete folder
+    deleteBtn.addEventListener("click", async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        await deleteFolder(folderId);
+    });
+
+    // Setup folder content as drop zone
+    setupFolderDropZone(content, folderId);
+}
+
+/**
+ * Setup folder content area as a drop zone for tiles
+ */
+function setupFolderDropZone(content: HTMLElement, folderId: string): void {
+    content.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (draggedElement?.classList.contains("flw-item")) {
+            if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+            content.closest(".anime-folder")?.classList.add("drag-over");
+        }
+    });
+
+    content.addEventListener("dragleave", (e) => {
+        e.stopPropagation();
+        const folder = content.closest(".anime-folder");
+        const relatedTarget = e.relatedTarget as Node | null;
+        if (!relatedTarget || !folder?.contains(relatedTarget)) {
+            folder?.classList.remove("drag-over");
+        }
+    });
+
+    content.addEventListener("drop", async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        content.closest(".anime-folder")?.classList.remove("drag-over");
+
+        if (draggedElement?.classList.contains("flw-item")) {
+            await handleDropIntoFolder(draggedElement, folderId);
+        }
+    });
+}
+
+/**
+ * Show color picker for folder
+ */
+function showColorPicker(folderId: string, anchorElement: HTMLElement): void {
+    // Remove any existing color picker
+    document.querySelector(".folder-color-picker")?.remove();
+
+    const picker = document.createElement("div");
+    picker.className = "folder-color-picker";
+    picker.setAttribute("data-testid", "folder-color-picker");
+    picker.setAttribute("role", "listbox");
+    picker.setAttribute("aria-label", "Select folder color");
+
+    picker.innerHTML = DEFAULT_FOLDER_COLORS.map(
+        (color, index) =>
+            `<button class="color-option"
+                     data-color="${color}"
+                     style="background: ${color};"
+                     type="button"
+                     role="option"
+                     aria-label="Color ${color}"
+                     title="Select color ${color}"
+                     tabindex="${index === 0 ? "0" : "-1"}"></button>`,
+    ).join("");
+
+    // Position near the button
+    const rect = anchorElement.getBoundingClientRect();
+    picker.style.position = "fixed";
+    picker.style.top = `${rect.bottom + 5}px`;
+    picker.style.left = `${rect.left}px`;
+    picker.style.zIndex = "10002";
+
+    // Handle color selection
+    picker.addEventListener("click", async (e) => {
+        const target = e.target as HTMLElement;
+        const color = target.getAttribute("data-color");
+        if (color) {
+            await changeFolderColor(folderId, color);
+            picker.remove();
+        }
+    });
+
+    // Close picker when clicking outside
+    const closeHandler = (e: MouseEvent) => {
+        if (!picker.contains(e.target as Node) && e.target !== anchorElement) {
+            picker.remove();
+            document.removeEventListener("click", closeHandler);
+        }
+    };
+    setTimeout(() => document.addEventListener("click", closeHandler), 0);
+
+    document.body.appendChild(picker);
+}
+
+/**
+ * Create a new folder with default values
+ */
+export async function createFolder(): Promise<Folder> {
+    const folder: Folder = {
+        id: `folder-${Date.now()}`,
+        name: "New Folder",
+        borderColor: DEFAULT_FOLDER_COLORS[Math.floor(Math.random() * DEFAULT_FOLDER_COLORS.length)],
+        createdAt: new Date().toISOString(),
+    };
+
+    const folderOrder = await loadFolderOrder();
+    folderOrder.folders.push(folder);
+    folderOrder.rootItems.push(`folder:${folder.id}`);
+    folderOrder.folderContents[folder.id] = [];
+    await saveFolderOrder(folderOrder);
+
+    // Create and insert DOM element
+    const folderEl = createFolderElement(folder);
+    const container = document.querySelector(SELECTORS.CONTAINER);
+    if (container) {
+        container.appendChild(folderEl);
+        // Make it draggable if drag mode is enabled
+        if (dragModeEnabled) {
+            makeFolderDraggable(folderEl);
+        }
+        // Focus the name input for inline editing
+        const nameInput = folderEl.querySelector(".anime-folder-name-input") as HTMLInputElement;
+        nameInput?.focus();
+        nameInput?.select();
+    }
+
+    showToast(`Created folder "${folder.name}"`, "success");
+    return folder;
+}
+
+/**
+ * Rename a folder
+ */
+export async function renameFolder(folderId: string, newName: string): Promise<void> {
+    const folderOrder = await loadFolderOrder();
+    const folder = folderOrder.folders.find((f) => f.id === folderId);
+    if (!folder) return;
+
+    if (folder.name === newName) return; // No change
+
+    folder.name = newName;
+    await saveFolderOrder(folderOrder);
+
+    // Update aria-label on folder element
+    const folderEl = document.querySelector(`[data-folder-id="${folderId}"]`);
+    if (folderEl) {
+        folderEl.setAttribute("aria-label", `Folder: ${newName}`);
+    }
+
+    console.log(`[ContentScript] Renamed folder ${folderId} to "${newName}"`);
+}
+
+/**
+ * Change folder border color
+ */
+export async function changeFolderColor(folderId: string, newColor: string): Promise<void> {
+    const folderOrder = await loadFolderOrder();
+    const folder = folderOrder.folders.find((f) => f.id === folderId);
+    if (!folder) return;
+
+    folder.borderColor = newColor;
+    await saveFolderOrder(folderOrder);
+
+    // Update DOM
+    const folderEl = document.querySelector(`[data-folder-id="${folderId}"]`) as HTMLElement;
+    if (folderEl) {
+        folderEl.style.border = `3px solid ${newColor}`;
+    }
+
+    showToast("Folder color updated", "success");
+}
+
+/**
+ * Delete a folder and move its items back to root
+ */
+export async function deleteFolder(folderId: string): Promise<void> {
+    const folderOrder = await loadFolderOrder();
+    const folderIndex = folderOrder.folders.findIndex((f) => f.id === folderId);
+    if (folderIndex === -1) return;
+
+    const folderItems = folderOrder.folderContents[folderId] || [];
+
+    // Remove folder from folders array
+    folderOrder.folders.splice(folderIndex, 1);
+
+    // Remove folder from rootItems and insert its items at that position
+    const rootIndex = folderOrder.rootItems.indexOf(`folder:${folderId}`);
+    if (rootIndex !== -1) {
+        folderOrder.rootItems.splice(rootIndex, 1, ...folderItems);
+    }
+
+    // Remove folder contents entry
+    delete folderOrder.folderContents[folderId];
+
+    await saveFolderOrder(folderOrder);
+
+    // Update DOM: move tiles back to root, then remove folder element
+    const container = document.querySelector(SELECTORS.CONTAINER);
+    const folderEl = document.querySelector(`[data-folder-id="${folderId}"]`);
+
+    if (folderEl && container) {
+        const tiles = folderEl.querySelectorAll(SELECTORS.ITEM);
+        tiles.forEach((tile) => {
+            container.insertBefore(tile, folderEl);
+        });
+        folderEl.remove();
+    }
+
+    showToast("Folder deleted, items moved to root", "info");
+}
+
+/**
+ * Handle dropping a tile into a folder
+ */
+async function handleDropIntoFolder(tile: HTMLElement, folderId: string): Promise<void> {
+    const animeData = extractAnimeData(tile);
+    if (!animeData) return;
+
+    const folderOrder = await loadFolderOrder();
+
+    // Remove from current location (root or other folder)
+    folderOrder.rootItems = folderOrder.rootItems.filter((id) => id !== animeData.animeId);
+    for (const [fId, contents] of Object.entries(folderOrder.folderContents)) {
+        folderOrder.folderContents[fId] = contents.filter((id) => id !== animeData.animeId);
+    }
+
+    // Add to target folder
+    if (!folderOrder.folderContents[folderId]) {
+        folderOrder.folderContents[folderId] = [];
+    }
+    folderOrder.folderContents[folderId].push(animeData.animeId);
+
+    await saveFolderOrder(folderOrder);
+
+    // Move DOM element
+    const folderContent = document.querySelector(`[data-folder-id="${folderId}"] .anime-folder-content`);
+    folderContent?.appendChild(tile);
+
+    updateFolderSpan(folderId);
+    showToast("Moved to folder", "success");
+}
+
+/**
+ * Handle dropping a tile from folder back to root
+ */
+async function handleDropFromFolderToRoot(tile: HTMLElement, insertBeforeElement: Element | null): Promise<void> {
+    const animeData = extractAnimeData(tile);
+    if (!animeData) return;
+
+    const folderOrder = await loadFolderOrder();
+    let sourceFolderId: string | null = null;
+
+    // Find and remove from current folder
+    for (const [fId, contents] of Object.entries(folderOrder.folderContents)) {
+        const index = contents.indexOf(animeData.animeId);
+        if (index !== -1) {
+            sourceFolderId = fId;
+            folderOrder.folderContents[fId].splice(index, 1);
+            break;
+        }
+    }
+
+    // Add to root items at appropriate position
+    if (insertBeforeElement) {
+        const insertId =
+            insertBeforeElement.getAttribute("data-folder-id") || extractAnimeData(insertBeforeElement)?.animeId;
+        if (insertId) {
+            const targetId = insertBeforeElement.classList.contains("anime-folder") ? `folder:${insertId}` : insertId;
+            const insertIndex = folderOrder.rootItems.indexOf(targetId);
+            if (insertIndex !== -1) {
+                folderOrder.rootItems.splice(insertIndex, 0, animeData.animeId);
+            } else {
+                folderOrder.rootItems.push(animeData.animeId);
+            }
+        } else {
+            folderOrder.rootItems.push(animeData.animeId);
+        }
+    } else {
+        folderOrder.rootItems.push(animeData.animeId);
+    }
+
+    await saveFolderOrder(folderOrder);
+
+    // Move DOM element
+    const container = document.querySelector(SELECTORS.CONTAINER);
+    if (container) {
+        if (insertBeforeElement) {
+            container.insertBefore(tile, insertBeforeElement);
+        } else {
+            container.appendChild(tile);
+        }
+    }
+
+    // Update source folder span
+    if (sourceFolderId) {
+        updateFolderSpan(sourceFolderId);
+    }
+
+    showToast("Moved to root", "success");
+}
+
+/**
+ * Make a folder element draggable
+ */
+export function makeFolderDraggable(folderEl: HTMLElement): void {
+    if (folderEl.getAttribute("draggable") === "true") return;
+
+    folderEl.setAttribute("draggable", "true");
+    folderEl.setAttribute("tabindex", "0");
+    folderEl.setAttribute("role", "group");
+
+    folderEl.addEventListener("dragstart", handleFolderDragStart);
+    folderEl.addEventListener("dragover", handleDragOver);
+    folderEl.addEventListener("dragenter", handleFolderDragEnter);
+    folderEl.addEventListener("dragleave", handleDragLeave);
+    folderEl.addEventListener("drop", handleDrop);
+    folderEl.addEventListener("dragend", handleDragEnd);
+}
+
+/**
+ * Remove draggable from folder
+ */
+export function removeFolderDraggable(folderEl: HTMLElement): void {
+    folderEl.removeAttribute("draggable");
+    folderEl.removeAttribute("tabindex");
+    folderEl.removeAttribute("role");
+    folderEl.classList.remove("drag-over", "dragging");
+
+    folderEl.removeEventListener("dragstart", handleFolderDragStart);
+    folderEl.removeEventListener("dragover", handleDragOver);
+    folderEl.removeEventListener("dragenter", handleFolderDragEnter);
+    folderEl.removeEventListener("dragleave", handleDragLeave);
+    folderEl.removeEventListener("drop", handleDrop);
+    folderEl.removeEventListener("dragend", handleDragEnd);
+}
+
+/**
+ * Container drop zone handler for dragover
+ */
+function handleContainerDragOver(e: DragEvent): void {
+    // Only handle if dragging a tile from a folder
+    if (!draggedElement?.classList.contains("flw-item")) return;
+    const fromFolder = draggedElement.closest(".anime-folder-content");
+    if (!fromFolder) return;
+
+    // Check if dropping directly on container (not on a tile or folder)
+    const target = e.target as HTMLElement;
+    if (target.closest(".flw-item") || target.closest(".anime-folder")) return;
+
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+}
+
+/**
+ * Container drop zone handler for drop - removes item from folder to root
+ */
+async function handleContainerDrop(e: DragEvent): Promise<void> {
+    // Only handle if dragging a tile from a folder
+    if (!draggedElement?.classList.contains("flw-item")) return;
+    const fromFolder = draggedElement.closest(".anime-folder-content");
+    const sourceFolderId = fromFolder?.closest(".anime-folder")?.getAttribute("data-folder-id");
+    if (!fromFolder || !sourceFolderId) return;
+
+    // Check if dropping directly on container (not on a tile or folder)
+    const target = e.target as HTMLElement;
+    if (target.closest(".flw-item") || target.closest(".anime-folder")) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Move tile from folder to root
+    await handleDropFromFolderToRoot(draggedElement, null);
+}
+
+/**
+ * Setup container as drop zone for removing items from folders
+ */
+function setupContainerDropZone(container: HTMLElement): void {
+    container.addEventListener("dragover", handleContainerDragOver);
+    container.addEventListener("drop", handleContainerDrop);
+}
+
+/**
+ * Remove container drop zone handlers
+ */
+function removeContainerDropZone(container: HTMLElement): void {
+    container.removeEventListener("dragover", handleContainerDragOver);
+    container.removeEventListener("drop", handleContainerDrop);
+}
+
+/**
+ * Handle folder drag start
+ */
+function handleFolderDragStart(e: DragEvent): void {
+    const target = e.currentTarget as HTMLElement;
+
+    // Don't start drag if clicking on input or buttons
+    const eventTarget = e.target as HTMLElement;
+    if (
+        eventTarget.classList.contains("anime-folder-name-input") ||
+        eventTarget.closest(".anime-folder-actions") ||
+        eventTarget.closest("button")
+    ) {
+        e.preventDefault();
+        return;
+    }
+
+    draggedElement = target;
+    target.classList.add("dragging");
+
+    if (e.dataTransfer) {
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("text/plain", "folder");
+    }
+
+    e.stopPropagation();
+}
+
+/**
+ * Handle folder drag enter
+ */
+function handleFolderDragEnter(e: DragEvent): void {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const target = e.currentTarget as HTMLElement;
+
+    // Only show drag-over for folder reordering, not when dragging tiles into folder
+    if (draggedElement?.classList.contains("anime-folder") && target !== draggedElement) {
+        target.classList.add("drag-over");
+    }
+}
+
+/**
+ * Restore folder order from storage
+ */
+export async function restoreFolderOrder(): Promise<void> {
+    const folderOrder = await loadFolderOrder();
+
+    // If no folders exist and no custom root order, fall back to tile order
+    if (folderOrder.folders.length === 0 && folderOrder.rootItems.length === 0) {
+        await restoreTileOrder();
+        return;
+    }
+
+    const container = document.querySelector(SELECTORS.CONTAINER);
+    if (!container) return;
+
+    // Build map of anime ID to tile element
+    const tileMap = new Map<string, Element>();
+    const items = container.querySelectorAll(SELECTORS.ITEM);
+    items.forEach((item) => {
+        const animeData = extractAnimeData(item);
+        if (animeData) {
+            tileMap.set(animeData.animeId, item);
+        }
+    });
+
+    // Create folder elements and populate them
+    const folderElements = new Map<string, HTMLElement>();
+    for (const folder of folderOrder.folders) {
+        const folderEl = createFolderElement(folder);
+        folderElements.set(folder.id, folderEl);
+
+        // Populate folder with its tiles
+        const folderContent = folderEl.querySelector(".anime-folder-content");
+        const folderItems = folderOrder.folderContents[folder.id] || [];
+        for (const animeId of folderItems) {
+            const tile = tileMap.get(animeId);
+            if (tile) {
+                folderContent?.appendChild(tile);
+                tileMap.delete(animeId);
+            }
+        }
+    }
+
+    // Rebuild root level in order
+    for (const itemId of folderOrder.rootItems) {
+        if (itemId.startsWith("folder:")) {
+            const folderId = itemId.replace("folder:", "");
+            const folderEl = folderElements.get(folderId);
+            if (folderEl) container.appendChild(folderEl);
+        } else {
+            const tile = tileMap.get(itemId);
+            if (tile) {
+                container.appendChild(tile);
+                tileMap.delete(itemId);
+            }
+        }
+    }
+
+    // Append any remaining tiles (new tiles not in saved order)
+    tileMap.forEach((tile) => container.appendChild(tile));
+
+    // Update folder spans AFTER all folders are in the DOM
+    for (const folder of folderOrder.folders) {
+        updateFolderSpan(folder.id);
+    }
+
+    console.log(
+        "[ContentScript] Restored folder order:",
+        folderOrder.folders.length,
+        "folders,",
+        folderOrder.rootItems.length,
+        "root items",
+    );
+}
+
+// =============================================================================
 // DRAG-AND-DROP TILE REORDERING
 // =============================================================================
 
@@ -2237,6 +3125,10 @@ export function createDragToolbar(): HTMLDivElement {
             <span class="button-icon" aria-hidden="true">↕️</span>
             <span class="button-text">Reorder</span>
         </button>
+        <button class="create-folder-btn" data-testid="create-folder-btn" style="display: none;" aria-label="Create new folder">
+            <span class="button-icon" aria-hidden="true">📁</span>
+            <span class="button-text">New Folder</span>
+        </button>
         <button class="drag-reset-order" data-testid="drag-reset-order" style="display: none;" aria-label="Reset tile order to default">
             <span class="button-icon" aria-hidden="true">🔄</span>
             <span class="button-text">Reset</span>
@@ -2249,6 +3141,14 @@ export function createDragToolbar(): HTMLDivElement {
         e.preventDefault();
         e.stopPropagation();
         toggleDragMode();
+    });
+
+    // Create folder button handler
+    const createFolderBtn = toolbar.querySelector(".create-folder-btn") as HTMLButtonElement;
+    createFolderBtn.addEventListener("click", async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        await createFolder();
     });
 
     // Reset button handler
@@ -2423,22 +3323,34 @@ export function removeTileDraggable(element: HTMLElement): void {
 export function enableDragMode(): void {
     dragModeEnabled = true;
 
-    const container = document.querySelector(SELECTORS.CONTAINER);
+    const container = document.querySelector(SELECTORS.CONTAINER) as HTMLElement;
     if (!container) return;
 
+    // Make tiles draggable
     const items = container.querySelectorAll(SELECTORS.ITEM);
     items.forEach((item) => {
         makeTileDraggable(item as HTMLElement);
     });
 
+    // Make folders draggable
+    const folders = container.querySelectorAll(".anime-folder");
+    folders.forEach((folder) => {
+        makeFolderDraggable(folder as HTMLElement);
+    });
+
+    // Setup container as drop zone for removing items from folders
+    setupContainerDropZone(container);
+
     // Update toolbar UI
     if (dragToolbar) {
         const toggleBtn = dragToolbar.querySelector(".drag-mode-toggle") as HTMLButtonElement;
+        const createFolderBtn = dragToolbar.querySelector(".create-folder-btn") as HTMLButtonElement;
         const resetBtn = dragToolbar.querySelector(".drag-reset-order") as HTMLButtonElement;
 
         toggleBtn.classList.add("active");
         const enableButtonText = toggleBtn.querySelector(".button-text");
         if (enableButtonText) enableButtonText.textContent = "Done";
+        createFolderBtn.style.display = "flex";
         resetBtn.style.display = "flex";
     }
 
@@ -2460,19 +3372,31 @@ export function disableDragMode(): void {
     const container = document.querySelector(SELECTORS.CONTAINER);
     if (!container) return;
 
+    // Remove draggable from tiles
     const items = container.querySelectorAll(SELECTORS.ITEM);
     items.forEach((item) => {
         removeTileDraggable(item as HTMLElement);
     });
 
+    // Remove draggable from folders
+    const folders = container.querySelectorAll(".anime-folder");
+    folders.forEach((folder) => {
+        removeFolderDraggable(folder as HTMLElement);
+    });
+
+    // Remove container drop zone
+    removeContainerDropZone(container as HTMLElement);
+
     // Update toolbar UI
     if (dragToolbar) {
         const toggleBtn = dragToolbar.querySelector(".drag-mode-toggle") as HTMLButtonElement;
+        const createFolderBtn = dragToolbar.querySelector(".create-folder-btn") as HTMLButtonElement;
         const resetBtn = dragToolbar.querySelector(".drag-reset-order") as HTMLButtonElement;
 
         toggleBtn.classList.remove("active");
         const disableButtonText = toggleBtn.querySelector(".button-text");
         if (disableButtonText) disableButtonText.textContent = "Reorder";
+        createFolderBtn.style.display = "none";
         resetBtn.style.display = "none";
     }
 
@@ -2538,7 +3462,7 @@ function handleDragLeave(e: DragEvent): void {
 }
 
 /**
- * Handle drop event
+ * Handle drop event - folder-aware version
  */
 async function handleDrop(e: DragEvent): Promise<void> {
     e.preventDefault();
@@ -2549,8 +3473,16 @@ async function handleDrop(e: DragEvent): Promise<void> {
 
     if (!draggedElement || draggedElement === target) return;
 
+    const isDraggedTile = draggedElement.classList.contains("flw-item");
+    const isDraggedFolder = draggedElement.classList.contains("anime-folder");
+    const isTargetTile = target.classList.contains("flw-item");
+    const isTargetFolder = target.classList.contains("anime-folder");
+
+    // Check if dragged element is coming from inside a folder
+    const draggedFromFolder = draggedElement.closest(".anime-folder-content");
+    const sourceFolderId = draggedFromFolder?.closest(".anime-folder")?.getAttribute("data-folder-id") || null;
+
     // Determine drop position (before or after target)
-    // Detect orientation: horizontal if width > height, else vertical
     const targetRect = target.getBoundingClientRect();
     const isHorizontal = targetRect.width > targetRect.height;
     let dropPosition: "before" | "after";
@@ -2560,23 +3492,108 @@ async function handleDrop(e: DragEvent): Promise<void> {
         dropPosition = e.clientY < targetRect.top + targetRect.height / 2 ? "before" : "after";
     }
 
-    // Reorder in DOM
-    const container = target.parentElement;
-    if (container) {
-        if (dropPosition === "before") {
-            container.insertBefore(draggedElement, target);
-        } else {
-            container.insertBefore(draggedElement, target.nextSibling);
-        }
+    // Determine target container
+    const targetInFolder = target.closest(".anime-folder-content");
+    const targetFolderId = targetInFolder?.closest(".anime-folder")?.getAttribute("data-folder-id") || null;
+
+    // Case 1: Tile from folder being dropped at root (on another root tile or folder)
+    if (isDraggedTile && sourceFolderId && !targetFolderId) {
+        await handleDropFromFolderToRoot(
+            draggedElement,
+            dropPosition === "before" ? target : target.nextElementSibling,
+        );
+        return;
     }
 
-    // Save order (debounced)
+    // Case 2: Tile being dropped into a different folder (handled by folder drop zone)
+    // This case is handled by setupFolderDropZone, but if dropping on a tile inside a folder:
+    if (isDraggedTile && targetFolderId && sourceFolderId !== targetFolderId) {
+        await handleDropIntoFolder(draggedElement, targetFolderId);
+        return;
+    }
+
+    // Case 3: Reordering within the same folder
+    if (isDraggedTile && isTargetTile && sourceFolderId && sourceFolderId === targetFolderId) {
+        // Reorder within folder
+        const folderContent = targetInFolder;
+        if (folderContent) {
+            if (dropPosition === "before") {
+                folderContent.insertBefore(draggedElement, target);
+            } else {
+                folderContent.insertBefore(draggedElement, target.nextSibling);
+            }
+        }
+        // Save folder contents order
+        debouncedSaveFolderOrder(sourceFolderId);
+        return;
+    }
+
+    // Case 4: Reordering at root level (tiles and folders)
+    const container = document.querySelector(SELECTORS.CONTAINER);
+    if (container && (isDraggedTile || isDraggedFolder) && (isTargetTile || isTargetFolder)) {
+        // Only reorder at root level (not inside a folder)
+        if (!sourceFolderId && !targetFolderId) {
+            if (dropPosition === "before") {
+                container.insertBefore(draggedElement, target);
+            } else {
+                container.insertBefore(draggedElement, target.nextSibling);
+            }
+            // Save root order
+            debouncedSaveRootOrder();
+        }
+    }
+}
+
+/**
+ * Debounced save for folder contents order
+ */
+function debouncedSaveFolderOrder(folderId: string): void {
     if (saveOrderTimeout) {
         clearTimeout(saveOrderTimeout);
     }
     saveOrderTimeout = setTimeout(async () => {
-        const newOrder = getCurrentTileOrder();
-        await saveTileOrder(newOrder);
+        const folderOrder = await loadFolderOrder();
+        const folderContent = document.querySelector(`[data-folder-id="${folderId}"] .anime-folder-content`);
+        if (folderContent) {
+            const tiles = folderContent.querySelectorAll(SELECTORS.ITEM);
+            const animeIds: string[] = [];
+            tiles.forEach((tile) => {
+                const animeData = extractAnimeData(tile);
+                if (animeData) animeIds.push(animeData.animeId);
+            });
+            folderOrder.folderContents[folderId] = animeIds;
+            await saveFolderOrder(folderOrder);
+        }
+        showToast("Order saved", "success");
+    }, 500);
+}
+
+/**
+ * Debounced save for root level order
+ */
+function debouncedSaveRootOrder(): void {
+    if (saveOrderTimeout) {
+        clearTimeout(saveOrderTimeout);
+    }
+    saveOrderTimeout = setTimeout(async () => {
+        const folderOrder = await loadFolderOrder();
+        const container = document.querySelector(SELECTORS.CONTAINER);
+        if (container) {
+            const rootItems: string[] = [];
+            // Get direct children only (not tiles inside folders)
+            const children = container.children;
+            for (const child of children) {
+                if (child.classList.contains("anime-folder")) {
+                    const folderId = child.getAttribute("data-folder-id");
+                    if (folderId) rootItems.push(`folder:${folderId}`);
+                } else if (child.classList.contains("flw-item")) {
+                    const animeData = extractAnimeData(child);
+                    if (animeData) rootItems.push(animeData.animeId);
+                }
+            }
+            folderOrder.rootItems = rootItems;
+            await saveFolderOrder(folderOrder);
+        }
         showToast("Order saved", "success");
     }, 500);
 }
@@ -2677,8 +3694,8 @@ export async function initializeDragAndDrop(): Promise<void> {
     // Insert toolbar
     insertDragToolbar();
 
-    // Restore saved order
-    await restoreTileOrder();
+    // Restore saved order (folders and tiles)
+    await restoreFolderOrder();
 }
 
 // Only auto-initialize if not in test environment

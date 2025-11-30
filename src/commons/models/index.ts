@@ -9,6 +9,7 @@ export enum StorageKeys {
     PLAN_TO_WATCH = "planToWatch",
     HIDDEN_ANIME = "hiddenAnime",
     TILE_ORDER = "tileOrder",
+    FOLDER_ORDER = "folderOrder",
 }
 
 export interface EpisodeProgress {
@@ -36,6 +37,20 @@ export interface AnimeData {
 
 export interface TileOrder {
     animeIds: string[];
+    lastUpdated: string;
+}
+
+export interface Folder {
+    id: string;
+    name: string;
+    borderColor: string;
+    createdAt: string;
+}
+
+export interface FolderOrder {
+    folders: Folder[];
+    rootItems: string[];
+    folderContents: Record<string, string[]>;
     lastUpdated: string;
 }
 
