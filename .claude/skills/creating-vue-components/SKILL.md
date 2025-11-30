@@ -43,7 +43,7 @@ const emit = defineEmits<{
 
 ```vue
 <!-- Full-screen gradient -->
-<div class="bg-linear-to-br from-purple-600 via-purple-700 to-pink-600">
+<div class="bg-gradient-to-br from-purple-600 via-purple-700 to-pink-600">
 
 <!-- Animated particles (optional) -->
 <div class="fixed inset-0 opacity-10">
