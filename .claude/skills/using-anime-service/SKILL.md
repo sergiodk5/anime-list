@@ -89,10 +89,10 @@ const animeService = new AnimeService();
 const status = await animeService.getAnimeStatus("anime-123");
 
 if (status.isTracked) {
-    console.log(`Episode: ${status.progress.currentEpisode}`);
+    console.log(`Episode: ${status.progress?.currentEpisode}`);
 }
 if (status.isPlanned) {
-    console.log(`Planned on: ${status.plan.dateAdded}`);
+    console.log(`Planned on: ${status.plan?.dateAdded}`);
 }
 if (status.isHidden) {
     console.log("Hidden");
