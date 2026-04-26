@@ -8,6 +8,15 @@ const HOST = "animetsu.live";
 const CARD_SELECTOR = 'a[href^="/anime/"]:has(.aspect-cover)';
 const TITLE_SELECTOR = ".line-clamp-2";
 
+// Path shape: /anime/{mongoId}, optionally followed by extra segments
+// (episode pages reuse the same prefix). Hex Mongo IDs are 24 chars, but we
+// accept any non-empty segment for forward compatibility.
+const WATCH_PATH_RE = /^\/anime\/([^/?#]+)/;
+
+// Watch-page header candidates, ordered most- to least- specific. Used as a
+// visible-DOM fallback when document.title hasn't been hydrated yet.
+const WATCH_TITLE_SELECTORS = ["div.flex-center.font-extrabold", "h1", "h2", "[class*='title']"];
+
 function extractCardAnime(card: Element): AnimeData | null {
     const href = card.getAttribute("href") || "";
     const idMatch = href.match(/^\/anime\/([^/?#]+)/);
@@ -17,6 +26,36 @@ function extractCardAnime(card: Element): AnimeData | null {
     const titleEl = card.querySelector(TITLE_SELECTOR);
     const animeTitle = titleEl?.textContent?.trim() || "";
     if (!animeTitle) return null;
+
+    return {
+        animeId,
+        animeTitle,
+        animeSlug: animeId,
+    };
+}
+
+function readWatchPageTitle(fallback: string): string {
+    const docTitle = document.title?.trim();
+    // Animetsu sets document.title to the anime title once the page hydrates.
+    // The literal "Animetsu" appears before hydration — treat that as not yet
+    // populated and fall back to a DOM scan.
+    if (docTitle && docTitle.toLowerCase() !== "animetsu") {
+        return docTitle;
+    }
+    for (const selector of WATCH_TITLE_SELECTORS) {
+        const el = document.querySelector(selector);
+        const text = el?.textContent?.trim();
+        if (text) return text;
+    }
+    return fallback;
+}
+
+function extractWatchPageAnime(): AnimeData | null {
+    const idMatch = window.location.pathname.match(WATCH_PATH_RE);
+    if (!idMatch) return null;
+
+    const animeId = idMatch[1];
+    const animeTitle = readWatchPageTitle(animeId);
 
     return {
         animeId,
@@ -51,7 +90,12 @@ export const animetsuAdapter: SiteAdapter = {
     cardSelector: CARD_SELECTOR,
     extractAnime: extractCardAnime,
     getInjectionTarget,
-    watchPage: null,
+    watchPage: {
+        // Match /anime/{id} and any nested path (e.g. /anime/{id}/episode/3)
+        // but NOT bare /anime or /browse.
+        matches: (url) => WATCH_PATH_RE.test(url.pathname),
+        extractAnime: extractWatchPageAnime,
+    },
     supportsClearHiddenButton: false,
     supportsDragAndDrop: false,
 };

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { animetsuAdapter } from "@/content/adapters/animetsu";
 
 function buildCard({
@@ -30,7 +30,7 @@ describe("animetsu adapter", () => {
         expect(animetsuAdapter.id).toBe("animetsu");
         expect(animetsuAdapter.supportsClearHiddenButton).toBe(false);
         expect(animetsuAdapter.supportsDragAndDrop).toBe(false);
-        expect(animetsuAdapter.watchPage).toBeNull();
+        expect(animetsuAdapter.watchPage).not.toBeNull();
     });
 
     it("matches animetsu.live and its subdomains only", () => {
@@ -95,5 +95,70 @@ describe("animetsu adapter", () => {
         const target = animetsuAdapter.getInjectionTarget(card) as HTMLElement;
         expect(target).toBe(wrapper);
         expect(target.style.position).toBe("relative");
+    });
+});
+
+describe("animetsu adapter — watch page", () => {
+    const watchPage = animetsuAdapter.watchPage!;
+    const originalTitle = document.title;
+
+    beforeEach(() => {
+        document.body.innerHTML = "";
+        document.title = "Animetsu";
+    });
+
+    afterEach(() => {
+        document.title = originalTitle;
+        vi.restoreAllMocks();
+    });
+
+    it("matches /anime/{id} URLs", () => {
+        expect(watchPage.matches(new URL("https://animetsu.live/anime/abc123"))).toBe(true);
+        expect(watchPage.matches(new URL("https://animetsu.live/anime/abc123/episode/4"))).toBe(true);
+    });
+
+    it("does not match list, root, or bare /anime URLs", () => {
+        expect(watchPage.matches(new URL("https://animetsu.live/browse"))).toBe(false);
+        expect(watchPage.matches(new URL("https://animetsu.live/"))).toBe(false);
+        expect(watchPage.matches(new URL("https://animetsu.live/anime"))).toBe(false);
+    });
+
+    it("extracts id from path and title from document.title once hydrated", () => {
+        vi.spyOn(window, "location", "get").mockReturnValue({
+            pathname: "/anime/abc123",
+        } as Location);
+        document.title = "Attack on Titan";
+        expect(watchPage.extractAnime()).toEqual({
+            animeId: "abc123",
+            animeTitle: "Attack on Titan",
+            animeSlug: "abc123",
+        });
+    });
+
+    it("falls back to a DOM heading when document.title is still 'Animetsu'", () => {
+        vi.spyOn(window, "location", "get").mockReturnValue({
+            pathname: "/anime/abc123",
+        } as Location);
+        document.title = "Animetsu";
+        const heading = document.createElement("div");
+        heading.className = "flex-center font-extrabold";
+        heading.textContent = "Demon Slayer";
+        document.body.appendChild(heading);
+        expect(watchPage.extractAnime()?.animeTitle).toBe("Demon Slayer");
+    });
+
+    it("falls back to the anime id when no title source is available", () => {
+        vi.spyOn(window, "location", "get").mockReturnValue({
+            pathname: "/anime/zzzz",
+        } as Location);
+        document.title = "Animetsu";
+        expect(watchPage.extractAnime()?.animeTitle).toBe("zzzz");
+    });
+
+    it("returns null when path does not match the watch shape", () => {
+        vi.spyOn(window, "location", "get").mockReturnValue({
+            pathname: "/browse",
+        } as Location);
+        expect(watchPage.extractAnime()).toBeNull();
     });
 });
