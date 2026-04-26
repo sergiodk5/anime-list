@@ -8,10 +8,12 @@ const HOST = "animetsu.live";
 const CARD_SELECTOR = 'a[href^="/anime/"]:has(.aspect-cover)';
 const TITLE_SELECTOR = ".line-clamp-2";
 
-// Path shape: /anime/{mongoId}, optionally followed by extra segments
-// (episode pages reuse the same prefix). Hex Mongo IDs are 24 chars, but we
-// accept any non-empty segment for forward compatibility.
-const WATCH_PATH_RE = /^\/anime\/([^/?#]+)/;
+// Animetsu has two single-anime URL shapes:
+//   /anime/{id}        → detail page with the episode list
+//   /watch/{id}?ep=N   → episode video player
+// Both expose the same anime id in the first segment.
+const WATCH_PATH_RE = /^\/(?:anime|watch)\/([^/?#]+)/;
+const EPISODE_PATH_RE = /^\/watch\//;
 
 // Watch-page header candidates, ordered most- to least- specific. Used as a
 // visible-DOM fallback when document.title hasn't been hydrated yet.
@@ -35,11 +37,18 @@ function extractCardAnime(card: Element): AnimeData | null {
 }
 
 function readWatchPageTitle(fallback: string): string {
-    const docTitle = document.title?.trim();
+    const docTitle = (document.title || "").trim();
+    const isEpisodePage = EPISODE_PATH_RE.test(window.location.pathname);
     // Animetsu sets document.title to the anime title once the page hydrates.
     // The literal "Animetsu" appears before hydration — treat that as not yet
     // populated and fall back to a DOM scan.
     if (docTitle && docTitle.toLowerCase() !== "animetsu") {
+        if (isEpisodePage && docTitle.includes(" - ")) {
+            // Episode pages format the title as "{episode} - {anime}". The anime
+            // portion sits at the tail; trim the episode prefix.
+            const trailing = docTitle.split(" - ").pop()?.trim();
+            if (trailing) return trailing;
+        }
         return docTitle;
     }
     for (const selector of WATCH_TITLE_SELECTORS) {
@@ -91,8 +100,8 @@ export const animetsuAdapter: SiteAdapter = {
     extractAnime: extractCardAnime,
     getInjectionTarget,
     watchPage: {
-        // Match /anime/{id} and any nested path (e.g. /anime/{id}/episode/3)
-        // but NOT bare /anime or /browse.
+        // Match /anime/{id} (detail page) and /watch/{id} (episode page) but
+        // not the bare /anime, /watch, or list paths like /browse.
         matches: (url) => WATCH_PATH_RE.test(url.pathname),
         extractAnime: extractWatchPageAnime,
     },

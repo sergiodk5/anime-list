@@ -112,15 +112,18 @@ describe("animetsu adapter — watch page", () => {
         vi.restoreAllMocks();
     });
 
-    it("matches /anime/{id} URLs", () => {
+    it("matches both /anime/{id} detail pages and /watch/{id} episode pages", () => {
         expect(watchPage.matches(new URL("https://animetsu.live/anime/abc123"))).toBe(true);
         expect(watchPage.matches(new URL("https://animetsu.live/anime/abc123/episode/4"))).toBe(true);
+        expect(watchPage.matches(new URL("https://animetsu.live/watch/abc123?ep=1"))).toBe(true);
+        expect(watchPage.matches(new URL("https://animetsu.live/watch/abc123"))).toBe(true);
     });
 
-    it("does not match list, root, or bare /anime URLs", () => {
+    it("does not match list, root, or bare prefix URLs", () => {
         expect(watchPage.matches(new URL("https://animetsu.live/browse"))).toBe(false);
         expect(watchPage.matches(new URL("https://animetsu.live/"))).toBe(false);
         expect(watchPage.matches(new URL("https://animetsu.live/anime"))).toBe(false);
+        expect(watchPage.matches(new URL("https://animetsu.live/watch"))).toBe(false);
     });
 
     it("extracts id from path and title from document.title once hydrated", () => {
@@ -160,5 +163,35 @@ describe("animetsu adapter — watch page", () => {
             pathname: "/browse",
         } as Location);
         expect(watchPage.extractAnime()).toBeNull();
+    });
+
+    it("strips the episode prefix from /watch/ document titles", () => {
+        vi.spyOn(window, "location", "get").mockReturnValue({
+            pathname: "/watch/abc123",
+            search: "?ep=1",
+        } as Location);
+        document.title = "To You Two Thousand Years Later - Attack on Titan";
+        expect(watchPage.extractAnime()?.animeTitle).toBe("Attack on Titan");
+    });
+
+    it("uses /anime/ document titles verbatim (no dash splitting)", () => {
+        vi.spyOn(window, "location", "get").mockReturnValue({
+            pathname: "/anime/abc123",
+        } as Location);
+        document.title = "Steins;Gate - The Movie";
+        expect(watchPage.extractAnime()?.animeTitle).toBe("Steins;Gate - The Movie");
+    });
+
+    it("extracts the id from /watch/ paths", () => {
+        vi.spyOn(window, "location", "get").mockReturnValue({
+            pathname: "/watch/abc123",
+            search: "?ep=4",
+        } as Location);
+        document.title = "Some Episode - Some Anime";
+        expect(watchPage.extractAnime()).toEqual({
+            animeId: "abc123",
+            animeTitle: "Some Anime",
+            animeSlug: "abc123",
+        });
     });
 });
