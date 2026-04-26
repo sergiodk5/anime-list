@@ -2,6 +2,7 @@ import type { AnimeData, AnimeStatus, TileOrder, Folder, FolderOrder } from "@/c
 import { StorageKeys } from "@/commons/models";
 import { AnimeService } from "@/commons/services";
 import { StorageAdapter } from "@/commons/adapters/StorageAdapter";
+import { selectAdapter, type SiteAdapter } from "@/content/adapters";
 
 /**
  * Content script for anime website integration
@@ -33,13 +34,24 @@ console.log("AnimeList content script loaded");
 // Initialize the anime service
 const animeService = new AnimeService();
 
-// Constants for DOM selectors based on the requirements
+// Resolve the active site adapter. When no adapter matches, the script self-disables.
+let activeAdapter: SiteAdapter | null = null;
+try {
+    activeAdapter = selectAdapter();
+} catch {
+    activeAdapter = null;
+}
+
+// Selector aliases routed through the active adapter. When no adapter matches,
+// the empty-string fallbacks keep guarded querySelector calls inert.
 const SELECTORS = {
-    CONTAINER: ".film_list-wrap",
-    ITEM: ".flw-item",
-    POSTER: ".film-poster",
-    TITLE_LINK: ".film-name a",
-} as const;
+    get CONTAINER(): string {
+        return activeAdapter?.containerSelector ?? "";
+    },
+    get ITEM(): string {
+        return activeAdapter?.cardSelector ?? "";
+    },
+};
 
 // Cache for anime data extracted from DOM
 const animeDataCache = new Map<string, AnimeData>();
@@ -177,34 +189,16 @@ function repositionToasts(): void {
 }
 
 /**
- * Extract anime data from a DOM element
+ * Extract anime data from a DOM element via the active site adapter.
  */
 export function extractAnimeData(element: Element): AnimeData | null {
     try {
-        const titleLink = element.querySelector(SELECTORS.TITLE_LINK) as HTMLAnchorElement;
-        if (!titleLink) return null;
+        if (!activeAdapter) return null;
 
-        const href = titleLink.getAttribute("href") || "";
-        const title = titleLink.getAttribute("title") || titleLink.textContent?.trim() || "";
+        const animeData = activeAdapter.extractAnime(element);
+        if (!animeData) return null;
 
-        // Extract anime ID from href (e.g., "/watch/anime-name-12345" -> "12345")
-        const idMatch = href.match(/\/(?:watch\/)?([^/]+)$/);
-        if (!idMatch) return null;
-
-        const slug = idMatch[1];
-        // Extract numeric ID from slug if present, otherwise use the full slug
-        const numericIdMatch = slug.match(/-(\d+)$/);
-        const animeId = numericIdMatch ? numericIdMatch[1] : slug;
-
-        const animeData: AnimeData = {
-            animeId,
-            animeTitle: title,
-            animeSlug: slug,
-        };
-
-        // Cache the data
-        animeDataCache.set(animeId, animeData);
-
+        animeDataCache.set(animeData.animeId, animeData);
         return animeData;
     } catch (error) {
         console.error("Error extracting anime data:", error);
@@ -872,10 +866,10 @@ export async function addControlsToItem(element: Element): Promise<void> {
             controlsContainer.classList.add("clean-state");
         }
 
-        // Find the poster element and add controls
-        const poster = element.querySelector(SELECTORS.POSTER);
-        if (poster) {
-            poster.appendChild(controlsContainer);
+        // Find the injection target via the active adapter and add controls
+        const injectionTarget = activeAdapter?.getInjectionTarget(element) ?? null;
+        if (injectionTarget) {
+            injectionTarget.appendChild(controlsContainer);
         }
     } catch (error) {
         console.error("Error adding controls to item:", error);
@@ -939,6 +933,8 @@ export async function initializeControls(): Promise<void> {
  */
 export function setupObserver(): void {
     const observer = new MutationObserver((mutations) => {
+        const itemSelector = SELECTORS.ITEM;
+        if (!itemSelector) return;
         for (const mutation of mutations) {
             if (mutation.type === "childList") {
                 // Handle added nodes
@@ -947,7 +943,7 @@ export function setupObserver(): void {
                         const element = node as Element;
 
                         // Check if the added node is an anime item
-                        if (element.matches(SELECTORS.ITEM)) {
+                        if (element.matches(itemSelector)) {
                             addControlsToItem(element);
                             // Make draggable if drag mode is active
                             if (dragModeEnabled) {
@@ -956,7 +952,7 @@ export function setupObserver(): void {
                         }
 
                         // Check if the added node contains anime items
-                        const items = element.querySelectorAll?.(SELECTORS.ITEM);
+                        const items = element.querySelectorAll?.(itemSelector);
                         if (items) {
                             items.forEach((item) => {
                                 addControlsToItem(item);
@@ -976,12 +972,12 @@ export function setupObserver(): void {
                         const element = node as Element;
 
                         // Clean up if the removed node is an anime item
-                        if (element.matches?.(SELECTORS.ITEM)) {
+                        if (element.matches?.(itemSelector)) {
                             removeTileDraggable(element as HTMLElement);
                         }
 
                         // Clean up any anime items within the removed node
-                        const items = element.querySelectorAll?.(SELECTORS.ITEM);
+                        const items = element.querySelectorAll?.(itemSelector);
                         if (items) {
                             items.forEach((item) => {
                                 removeTileDraggable(item as HTMLElement);
@@ -1768,6 +1764,11 @@ function injectStyles(): void {
  */
 export async function init(): Promise<void> {
     try {
+        // No adapter matched the current host — content script self-disables.
+        if (!activeAdapter) {
+            return;
+        }
+
         // Wait for DOM to be ready
         if (document.readyState === "loading") {
             document.addEventListener("DOMContentLoaded", init);
@@ -1822,71 +1823,27 @@ function getSinglePageAnimeService(): AnimeService {
 }
 
 /**
- * Check if current page is a watch page
+ * Check if current page is a watch / single-anime page (delegated to adapter).
  */
 export function isWatchPage(): boolean {
-    return window.location.href.includes("/watch/");
+    if (!activeAdapter?.watchPage) return false;
+    try {
+        return activeAdapter.watchPage.matches(new URL(window.location.href));
+    } catch {
+        return false;
+    }
 }
 
 /**
- * Extract anime data from watch page
+ * Extract anime data from a watch / single-anime page (delegated to adapter).
  */
 export function extractSinglePageAnimeData(): AnimeData | null {
     try {
-        const url = window.location.href;
-        const urlMatch = url.match(/\/watch\/([^/?]+)/);
-        if (!urlMatch) return null;
-
-        const originalSlug = urlMatch[1];
-
-        // Try multiple ID extraction strategies
-        let animeId = originalSlug;
-
-        // Strategy 1: Extract numeric ID from end (e.g., "anime-name-12345" -> "12345")
-        const numericIdMatch = originalSlug.match(/-(\d+)$/);
-        if (numericIdMatch) {
-            animeId = numericIdMatch[1];
+        if (!activeAdapter?.watchPage) return null;
+        const animeData = activeAdapter.watchPage.extractAnime();
+        if (animeData) {
+            console.log("Extracted anime data from watch page:", animeData);
         }
-
-        // Strategy 2: If no numeric suffix, use the full slug
-        // This handles cases where the anime ID is the full slug
-
-        // Try different selectors to get anime title
-        const titleSelectors = [
-            ".ani_detail-info h2",
-            ".watch-detail .title",
-            "h1.anime-title",
-            "h1",
-            "h2",
-            "[class*='title']",
-            ".film-name",
-            ".anime-title",
-        ];
-
-        let animeTitle = originalSlug; // Fallback to original slug
-        for (const selector of titleSelectors) {
-            const element = document.querySelector(selector);
-            if (element?.textContent?.trim()) {
-                animeTitle = element.textContent.trim();
-                break;
-            }
-        }
-
-        const animeData = {
-            animeId,
-            animeTitle,
-            animeSlug: originalSlug.toLowerCase(),
-        };
-
-        // Store debug info for modal display
-        (animeData as any).debugInfo = {
-            url,
-            originalSlug,
-            extractionStrategy: numericIdMatch ? "numeric-suffix" : "full-slug",
-            titleSelectorUsed: titleSelectors.find((sel) => document.querySelector(sel)?.textContent?.trim()) || "none",
-        };
-
-        console.log("Extracted anime data from watch page:", animeData);
         return animeData;
     } catch (error) {
         console.error("Error extracting anime data:", error);
@@ -3727,8 +3684,13 @@ export async function initializeDragAndDrop(): Promise<void> {
     await restoreFolderOrder();
 }
 
-// Only auto-initialize if not in test environment
-if (typeof window !== "undefined" && typeof document !== "undefined" && (globalThis as any).window?.location) {
+// Only auto-initialize if not in test environment AND a site adapter matched.
+if (
+    typeof window !== "undefined" &&
+    typeof document !== "undefined" &&
+    (globalThis as any).window?.location &&
+    activeAdapter
+) {
     init();
 
     // Initialize single page functionality
