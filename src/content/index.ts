@@ -53,6 +53,26 @@ const SELECTORS = {
     },
 };
 
+// Shared sentinel class applied to every tile we manage. Drag-and-drop, folder
+// logic, and tile-level CSS rules target this class so they remain
+// site-agnostic — the per-site card class (HiAnime's card class, the Animetsu
+// slot wrapper, …) is irrelevant once the tile has been tagged.
+const TILE_CLASS = "anime-list-tile";
+
+/**
+ * Resolve the user-visible tile for a given card and tag it with the shared
+ * sentinel class. Adapters may opt into a wrapper element (e.g. Animetsu's
+ * grid-slot div) so hide/reorder operations affect the slot rather than the
+ * inner card.
+ */
+function resolveTile(card: Element): HTMLElement {
+    const tile = (activeAdapter?.getTileElement?.(card) ?? card) as HTMLElement;
+    if (!tile.classList.contains(TILE_CLASS)) {
+        tile.classList.add(TILE_CLASS);
+    }
+    return tile;
+}
+
 // Cache for anime data extracted from DOM
 const animeDataCache = new Map<string, AnimeData>();
 
@@ -752,13 +772,15 @@ export async function handleHideClick(animeData: AnimeData, button: HTMLButtonEl
         const result = await animeService.hideAnime(animeData.animeId);
 
         if (result.success) {
-            // Find the parent anime item and hide it
-            const animeItem = button.closest(SELECTORS.ITEM);
-            if (animeItem) {
-                animeItem.classList.add("anime-hidden");
+            // Find the card, resolve its tile (the slot wrapper on adapters
+            // that opt into one) and hide that.
+            const card = button.closest(SELECTORS.ITEM);
+            if (card) {
+                const tile = resolveTile(card);
+                tile.classList.add("anime-hidden");
                 // Use CSS transition for smooth hiding
                 setTimeout(() => {
-                    (animeItem as HTMLElement).style.display = "none";
+                    tile.style.display = "none";
                 }, 300);
             }
             showToast(`Hidden "${animeData.animeTitle}"`, "success");
@@ -814,13 +836,18 @@ export async function addControlsToItem(element: Element): Promise<void> {
         const animeData = extractAnimeData(element);
         if (!animeData) return;
 
+        // Tag the user-visible tile so drag/drop and hide operate on the
+        // correct element (the slot wrapper on Animetsu, the card itself on
+        // HiAnime).
+        const tile = resolveTile(element);
+
         // Get unified anime status
         const status = await animeService.getAnimeStatus(animeData.animeId);
 
-        // Handle hidden anime - no controls shown, item is hidden
+        // Handle hidden anime - no controls shown, the entire tile is hidden
         if (status.isHidden) {
-            element.classList.add("anime-hidden");
-            (element as HTMLElement).style.display = "none";
+            tile.classList.add("anime-hidden");
+            tile.style.display = "none";
             return;
         }
 
@@ -948,7 +975,7 @@ export function setupObserver(): void {
                             addControlsToItem(element);
                             // Make draggable if drag mode is active
                             if (dragModeEnabled) {
-                                makeTileDraggable(element as HTMLElement);
+                                makeTileDraggable(resolveTile(element));
                             }
                         }
 
@@ -959,7 +986,7 @@ export function setupObserver(): void {
                                 addControlsToItem(item);
                                 // Make draggable if drag mode is active
                                 if (dragModeEnabled) {
-                                    makeTileDraggable(item as HTMLElement);
+                                    makeTileDraggable(resolveTile(item));
                                 }
                             });
                         }
@@ -974,14 +1001,14 @@ export function setupObserver(): void {
 
                         // Clean up if the removed node is an anime item
                         if (element.matches?.(itemSelector)) {
-                            removeTileDraggable(element as HTMLElement);
+                            removeTileDraggable(resolveTile(element));
                         }
 
                         // Clean up any anime items within the removed node
                         const items = element.querySelectorAll?.(itemSelector);
                         if (items) {
                             items.forEach((item) => {
-                                removeTileDraggable(item as HTMLElement);
+                                removeTileDraggable(resolveTile(item));
                             });
                         }
                     }
@@ -1494,37 +1521,37 @@ function injectStyles(): void {
         }
 
         /* Draggable tile styles */
-        .flw-item[draggable="true"] {
+        .anime-list-tile[draggable="true"] {
             cursor: grab;
             outline: 2px dashed rgba(139, 92, 246, 0.5);
             outline-offset: -2px;
             transition: outline 0.2s ease, outline-offset 0.2s ease, transform 0.2s ease, background 0.2s ease;
         }
 
-        .flw-item[draggable="true"]:active {
+        .anime-list-tile[draggable="true"]:active {
             cursor: grabbing;
         }
 
-        .flw-item.drag-over {
+        .anime-list-tile.drag-over {
             outline: 2px solid rgba(139, 92, 246, 0.8);
             outline-offset: -2px;
             transform: scale(1.02);
             background: rgba(139, 92, 246, 0.1);
         }
 
-        .flw-item.dragging {
+        .anime-list-tile.dragging {
             opacity: 0.5;
             transform: scale(0.98);
         }
 
         /* Keyboard selection state */
-        .flw-item.keyboard-selected {
+        .anime-list-tile.keyboard-selected {
             outline: 3px solid rgba(59, 130, 246, 0.8) !important;
             outline-offset: 2px !important;
             box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
         }
 
-        .flw-item[draggable="true"]:focus {
+        .anime-list-tile[draggable="true"]:focus {
             outline: 2px solid rgba(59, 130, 246, 0.6);
             outline-offset: 2px;
         }
@@ -1665,7 +1692,7 @@ function injectStyles(): void {
         }
 
         /* Ensure tiles inside folders display correctly */
-        .anime-folder-content .flw-item {
+        .anime-folder-content .anime-list-tile {
             width: 100% !important;
             display: block !important;
             min-width: 0;
@@ -2513,7 +2540,7 @@ function setupFolderDropZone(content: HTMLElement, folderId: string): void {
     content.addEventListener("dragover", (e) => {
         e.preventDefault();
         e.stopPropagation();
-        if (draggedElement?.classList.contains("flw-item")) {
+        if (draggedElement?.classList.contains("anime-list-tile")) {
             if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
             content.closest(".anime-folder")?.classList.add("drag-over");
         }
@@ -2533,7 +2560,7 @@ function setupFolderDropZone(content: HTMLElement, folderId: string): void {
         e.stopPropagation();
         content.closest(".anime-folder")?.classList.remove("drag-over");
 
-        if (draggedElement?.classList.contains("flw-item")) {
+        if (draggedElement?.classList.contains("anime-list-tile")) {
             await handleDropIntoFolder(draggedElement, folderId);
         }
     });
@@ -2858,13 +2885,13 @@ export function removeFolderDraggable(folderEl: HTMLElement): void {
  */
 function handleContainerDragOver(e: DragEvent): void {
     // Only handle if dragging a tile from a folder
-    if (!draggedElement?.classList.contains("flw-item")) return;
+    if (!draggedElement?.classList.contains("anime-list-tile")) return;
     const fromFolder = draggedElement.closest(".anime-folder-content");
     if (!fromFolder) return;
 
     // Check if dropping directly on container (not on a tile or folder)
     const target = e.target as HTMLElement;
-    if (target.closest(".flw-item") || target.closest(".anime-folder")) return;
+    if (target.closest(".anime-list-tile") || target.closest(".anime-folder")) return;
 
     e.preventDefault();
     if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
@@ -2875,14 +2902,14 @@ function handleContainerDragOver(e: DragEvent): void {
  */
 async function handleContainerDrop(e: DragEvent): Promise<void> {
     // Only handle if dragging a tile from a folder
-    if (!draggedElement?.classList.contains("flw-item")) return;
+    if (!draggedElement?.classList.contains("anime-list-tile")) return;
     const fromFolder = draggedElement.closest(".anime-folder-content");
     const sourceFolderId = fromFolder?.closest(".anime-folder")?.getAttribute("data-folder-id");
     if (!fromFolder || !sourceFolderId) return;
 
     // Check if dropping directly on container (not on a tile or folder)
     const target = e.target as HTMLElement;
-    if (target.closest(".flw-item") || target.closest(".anime-folder")) return;
+    if (target.closest(".anime-list-tile") || target.closest(".anime-folder")) return;
 
     e.preventDefault();
     e.stopPropagation();
@@ -3314,10 +3341,12 @@ export function enableDragMode(): void {
     const container = document.querySelector(SELECTORS.CONTAINER) as HTMLElement;
     if (!container) return;
 
-    // Make tiles draggable
-    const items = container.querySelectorAll(SELECTORS.ITEM);
-    items.forEach((item) => {
-        makeTileDraggable(item as HTMLElement);
+    // Make tiles draggable. Resolve each card to its tile element so that on
+    // adapters with a slot wrapper (Animetsu), the wrapper — not the inner
+    // card — receives the draggable attribute and event listeners.
+    const cards = container.querySelectorAll(SELECTORS.ITEM);
+    cards.forEach((card) => {
+        makeTileDraggable(resolveTile(card));
     });
 
     // Make folders draggable
@@ -3361,9 +3390,9 @@ export function disableDragMode(): void {
     if (!container) return;
 
     // Remove draggable from tiles
-    const items = container.querySelectorAll(SELECTORS.ITEM);
-    items.forEach((item) => {
-        removeTileDraggable(item as HTMLElement);
+    const cards = container.querySelectorAll(SELECTORS.ITEM);
+    cards.forEach((card) => {
+        removeTileDraggable(resolveTile(card));
     });
 
     // Remove draggable from folders
@@ -3461,9 +3490,9 @@ async function handleDrop(e: DragEvent): Promise<void> {
 
     if (!draggedElement || draggedElement === target) return;
 
-    const isDraggedTile = draggedElement.classList.contains("flw-item");
+    const isDraggedTile = draggedElement.classList.contains("anime-list-tile");
     const isDraggedFolder = draggedElement.classList.contains("anime-folder");
-    const isTargetTile = target.classList.contains("flw-item");
+    const isTargetTile = target.classList.contains("anime-list-tile");
     const isTargetFolder = target.classList.contains("anime-folder");
 
     // Check if dragged element is coming from inside a folder
@@ -3574,7 +3603,7 @@ function debouncedSaveRootOrder(): void {
                 if (child.classList.contains("anime-folder")) {
                     const folderId = child.getAttribute("data-folder-id");
                     if (folderId) rootItems.push(`folder:${folderId}`);
-                } else if (child.classList.contains("flw-item")) {
+                } else if (child.classList.contains("anime-list-tile")) {
                     const animeData = extractAnimeData(child);
                     if (animeData) rootItems.push(animeData.animeId);
                 }

@@ -26,11 +26,29 @@ function buildCard({
 }
 
 describe("animetsu adapter", () => {
-    it("declares its identity and feature flags", () => {
+    it("declares its identity and exposes the watch-page handler", () => {
         expect(animetsuAdapter.id).toBe("animetsu");
-        expect(animetsuAdapter.supportsClearHiddenButton).toBe(false);
-        expect(animetsuAdapter.supportsDragAndDrop).toBe(false);
         expect(animetsuAdapter.watchPage).not.toBeNull();
+    });
+
+    it("anchors the clear-hidden / drag-and-drop features on the grid container", () => {
+        // No opt-out flags set → the script-wide defaults (enabled) apply, so
+        // both features run on Animetsu against the grid container selector.
+        expect(animetsuAdapter.supportsClearHiddenButton).toBeUndefined();
+        expect(animetsuAdapter.supportsDragAndDrop).toBeUndefined();
+        expect(animetsuAdapter.containerSelector).toBe(".min-h-\\[30dvh\\]");
+    });
+
+    it("returns the parent slot wrapper as the tile element", () => {
+        const slot = document.createElement("div");
+        const card = document.createElement("a");
+        slot.appendChild(card);
+        expect(animetsuAdapter.getTileElement?.(card)).toBe(slot);
+    });
+
+    it("falls back to the card itself when no parent exists", () => {
+        const card = document.createElement("a");
+        expect(animetsuAdapter.getTileElement?.(card)).toBe(card);
     });
 
     it("matches animetsu.live and its subdomains only", () => {

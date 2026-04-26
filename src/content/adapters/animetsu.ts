@@ -93,18 +93,21 @@ function getInjectionTarget(card: Element): Element | null {
 export const animetsuAdapter: SiteAdapter = {
     id: "animetsu",
     matches: (url) => url.host === HOST || url.host.endsWith(`.${HOST}`),
-    // No dedicated list container — cards live inside the page's main grid.
-    // The empty selector keeps the container-based code paths inert.
-    containerSelector: "body",
+    // The flex-wrap grid that holds every card on /browse and other list
+    // pages. The Tailwind `min-h-[30dvh]` arbitrary-value class is the most
+    // distinctive hook on the page (only one element on /browse matches).
+    containerSelector: ".min-h-\\[30dvh\\]",
     cardSelector: CARD_SELECTOR,
     extractAnime: extractCardAnime,
     getInjectionTarget,
+    // Cards are wrapped in a Tailwind grid-slot div; reorder/hide must
+    // operate on that wrapper so the slot itself collapses or moves rather
+    // than leaving an empty padded gap.
+    getTileElement: (card) => (card.parentElement as Element | null) ?? card,
     watchPage: {
         // Match /anime/{id} (detail page) and /watch/{id} (episode page) but
         // not the bare /anime, /watch, or list paths like /browse.
         matches: (url) => WATCH_PATH_RE.test(url.pathname),
         extractAnime: extractWatchPageAnime,
     },
-    supportsClearHiddenButton: false,
-    supportsDragAndDrop: false,
 };
