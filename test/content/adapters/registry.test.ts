@@ -1,12 +1,22 @@
 import { describe, expect, it } from "vitest";
-import { adapters, hianimeAdapter, selectAdapter } from "@/content/adapters";
+import { adapters, animetsuAdapter, hianimeAdapter, selectAdapter } from "@/content/adapters";
 
 describe("content/adapters registry", () => {
-    it("includes the hianime adapter", () => {
+    it("includes both built-in adapters", () => {
+        expect(adapters).toContain(animetsuAdapter);
         expect(adapters).toContain(hianimeAdapter);
     });
 
-    it("selects the hianime adapter by default", () => {
+    it("registers more-specific adapters before the hianime catch-all", () => {
+        expect(adapters.indexOf(animetsuAdapter)).toBeLessThan(adapters.indexOf(hianimeAdapter));
+    });
+
+    it("selects the animetsu adapter for animetsu.live URLs", () => {
+        const adapter = selectAdapter(new URL("https://animetsu.live/browse"));
+        expect(adapter).toBe(animetsuAdapter);
+    });
+
+    it("falls back to the hianime adapter for unknown hosts", () => {
         const adapter = selectAdapter(new URL("https://example.com/anything"));
         expect(adapter).toBe(hianimeAdapter);
     });

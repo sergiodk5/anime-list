@@ -880,6 +880,7 @@ export async function addControlsToItem(element: Element): Promise<void> {
  * Add Clear Hidden button to the list container
  */
 export function addClearHiddenButton(): void {
+    if (activeAdapter?.supportsClearHiddenButton === false) return;
     const container = document.querySelector(SELECTORS.CONTAINER);
     if (!container) return;
 
@@ -3152,6 +3153,7 @@ export function createDragToolbar(): HTMLDivElement {
  * Insert drag toolbar into the page
  */
 export function insertDragToolbar(): void {
+    if (activeAdapter?.supportsDragAndDrop === false) return;
     // Only insert if container exists and toolbar doesn't exist
     const container = document.querySelector(SELECTORS.CONTAINER);
     if (!container) return;
@@ -3673,6 +3675,7 @@ export async function resetTileOrder(): Promise<void> {
  * Initialize drag-and-drop functionality
  */
 export async function initializeDragAndDrop(): Promise<void> {
+    if (activeAdapter?.supportsDragAndDrop === false) return;
     // Only initialize if container exists
     const container = document.querySelector(SELECTORS.CONTAINER);
     if (!container) return;
