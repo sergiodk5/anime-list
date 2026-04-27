@@ -59,22 +59,31 @@ const SELECTORS = {
 // slot wrapper, …) is irrelevant once the tile has been tagged.
 const TILE_CLASS = "anime-list-tile";
 
+// Cache for anime data extracted from DOM
+const animeDataCache = new Map<string, AnimeData>();
+
 /**
  * Resolve the user-visible tile for a given card and tag it with the shared
  * sentinel class. Adapters may opt into a wrapper element (e.g. Animetsu's
  * grid-slot div) so hide/reorder operations affect the slot rather than the
- * inner card.
+ * inner card. The card's anime id is also persisted on the tile via
+ * `data-anime-id` so reorder / folder code paths can treat the tile as the
+ * canonical handle even when tile !== card.
  */
 function resolveTile(card: Element): HTMLElement {
     const tile = (activeAdapter?.getTileElement?.(card) ?? card) as HTMLElement;
     if (!tile.classList.contains(TILE_CLASS)) {
         tile.classList.add(TILE_CLASS);
     }
+    if (!tile.dataset.animeId) {
+        const animeData = activeAdapter?.extractAnime(card) ?? null;
+        if (animeData) {
+            animeDataCache.set(animeData.animeId, animeData);
+            tile.dataset.animeId = animeData.animeId;
+        }
+    }
     return tile;
 }
-
-// Cache for anime data extracted from DOM
-const animeDataCache = new Map<string, AnimeData>();
 
 // Toast notification system
 interface Toast {
@@ -210,12 +219,36 @@ function repositionToasts(): void {
 
 /**
  * Extract anime data from a DOM element via the active site adapter.
+ *
+ * Accepts either a card or a tile wrapper. Resolution order:
+ *   1. `element.dataset.animeId` if it points at a cached entry (fast path
+ *      written by `resolveTile`)
+ *   2. The element itself, if it matches the adapter's card selector
+ *   3. The first descendant matching the card selector
+ *
+ * Folder / drag-and-drop code can therefore safely call this with the
+ * `.anime-list-tile` wrapper even when the wrapper isn't itself a card.
  */
 export function extractAnimeData(element: Element): AnimeData | null {
     try {
         if (!activeAdapter) return null;
 
-        const animeData = activeAdapter.extractAnime(element);
+        const datasetId = (element as HTMLElement).dataset?.animeId;
+        if (datasetId) {
+            const cached = animeDataCache.get(datasetId);
+            if (cached) return cached;
+        }
+
+        const cardSelector = activeAdapter.cardSelector;
+        const matchesSelf =
+            cardSelector && typeof element.matches === "function" ? element.matches(cardSelector) : false;
+        const card = matchesSelf
+            ? element
+            : (cardSelector && typeof element.querySelector === "function"
+                  ? element.querySelector(cardSelector)
+                  : null) || element;
+
+        const animeData = activeAdapter.extractAnime(card);
         if (!animeData) return null;
 
         animeDataCache.set(animeData.animeId, animeData);

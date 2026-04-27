@@ -58,6 +58,10 @@ describe("animetsu adapter", () => {
         expect(animetsuAdapter.matches(new URL("https://example.com/animetsu.live"))).toBe(false);
     });
 
+    it("matches when an explicit port is present in the URL", () => {
+        expect(animetsuAdapter.matches(new URL("https://animetsu.live:8443/browse"))).toBe(true);
+    });
+
     it("scopes its card selector to anchors with a poster wrapper", () => {
         expect(animetsuAdapter.cardSelector).toBe('a[href^="/anime/"]:has(.aspect-cover)');
     });

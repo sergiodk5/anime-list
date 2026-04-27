@@ -22,17 +22,11 @@ describe("content/adapters registry", () => {
     });
 
     it("returns null when no adapter matches", () => {
+        // Pass a local list rather than mutating the exported singleton so the
+        // test stays safe under Vitest's parallel runner.
         const fakeAdapter = { ...hianimeAdapter, matches: () => false };
-        const original = adapters.slice();
-        adapters.length = 0;
-        adapters.push(fakeAdapter);
-        try {
-            const adapter = selectAdapter(new URL("https://example.com/anything"));
-            expect(adapter).toBeNull();
-        } finally {
-            adapters.length = 0;
-            adapters.push(...original);
-        }
+        const adapter = selectAdapter(new URL("https://example.com/anything"), [fakeAdapter]);
+        expect(adapter).toBeNull();
     });
 });
 

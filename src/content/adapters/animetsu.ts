@@ -92,7 +92,7 @@ function getInjectionTarget(card: Element): Element | null {
 
 export const animetsuAdapter: SiteAdapter = {
     id: "animetsu",
-    matches: (url) => url.host === HOST || url.host.endsWith(`.${HOST}`),
+    matches: (url) => url.hostname === HOST || url.hostname.endsWith(`.${HOST}`),
     // The flex-wrap grid that holds every card on /browse and other list
     // pages. The Tailwind `min-h-[30dvh]` arbitrary-value class is the most
     // distinctive hook on the page (only one element on /browse matches).
