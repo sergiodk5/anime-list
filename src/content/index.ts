@@ -2,6 +2,7 @@ import type { AnimeData, AnimeStatus, TileOrder, Folder, FolderOrder } from "@/c
 import { StorageKeys } from "@/commons/models";
 import { AnimeService } from "@/commons/services";
 import { StorageAdapter } from "@/commons/adapters/StorageAdapter";
+import { selectAdapter, type SiteAdapter } from "@/content/adapters";
 
 /**
  * Content script for anime website integration
@@ -33,16 +34,56 @@ console.log("AnimeList content script loaded");
 // Initialize the anime service
 const animeService = new AnimeService();
 
-// Constants for DOM selectors based on the requirements
+// Resolve the active site adapter. When no adapter matches, the script self-disables.
+let activeAdapter: SiteAdapter | null = null;
+try {
+    activeAdapter = selectAdapter();
+} catch {
+    activeAdapter = null;
+}
+
+// Selector aliases routed through the active adapter. When no adapter matches,
+// the empty-string fallbacks keep guarded querySelector calls inert.
 const SELECTORS = {
-    CONTAINER: ".film_list-wrap",
-    ITEM: ".flw-item",
-    POSTER: ".film-poster",
-    TITLE_LINK: ".film-name a",
-} as const;
+    get CONTAINER(): string {
+        return activeAdapter?.containerSelector ?? "";
+    },
+    get ITEM(): string {
+        return activeAdapter?.cardSelector ?? "";
+    },
+};
+
+// Shared sentinel class applied to every tile we manage. Drag-and-drop, folder
+// logic, and tile-level CSS rules target this class so they remain
+// site-agnostic — the per-site card class (HiAnime's card class, the Animetsu
+// slot wrapper, …) is irrelevant once the tile has been tagged.
+const TILE_CLASS = "anime-list-tile";
 
 // Cache for anime data extracted from DOM
 const animeDataCache = new Map<string, AnimeData>();
+
+/**
+ * Resolve the user-visible tile for a given card and tag it with the shared
+ * sentinel class. Adapters may opt into a wrapper element (e.g. Animetsu's
+ * grid-slot div) so hide/reorder operations affect the slot rather than the
+ * inner card. The card's anime id is also persisted on the tile via
+ * `data-anime-id` so reorder / folder code paths can treat the tile as the
+ * canonical handle even when tile !== card.
+ */
+function resolveTile(card: Element): HTMLElement {
+    const tile = (activeAdapter?.getTileElement?.(card) ?? card) as HTMLElement;
+    if (!tile.classList.contains(TILE_CLASS)) {
+        tile.classList.add(TILE_CLASS);
+    }
+    if (!tile.dataset.animeId) {
+        const animeData = activeAdapter?.extractAnime(card) ?? null;
+        if (animeData) {
+            animeDataCache.set(animeData.animeId, animeData);
+            tile.dataset.animeId = animeData.animeId;
+        }
+    }
+    return tile;
+}
 
 // Toast notification system
 interface Toast {
@@ -177,34 +218,40 @@ function repositionToasts(): void {
 }
 
 /**
- * Extract anime data from a DOM element
+ * Extract anime data from a DOM element via the active site adapter.
+ *
+ * Accepts either a card or a tile wrapper. Resolution order:
+ *   1. `element.dataset.animeId` if it points at a cached entry (fast path
+ *      written by `resolveTile`)
+ *   2. The element itself, if it matches the adapter's card selector
+ *   3. The first descendant matching the card selector
+ *
+ * Folder / drag-and-drop code can therefore safely call this with the
+ * `.anime-list-tile` wrapper even when the wrapper isn't itself a card.
  */
 export function extractAnimeData(element: Element): AnimeData | null {
     try {
-        const titleLink = element.querySelector(SELECTORS.TITLE_LINK) as HTMLAnchorElement;
-        if (!titleLink) return null;
+        if (!activeAdapter) return null;
 
-        const href = titleLink.getAttribute("href") || "";
-        const title = titleLink.getAttribute("title") || titleLink.textContent?.trim() || "";
+        const datasetId = (element as HTMLElement).dataset?.animeId;
+        if (datasetId) {
+            const cached = animeDataCache.get(datasetId);
+            if (cached) return cached;
+        }
 
-        // Extract anime ID from href (e.g., "/watch/anime-name-12345" -> "12345")
-        const idMatch = href.match(/\/(?:watch\/)?([^/]+)$/);
-        if (!idMatch) return null;
+        const cardSelector = activeAdapter.cardSelector;
+        const matchesSelf =
+            cardSelector && typeof element.matches === "function" ? element.matches(cardSelector) : false;
+        const card = matchesSelf
+            ? element
+            : (cardSelector && typeof element.querySelector === "function"
+                  ? element.querySelector(cardSelector)
+                  : null) || element;
 
-        const slug = idMatch[1];
-        // Extract numeric ID from slug if present, otherwise use the full slug
-        const numericIdMatch = slug.match(/-(\d+)$/);
-        const animeId = numericIdMatch ? numericIdMatch[1] : slug;
+        const animeData = activeAdapter.extractAnime(card);
+        if (!animeData) return null;
 
-        const animeData: AnimeData = {
-            animeId,
-            animeTitle: title,
-            animeSlug: slug,
-        };
-
-        // Cache the data
-        animeDataCache.set(animeId, animeData);
-
+        animeDataCache.set(animeData.animeId, animeData);
         return animeData;
     } catch (error) {
         console.error("Error extracting anime data:", error);
@@ -758,13 +805,15 @@ export async function handleHideClick(animeData: AnimeData, button: HTMLButtonEl
         const result = await animeService.hideAnime(animeData.animeId);
 
         if (result.success) {
-            // Find the parent anime item and hide it
-            const animeItem = button.closest(SELECTORS.ITEM);
-            if (animeItem) {
-                animeItem.classList.add("anime-hidden");
+            // Find the card, resolve its tile (the slot wrapper on adapters
+            // that opt into one) and hide that.
+            const card = button.closest(SELECTORS.ITEM);
+            if (card) {
+                const tile = resolveTile(card);
+                tile.classList.add("anime-hidden");
                 // Use CSS transition for smooth hiding
                 setTimeout(() => {
-                    (animeItem as HTMLElement).style.display = "none";
+                    tile.style.display = "none";
                 }, 300);
             }
             showToast(`Hidden "${animeData.animeTitle}"`, "success");
@@ -820,13 +869,18 @@ export async function addControlsToItem(element: Element): Promise<void> {
         const animeData = extractAnimeData(element);
         if (!animeData) return;
 
+        // Tag the user-visible tile so drag/drop and hide operate on the
+        // correct element (the slot wrapper on Animetsu, the card itself on
+        // HiAnime).
+        const tile = resolveTile(element);
+
         // Get unified anime status
         const status = await animeService.getAnimeStatus(animeData.animeId);
 
-        // Handle hidden anime - no controls shown, item is hidden
+        // Handle hidden anime - no controls shown, the entire tile is hidden
         if (status.isHidden) {
-            element.classList.add("anime-hidden");
-            (element as HTMLElement).style.display = "none";
+            tile.classList.add("anime-hidden");
+            tile.style.display = "none";
             return;
         }
 
@@ -872,10 +926,10 @@ export async function addControlsToItem(element: Element): Promise<void> {
             controlsContainer.classList.add("clean-state");
         }
 
-        // Find the poster element and add controls
-        const poster = element.querySelector(SELECTORS.POSTER);
-        if (poster) {
-            poster.appendChild(controlsContainer);
+        // Find the injection target via the active adapter and add controls
+        const injectionTarget = activeAdapter?.getInjectionTarget(element) ?? null;
+        if (injectionTarget) {
+            injectionTarget.appendChild(controlsContainer);
         }
     } catch (error) {
         console.error("Error adding controls to item:", error);
@@ -886,6 +940,7 @@ export async function addControlsToItem(element: Element): Promise<void> {
  * Add Clear Hidden button to the list container
  */
 export function addClearHiddenButton(): void {
+    if (activeAdapter?.supportsClearHiddenButton === false) return;
     const container = document.querySelector(SELECTORS.CONTAINER);
     if (!container) return;
 
@@ -939,6 +994,8 @@ export async function initializeControls(): Promise<void> {
  */
 export function setupObserver(): void {
     const observer = new MutationObserver((mutations) => {
+        const itemSelector = SELECTORS.ITEM;
+        if (!itemSelector) return;
         for (const mutation of mutations) {
             if (mutation.type === "childList") {
                 // Handle added nodes
@@ -947,22 +1004,22 @@ export function setupObserver(): void {
                         const element = node as Element;
 
                         // Check if the added node is an anime item
-                        if (element.matches(SELECTORS.ITEM)) {
+                        if (element.matches(itemSelector)) {
                             addControlsToItem(element);
                             // Make draggable if drag mode is active
                             if (dragModeEnabled) {
-                                makeTileDraggable(element as HTMLElement);
+                                makeTileDraggable(resolveTile(element));
                             }
                         }
 
                         // Check if the added node contains anime items
-                        const items = element.querySelectorAll?.(SELECTORS.ITEM);
+                        const items = element.querySelectorAll?.(itemSelector);
                         if (items) {
                             items.forEach((item) => {
                                 addControlsToItem(item);
                                 // Make draggable if drag mode is active
                                 if (dragModeEnabled) {
-                                    makeTileDraggable(item as HTMLElement);
+                                    makeTileDraggable(resolveTile(item));
                                 }
                             });
                         }
@@ -976,15 +1033,15 @@ export function setupObserver(): void {
                         const element = node as Element;
 
                         // Clean up if the removed node is an anime item
-                        if (element.matches?.(SELECTORS.ITEM)) {
-                            removeTileDraggable(element as HTMLElement);
+                        if (element.matches?.(itemSelector)) {
+                            removeTileDraggable(resolveTile(element));
                         }
 
                         // Clean up any anime items within the removed node
-                        const items = element.querySelectorAll?.(SELECTORS.ITEM);
+                        const items = element.querySelectorAll?.(itemSelector);
                         if (items) {
                             items.forEach((item) => {
-                                removeTileDraggable(item as HTMLElement);
+                                removeTileDraggable(resolveTile(item));
                             });
                         }
                     }
@@ -1497,37 +1554,37 @@ function injectStyles(): void {
         }
 
         /* Draggable tile styles */
-        .flw-item[draggable="true"] {
+        .anime-list-tile[draggable="true"] {
             cursor: grab;
             outline: 2px dashed rgba(139, 92, 246, 0.5);
             outline-offset: -2px;
             transition: outline 0.2s ease, outline-offset 0.2s ease, transform 0.2s ease, background 0.2s ease;
         }
 
-        .flw-item[draggable="true"]:active {
+        .anime-list-tile[draggable="true"]:active {
             cursor: grabbing;
         }
 
-        .flw-item.drag-over {
+        .anime-list-tile.drag-over {
             outline: 2px solid rgba(139, 92, 246, 0.8);
             outline-offset: -2px;
             transform: scale(1.02);
             background: rgba(139, 92, 246, 0.1);
         }
 
-        .flw-item.dragging {
+        .anime-list-tile.dragging {
             opacity: 0.5;
             transform: scale(0.98);
         }
 
         /* Keyboard selection state */
-        .flw-item.keyboard-selected {
+        .anime-list-tile.keyboard-selected {
             outline: 3px solid rgba(59, 130, 246, 0.8) !important;
             outline-offset: 2px !important;
             box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
         }
 
-        .flw-item[draggable="true"]:focus {
+        .anime-list-tile[draggable="true"]:focus {
             outline: 2px solid rgba(59, 130, 246, 0.6);
             outline-offset: 2px;
         }
@@ -1668,7 +1725,7 @@ function injectStyles(): void {
         }
 
         /* Ensure tiles inside folders display correctly */
-        .anime-folder-content .flw-item {
+        .anime-folder-content .anime-list-tile {
             width: 100% !important;
             display: block !important;
             min-width: 0;
@@ -1768,6 +1825,11 @@ function injectStyles(): void {
  */
 export async function init(): Promise<void> {
     try {
+        // No adapter matched the current host — content script self-disables.
+        if (!activeAdapter) {
+            return;
+        }
+
         // Wait for DOM to be ready
         if (document.readyState === "loading") {
             document.addEventListener("DOMContentLoaded", init);
@@ -1822,71 +1884,27 @@ function getSinglePageAnimeService(): AnimeService {
 }
 
 /**
- * Check if current page is a watch page
+ * Check if current page is a watch / single-anime page (delegated to adapter).
  */
 export function isWatchPage(): boolean {
-    return window.location.href.includes("/watch/");
+    if (!activeAdapter?.watchPage) return false;
+    try {
+        return activeAdapter.watchPage.matches(new URL(window.location.href));
+    } catch {
+        return false;
+    }
 }
 
 /**
- * Extract anime data from watch page
+ * Extract anime data from a watch / single-anime page (delegated to adapter).
  */
 export function extractSinglePageAnimeData(): AnimeData | null {
     try {
-        const url = window.location.href;
-        const urlMatch = url.match(/\/watch\/([^/?]+)/);
-        if (!urlMatch) return null;
-
-        const originalSlug = urlMatch[1];
-
-        // Try multiple ID extraction strategies
-        let animeId = originalSlug;
-
-        // Strategy 1: Extract numeric ID from end (e.g., "anime-name-12345" -> "12345")
-        const numericIdMatch = originalSlug.match(/-(\d+)$/);
-        if (numericIdMatch) {
-            animeId = numericIdMatch[1];
+        if (!activeAdapter?.watchPage) return null;
+        const animeData = activeAdapter.watchPage.extractAnime();
+        if (animeData) {
+            console.log("Extracted anime data from watch page:", animeData);
         }
-
-        // Strategy 2: If no numeric suffix, use the full slug
-        // This handles cases where the anime ID is the full slug
-
-        // Try different selectors to get anime title
-        const titleSelectors = [
-            ".ani_detail-info h2",
-            ".watch-detail .title",
-            "h1.anime-title",
-            "h1",
-            "h2",
-            "[class*='title']",
-            ".film-name",
-            ".anime-title",
-        ];
-
-        let animeTitle = originalSlug; // Fallback to original slug
-        for (const selector of titleSelectors) {
-            const element = document.querySelector(selector);
-            if (element?.textContent?.trim()) {
-                animeTitle = element.textContent.trim();
-                break;
-            }
-        }
-
-        const animeData = {
-            animeId,
-            animeTitle,
-            animeSlug: originalSlug.toLowerCase(),
-        };
-
-        // Store debug info for modal display
-        (animeData as any).debugInfo = {
-            url,
-            originalSlug,
-            extractionStrategy: numericIdMatch ? "numeric-suffix" : "full-slug",
-            titleSelectorUsed: titleSelectors.find((sel) => document.querySelector(sel)?.textContent?.trim()) || "none",
-        };
-
-        console.log("Extracted anime data from watch page:", animeData);
         return animeData;
     } catch (error) {
         console.error("Error extracting anime data:", error);
@@ -2555,7 +2573,7 @@ function setupFolderDropZone(content: HTMLElement, folderId: string): void {
     content.addEventListener("dragover", (e) => {
         e.preventDefault();
         e.stopPropagation();
-        if (draggedElement?.classList.contains("flw-item")) {
+        if (draggedElement?.classList.contains("anime-list-tile")) {
             if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
             content.closest(".anime-folder")?.classList.add("drag-over");
         }
@@ -2575,7 +2593,7 @@ function setupFolderDropZone(content: HTMLElement, folderId: string): void {
         e.stopPropagation();
         content.closest(".anime-folder")?.classList.remove("drag-over");
 
-        if (draggedElement?.classList.contains("flw-item")) {
+        if (draggedElement?.classList.contains("anime-list-tile")) {
             await handleDropIntoFolder(draggedElement, folderId);
         }
     });
@@ -2900,13 +2918,13 @@ export function removeFolderDraggable(folderEl: HTMLElement): void {
  */
 function handleContainerDragOver(e: DragEvent): void {
     // Only handle if dragging a tile from a folder
-    if (!draggedElement?.classList.contains("flw-item")) return;
+    if (!draggedElement?.classList.contains("anime-list-tile")) return;
     const fromFolder = draggedElement.closest(".anime-folder-content");
     if (!fromFolder) return;
 
     // Check if dropping directly on container (not on a tile or folder)
     const target = e.target as HTMLElement;
-    if (target.closest(".flw-item") || target.closest(".anime-folder")) return;
+    if (target.closest(".anime-list-tile") || target.closest(".anime-folder")) return;
 
     e.preventDefault();
     if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
@@ -2917,14 +2935,14 @@ function handleContainerDragOver(e: DragEvent): void {
  */
 async function handleContainerDrop(e: DragEvent): Promise<void> {
     // Only handle if dragging a tile from a folder
-    if (!draggedElement?.classList.contains("flw-item")) return;
+    if (!draggedElement?.classList.contains("anime-list-tile")) return;
     const fromFolder = draggedElement.closest(".anime-folder-content");
     const sourceFolderId = fromFolder?.closest(".anime-folder")?.getAttribute("data-folder-id");
     if (!fromFolder || !sourceFolderId) return;
 
     // Check if dropping directly on container (not on a tile or folder)
     const target = e.target as HTMLElement;
-    if (target.closest(".flw-item") || target.closest(".anime-folder")) return;
+    if (target.closest(".anime-list-tile") || target.closest(".anime-folder")) return;
 
     e.preventDefault();
     e.stopPropagation();
@@ -3195,6 +3213,7 @@ export function createDragToolbar(): HTMLDivElement {
  * Insert drag toolbar into the page
  */
 export function insertDragToolbar(): void {
+    if (activeAdapter?.supportsDragAndDrop === false) return;
     // Only insert if container exists and toolbar doesn't exist
     const container = document.querySelector(SELECTORS.CONTAINER);
     if (!container) return;
@@ -3355,10 +3374,12 @@ export function enableDragMode(): void {
     const container = document.querySelector(SELECTORS.CONTAINER) as HTMLElement;
     if (!container) return;
 
-    // Make tiles draggable
-    const items = container.querySelectorAll(SELECTORS.ITEM);
-    items.forEach((item) => {
-        makeTileDraggable(item as HTMLElement);
+    // Make tiles draggable. Resolve each card to its tile element so that on
+    // adapters with a slot wrapper (Animetsu), the wrapper — not the inner
+    // card — receives the draggable attribute and event listeners.
+    const cards = container.querySelectorAll(SELECTORS.ITEM);
+    cards.forEach((card) => {
+        makeTileDraggable(resolveTile(card));
     });
 
     // Make folders draggable
@@ -3402,9 +3423,9 @@ export function disableDragMode(): void {
     if (!container) return;
 
     // Remove draggable from tiles
-    const items = container.querySelectorAll(SELECTORS.ITEM);
-    items.forEach((item) => {
-        removeTileDraggable(item as HTMLElement);
+    const cards = container.querySelectorAll(SELECTORS.ITEM);
+    cards.forEach((card) => {
+        removeTileDraggable(resolveTile(card));
     });
 
     // Remove draggable from folders
@@ -3502,9 +3523,9 @@ async function handleDrop(e: DragEvent): Promise<void> {
 
     if (!draggedElement || draggedElement === target) return;
 
-    const isDraggedTile = draggedElement.classList.contains("flw-item");
+    const isDraggedTile = draggedElement.classList.contains("anime-list-tile");
     const isDraggedFolder = draggedElement.classList.contains("anime-folder");
-    const isTargetTile = target.classList.contains("flw-item");
+    const isTargetTile = target.classList.contains("anime-list-tile");
     const isTargetFolder = target.classList.contains("anime-folder");
 
     // Check if dragged element is coming from inside a folder
@@ -3615,7 +3636,7 @@ function debouncedSaveRootOrder(): void {
                 if (child.classList.contains("anime-folder")) {
                     const folderId = child.getAttribute("data-folder-id");
                     if (folderId) rootItems.push(`folder:${folderId}`);
-                } else if (child.classList.contains("flw-item")) {
+                } else if (child.classList.contains("anime-list-tile")) {
                     const animeData = extractAnimeData(child);
                     if (animeData) rootItems.push(animeData.animeId);
                 }
@@ -3716,6 +3737,7 @@ export async function resetTileOrder(): Promise<void> {
  * Initialize drag-and-drop functionality
  */
 export async function initializeDragAndDrop(): Promise<void> {
+    if (activeAdapter?.supportsDragAndDrop === false) return;
     // Only initialize if container exists
     const container = document.querySelector(SELECTORS.CONTAINER);
     if (!container) return;
@@ -3727,8 +3749,13 @@ export async function initializeDragAndDrop(): Promise<void> {
     await restoreFolderOrder();
 }
 
-// Only auto-initialize if not in test environment
-if (typeof window !== "undefined" && typeof document !== "undefined" && (globalThis as any).window?.location) {
+// Only auto-initialize if not in test environment AND a site adapter matched.
+if (
+    typeof window !== "undefined" &&
+    typeof document !== "undefined" &&
+    (globalThis as any).window?.location &&
+    activeAdapter
+) {
     init();
 
     // Initialize single page functionality
