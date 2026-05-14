@@ -22,17 +22,20 @@ describe("Combined Watching Controls", () => {
             <html>
             <head><title>Test</title></head>
             <body>
-                <div class="flw-item">
-                    <div class="film-detail">
-                        <h3 class="film-name">
-                            <a href="/watch/test-anime-123" class="dynamic-name" title="Test Anime">Test Anime</a>
-                        </h3>
+                <div class="item">
+                    <div class="inner">
+                        <div class="ani poster"><a href="/watch/test-anime-snxwm/ep-1"><img alt="Test Anime"></a></div>
+                        <div class="info">
+                            <div class="b1">
+                                <a class="name d-title" href="/watch/test-anime-snxwm/ep-1">Test Anime</a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </body>
             </html>
         `,
-            { url: "https://aniwave.to" },
+            { url: "https://anikototv.to" },
         );
 
         // Setup globals

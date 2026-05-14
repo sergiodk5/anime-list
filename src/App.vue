@@ -16,7 +16,7 @@
             >
                 <div class="flex items-center justify-between gap-1">
                     <a
-                        :href="`https://hianime.to/${anime.animeSlug}`"
+                        :href="`https://anikototv.to/watch/${anime.animeSlug}`"
                         target="_blank"
                         class="block w-full grow-0 rounded-xs bg-gray-100 px-2 py-1 text-gray-800 hover:bg-blue-500 hover:text-white"
                     >

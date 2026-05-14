@@ -31,42 +31,39 @@ vi.mock("@/commons/adapters/StorageAdapter", () => ({
     },
 }));
 
+const ITEM_ONE_HTML = `
+    <div class="item" data-testid="anime-item-1">
+        <div class="inner">
+            <div class="ani poster"><a href="/watch/test-anime-aaaaa/ep-1"><img alt="Test Anime"></a></div>
+            <div class="info">
+                <div class="b1">
+                    <a class="name d-title" href="/watch/test-anime-aaaaa/ep-1">Test Anime</a>
+                </div>
+            </div>
+        </div>
+    </div>
+`;
+
+const ITEM_TWO_HTML = `
+    <div class="item" data-testid="anime-item-2">
+        <div class="inner">
+            <div class="ani poster"><a href="/watch/another-anime-bbbbb/ep-1"><img alt="Another Anime"></a></div>
+            <div class="info">
+                <div class="b1">
+                    <a class="name d-title" href="/watch/another-anime-bbbbb/ep-1">Another Anime</a>
+                </div>
+            </div>
+        </div>
+    </div>
+`;
+
 describe("Content Script", () => {
     beforeEach(() => {
         // Clear document body and setup DOM structure
         document.body.innerHTML = `
-            <div class="film_list-wrap">
-                <div class="flw-item" data-testid="anime-item-1">
-                    <div class="film-poster">
-                        <img src="poster1.jpg" alt="Anime 1">
-                        <a href="/watch/test-anime-123" class="film-poster-ahref">
-                            <i class="fas fa-play"></i>
-                        </a>
-                    </div>
-                    <div class="film-detail">
-                        <h3 class="film-name">
-                            <a href="/test-anime-123" title="Test Anime" class="dynamic-name">
-                                Test Anime
-                            </a>
-                        </h3>
-                    </div>
-                </div>
-                
-                <div class="flw-item" data-testid="anime-item-2">
-                    <div class="film-poster">
-                        <img src="poster2.jpg" alt="Anime 2">
-                        <a href="/watch/another-anime-456" class="film-poster-ahref">
-                            <i class="fas fa-play"></i>
-                        </a>
-                    </div>
-                    <div class="film-detail">
-                        <h3 class="film-name">
-                            <a href="/another-anime-456" title="Another Anime" class="dynamic-name">
-                                Another Anime
-                            </a>
-                        </h3>
-                    </div>
-                </div>
+            <div id="list-items">
+                ${ITEM_ONE_HTML}
+                ${ITEM_TWO_HTML}
             </div>
         `;
 
@@ -113,38 +110,32 @@ describe("Content Script", () => {
         });
 
         it("should find anime list container", () => {
-            const container = document.querySelector(".film_list-wrap");
+            const container = document.querySelector("#list-items");
             expect(container).toBeTruthy();
         });
 
         it("should find anime items", () => {
-            const items = document.querySelectorAll(".flw-item");
+            const items = document.querySelectorAll(".item");
             expect(items.length).toBe(2);
         });
     });
 
     describe("Controls Creation", () => {
         it("should create and add controls to anime items", async () => {
-            // Setup mocks
             mockAnimeService.getAnimeStatus.mockResolvedValue({
                 isTracked: false,
                 isPlanned: false,
                 isHidden: false,
             });
 
-            // Import the content script functions
             const { initializeControls } = await import("@/content/index");
-
-            // Run initialization
             await initializeControls();
 
-            // Check that controls were added
             const controls = document.querySelectorAll(".anime-list-controls");
             expect(controls.length).toBeGreaterThan(0);
         });
 
         it("should create plan buttons", async () => {
-            // Setup mocks
             mockAnimeService.getAnimeStatus.mockResolvedValue({
                 isTracked: false,
                 isPlanned: false,
@@ -163,7 +154,6 @@ describe("Content Script", () => {
         });
 
         it("should create hide buttons", async () => {
-            // Setup mocks
             mockAnimeService.getAnimeStatus.mockResolvedValue({
                 isTracked: false,
                 isPlanned: false,
@@ -182,7 +172,6 @@ describe("Content Script", () => {
         });
 
         it("should create clear hidden button", async () => {
-            // Setup mocks
             mockAnimeService.getAnimeStatus.mockResolvedValue({
                 isTracked: false,
                 isPlanned: false,
@@ -200,7 +189,6 @@ describe("Content Script", () => {
 
     describe("Button Functionality", () => {
         it("should handle plan button click", async () => {
-            // Setup mocks
             mockAnimeService.getAnimeStatus.mockResolvedValue({
                 isTracked: false,
                 isPlanned: false,
@@ -214,10 +202,7 @@ describe("Content Script", () => {
             const planButton = document.querySelector('[data-testid="anime-plan-button"]') as HTMLButtonElement;
             expect(planButton).toBeTruthy();
 
-            // Simulate click
             planButton.click();
-
-            // Wait for async operation
             await new Promise((resolve) => setTimeout(resolve, 0));
 
             expect(mockAnimeService.addToPlanToWatch).toHaveBeenCalledWith(
@@ -230,7 +215,6 @@ describe("Content Script", () => {
         });
 
         it("should handle hide button click", async () => {
-            // Setup mocks
             mockAnimeService.getAnimeStatus.mockResolvedValue({
                 isTracked: false,
                 isPlanned: false,
@@ -244,17 +228,13 @@ describe("Content Script", () => {
             const hideButton = document.querySelector('[data-testid="anime-hide-button"]') as HTMLButtonElement;
             expect(hideButton).toBeTruthy();
 
-            // Simulate click
             hideButton.click();
-
-            // Wait for async operation
             await new Promise((resolve) => setTimeout(resolve, 0));
 
             expect(mockAnimeService.hideAnime).toHaveBeenCalledWith(expect.any(String));
         });
 
         it("should handle clear hidden button click", async () => {
-            // Setup mocks
             mockAnimeService.getAnimeStatus.mockResolvedValue({
                 isTracked: false,
                 isPlanned: false,
@@ -270,10 +250,7 @@ describe("Content Script", () => {
             ) as HTMLButtonElement;
             expect(clearButton).toBeTruthy();
 
-            // Simulate click
             clearButton.click();
-
-            // Wait for async operation
             await new Promise((resolve) => setTimeout(resolve, 0));
 
             expect(mockAnimeService.clearAllHidden).toHaveBeenCalled();
@@ -282,13 +259,11 @@ describe("Content Script", () => {
 
     describe("CSS Injection", () => {
         it("should inject CSS styles", async () => {
-            // Mock just the readyState property
             Object.defineProperty(document, "readyState", {
                 value: "complete",
                 configurable: true,
             });
 
-            // Mock head appendChild to track style injection
             const originalAppendChild = document.head.appendChild;
             const mockAppendChild = vi.fn();
             document.head.appendChild = mockAppendChild;
@@ -296,10 +271,8 @@ describe("Content Script", () => {
             const { init } = await import("@/content/index");
             await init();
 
-            // Restore original appendChild
             document.head.appendChild = originalAppendChild;
 
-            // Check that a style element was appended
             expect(mockAppendChild).toHaveBeenCalled();
             const styleCall = mockAppendChild.mock.calls.find(
                 (call) => call[0].tagName === "STYLE" && call[0].getAttribute?.("data-testid") === "anime-list-styles",
@@ -310,32 +283,29 @@ describe("Content Script", () => {
 
     describe("Hidden Anime Handling", () => {
         it("should hide anime items that are marked as hidden", async () => {
-            // Mock first anime as hidden, second as not hidden
             mockAnimeService.getAnimeStatus
                 .mockResolvedValueOnce({
                     isTracked: false,
                     isPlanned: false,
                     isHidden: true,
-                }) // First item is hidden
+                })
                 .mockResolvedValueOnce({
                     isTracked: false,
                     isPlanned: false,
                     isHidden: false,
-                }); // Second item is not hidden
+                });
 
             const { initializeControls } = await import("@/content/index");
             await initializeControls();
 
-            const animeItems = document.querySelectorAll(".flw-item");
+            const animeItems = document.querySelectorAll(".item");
             const firstItem = animeItems[0];
             const secondItem = animeItems[1];
 
-            // First item should be hidden
             expect(firstItem.classList.contains("anime-hidden")).toBe(true);
             expect((firstItem as HTMLElement).style.display).toBe("none");
             expect(firstItem.querySelector(".anime-list-controls")).toBeFalsy();
 
-            // Second item should have controls
             expect(secondItem.classList.contains("anime-hidden")).toBe(false);
             expect(secondItem.querySelector(".anime-list-controls")).toBeTruthy();
         });
@@ -347,14 +317,12 @@ describe("Content Script", () => {
 
             const { initializeControls } = await import("@/content/index");
 
-            // Should not throw
             await expect(initializeControls()).resolves.not.toThrow();
         });
     });
 
     describe("DOM Ready State Handling", () => {
         it("should wait for DOM to be ready when document is loading", async () => {
-            // Mock document properties without stubbing the entire object
             Object.defineProperty(document, "readyState", {
                 value: "loading",
                 configurable: true,
@@ -369,18 +337,15 @@ describe("Content Script", () => {
             const originalAddEventListener = document.addEventListener;
             document.addEventListener = mockAddEventListener;
 
-            // Import and call init
             const { init } = await import("@/content/index");
             await init();
 
             expect(mockAddEventListener).toHaveBeenCalledWith("DOMContentLoaded", expect.any(Function));
 
-            // Restore
             document.addEventListener = originalAddEventListener;
         });
 
         it("should initialize immediately when DOM is ready", async () => {
-            // Mock document properties without stubbing the entire object
             Object.defineProperty(document, "readyState", {
                 value: "complete",
                 configurable: true,
@@ -390,35 +355,25 @@ describe("Content Script", () => {
             const originalAddEventListener = document.addEventListener;
             document.addEventListener = mockAddEventListener;
 
-            // Import and call init
             const { init } = await import("@/content/index");
             await init();
 
-            // Should not set up DOMContentLoaded listener when DOM is ready
             expect(mockAddEventListener).not.toHaveBeenCalledWith("DOMContentLoaded", expect.any(Function));
 
-            // Restore
             document.addEventListener = originalAddEventListener;
         });
     });
 
     describe("Additional Coverage", () => {
-        it("should cover remaining lines for 100% coverage", async () => {
-            // This test is designed to cover the remaining uncovered lines
-            // Lines 6, 330-331, 342-355 based on coverage report
-
-            // Line 6 should be covered by module loading - force console.log call
+        it("should cover mutation observer card handling", async () => {
             console.log("AnimeList content script loaded");
 
-            // Set up proper DOM state using vi.stubGlobal
             const mockElement = {
                 querySelectorAll: vi.fn().mockReturnValue([]),
                 appendChild: vi.fn(),
                 classList: { add: vi.fn() },
             };
 
-            // Instead of replacing the entire document (which strips prototype methods),
-            // patch only what we need on the existing jsdom document.
             Object.defineProperty(document, "readyState", { value: "complete", configurable: true });
             vi.spyOn(document, "querySelector").mockReturnValue(mockElement as any);
             vi.spyOn(document, "querySelectorAll").mockReturnValue([] as any);
@@ -430,14 +385,12 @@ describe("Content Script", () => {
                 return element;
             });
 
-            // Mock all storage operations to avoid localStorage issues
             mockAnimeService.getAnimeStatus.mockResolvedValue({
                 isTracked: false,
                 isPlanned: false,
                 isHidden: false,
             });
 
-            // Capture MutationObserver callback for direct testing
             let capturedCallback: MutationCallback | null = null;
             const originalMutationObserver = global.MutationObserver;
 
@@ -453,75 +406,51 @@ describe("Content Script", () => {
                 const { init } = await import("@/content/index");
                 await init();
 
-                // This should cover the initial load console.log message
                 expect(console.log).toHaveBeenCalledWith("AnimeList content script loaded");
 
-                // Now test the mutation observer callback directly to cover lines 342-355
                 if (capturedCallback) {
-                    // Create an anime item element that matches SELECTORS.ITEM
                     const animeElement = document.createElement("div");
-                    animeElement.className = "flw-item";
+                    animeElement.className = "item";
                     animeElement.innerHTML = `
-                        <div class="film-poster">
-                            <img src="poster.jpg" alt="Test Anime">
-                        </div>
-                        <div class="film-detail">
-                            <h3 class="film-name">
-                                <a href="/test-anime-123" title="Test Anime" class="dynamic-name">
-                                    Test Anime
-                                </a>
-                            </h3>
+                        <div class="ani poster"></div>
+                        <div class="b1">
+                            <a class="name d-title" href="/watch/test-anime-aaaaa/ep-1">Test Anime</a>
                         </div>
                     `;
 
-                    // Create a container element that contains anime items
                     const containerElement = document.createElement("div");
                     const innerAnimeElement = document.createElement("div");
-                    innerAnimeElement.className = "flw-item";
+                    innerAnimeElement.className = "item";
                     innerAnimeElement.innerHTML = `
-                        <div class="film-poster">
-                            <img src="poster2.jpg" alt="Container Anime">
-                        </div>
-                        <div class="film-detail">
-                            <h3 class="film-name">
-                                <a href="/container-anime-456" title="Container Anime" class="dynamic-name">
-                                    Container Anime
-                                </a>
-                            </h3>
+                        <div class="ani poster"></div>
+                        <div class="b1">
+                            <a class="name d-title" href="/watch/container-anime-bbbbb/ep-1">Container Anime</a>
                         </div>
                     `;
                     containerElement.appendChild(innerAnimeElement);
 
-                    // Mock matches method for the anime element
                     animeElement.matches = vi.fn().mockReturnValue(true);
 
-                    // Create NodeList-like structure
                     const addedNodes = [animeElement, containerElement] as any;
                     addedNodes.forEach = Array.prototype.forEach;
 
-                    // Mock querySelectorAll for the container
                     containerElement.querySelectorAll = vi.fn().mockReturnValue([innerAnimeElement]);
 
-                    // Create mutations that will exercise the callback logic
                     const mutations = [
                         {
                             type: "childList",
                             addedNodes: addedNodes,
                         },
                         {
-                            type: "attributes", // This should be ignored
+                            type: "attributes",
                             addedNodes: [] as any,
                         },
                     ] as MutationRecord[];
 
-                    // Execute the callback - this should cover lines 342-355
                     expect(() => capturedCallback!(mutations, {} as MutationObserver)).not.toThrow();
 
-                    // Verify that matches was called (covering the element.matches line)
-                    expect(animeElement.matches).toHaveBeenCalledWith(".flw-item");
-
-                    // Verify that querySelectorAll was called (covering the querySelectorAll line)
-                    expect(containerElement.querySelectorAll).toHaveBeenCalledWith(".flw-item");
+                    expect(animeElement.matches).toHaveBeenCalledWith(".item");
+                    expect(containerElement.querySelectorAll).toHaveBeenCalledWith(".item");
                 }
             } finally {
                 global.MutationObserver = originalMutationObserver;
@@ -529,10 +458,9 @@ describe("Content Script", () => {
         });
 
         it("should cover isPlanned=true branch in addControlsToItem", async () => {
-            // Mock storage to return that anime is already planned
             mockAnimeService.getAnimeStatus.mockResolvedValue({
                 isTracked: false,
-                isPlanned: true, // This is the key change
+                isPlanned: true,
                 isHidden: false,
             });
 
@@ -541,71 +469,54 @@ describe("Content Script", () => {
             const { initializeControls } = await import("@/content/index");
             await initializeControls();
 
-            // Check that planned anime shows Start Watching + Remove Plan buttons (new business rules)
             const startWatchingButtons = document.querySelectorAll('[data-testid="anime-start-watching-button"]');
             const removePlanButtons = document.querySelectorAll('[data-testid="anime-remove-plan-button"]');
             const planButtons = document.querySelectorAll('[data-testid="anime-plan-button"]');
 
             expect(startWatchingButtons.length).toBeGreaterThan(0);
             expect(removePlanButtons.length).toBeGreaterThan(0);
-            expect(planButtons.length).toBe(0); // Planned anime should not have Plan buttons
+            expect(planButtons.length).toBe(0);
         });
     });
 
     describe("Edge Cases", () => {
         it("should handle anime items without valid data", async () => {
-            // Create anime item without proper links
             const invalidItem = document.createElement("div");
-            invalidItem.className = "flw-item";
+            invalidItem.className = "item";
             invalidItem.innerHTML = `
-                <div class="film-poster">
-                    <img src="poster.jpg" alt="Invalid Anime">
-                </div>
-                <div class="film-detail">
-                    <h3 class="film-name">
-                        <!-- No link element -->
-                    </h3>
+                <div class="ani poster"></div>
+                <div class="b1">
+                    <!-- No link element -->
                 </div>
             `;
 
-            const container = document.querySelector(".film_list-wrap");
+            const container = document.querySelector("#list-items");
             container?.appendChild(invalidItem);
 
             const { initializeControls } = await import("@/content/index");
 
-            // Should not throw error
             await expect(initializeControls()).resolves.not.toThrow();
 
-            // Should not have added controls
             const controls = invalidItem.querySelector(".anime-list-controls");
             expect(controls).toBeFalsy();
         });
 
         it("should handle missing container gracefully", async () => {
-            // Remove the container
-            const container = document.querySelector(".film_list-wrap");
+            const container = document.querySelector("#list-items");
             container?.remove();
 
             const { initializeControls } = await import("@/content/index");
 
-            // Should not throw error
             await expect(initializeControls()).resolves.not.toThrow();
         });
 
         it("should handle extractAnimeData with invalid href patterns", async () => {
-            // Create anime item with invalid href
             const invalidItem = document.createElement("div");
-            invalidItem.className = "flw-item";
+            invalidItem.className = "item";
             invalidItem.innerHTML = `
-                <div class="film-poster">
-                    <img src="poster.jpg" alt="Invalid Anime">
-                </div>
-                <div class="film-detail">
-                    <h3 class="film-name">
-                        <a href="invalid-url" title="Invalid Anime" class="dynamic-name">
-                            Invalid Anime
-                        </a>
-                    </h3>
+                <div class="ani poster"></div>
+                <div class="b1">
+                    <a class="name d-title" href="invalid-url">Invalid Anime</a>
                 </div>
             `;
 
@@ -616,20 +527,15 @@ describe("Content Script", () => {
         });
 
         it("should handle items without poster element", async () => {
-            // Create anime item without poster
             const itemWithoutPoster = document.createElement("div");
-            itemWithoutPoster.className = "flw-item";
+            itemWithoutPoster.className = "item";
             itemWithoutPoster.innerHTML = `
-                <div class="film-detail">
-                    <h3 class="film-name">
-                        <a href="/test-anime-999" title="Test Anime" class="dynamic-name">
-                            Test Anime
-                        </a>
-                    </h3>
+                <div class="b1">
+                    <a class="name d-title" href="/watch/test-anime-zzzzz/ep-1">Test Anime</a>
                 </div>
             `;
 
-            const container = document.querySelector(".film_list-wrap");
+            const container = document.querySelector("#list-items");
             container?.appendChild(itemWithoutPoster);
 
             mockAnimeService.getAnimeStatus.mockResolvedValue({
@@ -640,26 +546,19 @@ describe("Content Script", () => {
 
             const { initializeControls } = await import("@/content/index");
 
-            // Should not throw error
             await expect(initializeControls()).resolves.not.toThrow();
 
-            // Should not have added controls (no poster to attach to)
             const controls = itemWithoutPoster.querySelector(".anime-list-controls");
             expect(controls).toBeFalsy();
         });
 
         it("should handle extractAnimeData with missing title link", async () => {
-            // Create anime item without title link
             const itemWithoutLink = document.createElement("div");
-            itemWithoutLink.className = "flw-item";
+            itemWithoutLink.className = "item";
             itemWithoutLink.innerHTML = `
-                <div class="film-poster">
-                    <img src="poster.jpg" alt="Test Anime">
-                </div>
-                <div class="film-detail">
-                    <h3 class="film-name">
-                        <!-- No anchor tag -->
-                    </h3>
+                <div class="ani poster"></div>
+                <div class="b1">
+                    <!-- No anchor tag -->
                 </div>
             `;
 
@@ -670,19 +569,12 @@ describe("Content Script", () => {
         });
 
         it("should handle extractAnimeData with empty href", async () => {
-            // Create anime item with empty href
             const itemWithEmptyHref = document.createElement("div");
-            itemWithEmptyHref.className = "flw-item";
+            itemWithEmptyHref.className = "item";
             itemWithEmptyHref.innerHTML = `
-                <div class="film-poster">
-                    <img src="poster.jpg" alt="Test Anime">
-                </div>
-                <div class="film-detail">
-                    <h3 class="film-name">
-                        <a href="" title="Test Anime" class="dynamic-name">
-                            Test Anime
-                        </a>
-                    </h3>
+                <div class="ani poster"></div>
+                <div class="b1">
+                    <a class="name d-title" href="">Test Anime</a>
                 </div>
             `;
 
@@ -693,7 +585,6 @@ describe("Content Script", () => {
         });
 
         it("should handle extractAnimeData errors gracefully", async () => {
-            // Create a mock element that will throw an error
             const errorElement = {
                 querySelector: vi.fn().mockImplementation(() => {
                     throw new Error("DOM error");
@@ -707,16 +598,13 @@ describe("Content Script", () => {
         });
 
         it("should handle clear hidden button without existing button", async () => {
-            // Remove any existing clear hidden button
             const existingButton = document.querySelector(".anime-list-clear-hidden-btn");
             existingButton?.remove();
 
             const { addClearHiddenButton } = await import("@/content/index");
 
-            // Should not throw error
             expect(() => addClearHiddenButton()).not.toThrow();
 
-            // Should add the button
             const newButton = document.querySelector(".anime-list-clear-hidden-btn");
             expect(newButton).toBeTruthy();
         });
@@ -724,44 +612,35 @@ describe("Content Script", () => {
         it("should not add duplicate clear hidden button", async () => {
             const { addClearHiddenButton } = await import("@/content/index");
 
-            // Add button first time
             addClearHiddenButton();
             const firstButton = document.querySelector(".anime-list-clear-hidden-btn");
             expect(firstButton).toBeTruthy();
 
-            // Try to add again
             addClearHiddenButton();
             const allButtons = document.querySelectorAll(".anime-list-clear-hidden-btn");
             expect(allButtons.length).toBe(1);
         });
 
         it("should handle init function errors gracefully", async () => {
-            // Mock document.readyState as "complete" without replacing prototype
             Object.defineProperty(document, "readyState", { value: "complete", configurable: true });
 
-            // Mock initializeControls to throw an error by removing the container
-            const container = document.querySelector(".film_list-wrap");
+            const container = document.querySelector("#list-items");
             container?.remove();
 
-            // Force an error by making initializeControls throw
             const originalError = console.error;
             const consoleErrorSpy = vi.fn();
             console.error = consoleErrorSpy;
 
             const { init } = await import("@/content/index");
 
-            // Should not throw error, but should log it
             await expect(init()).resolves.not.toThrow();
 
-            // Restore console.error
             console.error = originalError;
         });
 
         it("should handle init function with actual error", async () => {
-            // Mock document.readyState as "complete" safely
             Object.defineProperty(document, "readyState", { value: "complete", configurable: true });
 
-            // Mock document.head.appendChild to throw an error (for injectStyles)
             const originalAppendChild = document.head.appendChild;
             document.head.appendChild = vi.fn().mockImplementation(() => {
                 throw new Error("DOM manipulation error");
@@ -772,16 +651,13 @@ describe("Content Script", () => {
             try {
                 const { init } = await import("@/content/index");
 
-                // Should not throw error but should catch and log it
                 await expect(init()).resolves.not.toThrow();
 
-                // Should have logged the error
                 expect(consoleErrorSpy).toHaveBeenCalledWith(
                     "Error initializing AnimeList content script:",
                     expect.any(Error),
                 );
             } finally {
-                // Restore original functions
                 document.head.appendChild = originalAppendChild;
                 consoleErrorSpy.mockRestore();
             }
@@ -793,8 +669,6 @@ describe("Content Script", () => {
                 isPlanned: false,
                 isHidden: false,
             });
-
-            // Mock clearAllHidden to throw an error (lines 202-204)
             mockAnimeService.clearAllHidden.mockRejectedValue(new Error("Storage error"));
 
             const { initializeControls } = await import("@/content/index");
@@ -807,32 +681,20 @@ describe("Content Script", () => {
 
             const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-            // Simulate click - this should trigger the error handling
             clearButton.click();
-
-            // Wait for async operation
             await new Promise((resolve) => setTimeout(resolve, 0));
 
-            // Should have logged the error (covering lines 202-204)
             expect(consoleErrorSpy).toHaveBeenCalledWith("Error handling clear hidden click:", expect.any(Error));
 
             consoleErrorSpy.mockRestore();
         });
 
         it("should handle error in initializeControls function", async () => {
-            // Mock document.querySelector to throw an error to force the initializeControls catch block
             const originalQuerySelector = document.querySelector;
-            document.querySelector = vi.fn().mockImplementation((selector) => {
-                if (selector === ".film_list-wrap") {
-                    throw new Error("DOM access error");
-                }
-                return originalQuerySelector.call(document, selector);
-            });
-
             Object.defineProperty(document, "readyState", { value: "complete", configurable: true });
             const originalQuery = document.querySelector.bind(document);
             vi.spyOn(document, "querySelector").mockImplementation((selector: string) => {
-                if (selector === ".film_list-wrap") {
+                if (selector === "#list-items") {
                     throw new Error("DOM access error");
                 }
                 return originalQuery(selector);
@@ -843,10 +705,8 @@ describe("Content Script", () => {
             try {
                 const { initializeControls } = await import("@/content/index");
 
-                // Should not throw error but should catch and log it
                 await expect(initializeControls()).resolves.not.toThrow();
 
-                // Should have logged the error (covering lines 330-331)
                 expect(consoleErrorSpy).toHaveBeenCalledWith("Error initializing controls:", expect.any(Error));
             } finally {
                 document.querySelector = originalQuerySelector;
@@ -860,8 +720,6 @@ describe("Content Script", () => {
                 isPlanned: false,
                 isHidden: false,
             });
-
-            // Mock addToPlanToWatch to throw an error (lines 155-157)
             mockAnimeService.addToPlanToWatch.mockRejectedValue(new Error("Storage error"));
 
             const { initializeControls } = await import("@/content/index");
@@ -872,13 +730,9 @@ describe("Content Script", () => {
 
             const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-            // Simulate click - this should trigger the error handling
             planButton.click();
-
-            // Wait for async operation
             await new Promise((resolve) => setTimeout(resolve, 0));
 
-            // Should have logged the error (covering lines 155-157)
             expect(consoleErrorSpy).toHaveBeenCalledWith("Error handling plan click:", expect.any(Error));
 
             consoleErrorSpy.mockRestore();
@@ -890,8 +744,6 @@ describe("Content Script", () => {
                 isPlanned: false,
                 isHidden: false,
             });
-
-            // Mock hideAnime to throw an error (lines 180-182)
             mockAnimeService.hideAnime.mockRejectedValue(new Error("Storage error"));
 
             const { initializeControls } = await import("@/content/index");
@@ -902,13 +754,9 @@ describe("Content Script", () => {
 
             const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-            // Simulate click - this should trigger the error handling
             hideButton.click();
-
-            // Wait for async operation
             await new Promise((resolve) => setTimeout(resolve, 0));
 
-            // Should have logged the error (covering lines 180-182)
             expect(consoleErrorSpy).toHaveBeenCalledWith("Error handling hide click:", expect.any(Error));
 
             consoleErrorSpy.mockRestore();
@@ -917,7 +765,7 @@ describe("Content Script", () => {
         it("should handle removing anime from plan to watch list", async () => {
             mockAnimeService.getAnimeStatus.mockResolvedValue({
                 isTracked: false,
-                isPlanned: true, // Already planned
+                isPlanned: true,
                 isHidden: false,
             });
             mockAnimeService.removeFromPlanToWatch.mockResolvedValue(undefined);
@@ -925,21 +773,16 @@ describe("Content Script", () => {
             const { initializeControls } = await import("@/content/index");
             await initializeControls();
 
-            // Planned anime should have Remove Plan button, not Plan button
             const removePlanButton = document.querySelector(
                 '[data-testid="anime-remove-plan-button"]',
             ) as HTMLButtonElement;
             const planButton = document.querySelector('[data-testid="anime-plan-button"]');
             expect(removePlanButton).toBeTruthy();
-            expect(planButton).toBeNull(); // Should not have Plan button
+            expect(planButton).toBeNull();
 
-            // Simulate click to remove from plan to watch list
             removePlanButton.click();
-
-            // Wait for async operation
             await new Promise((resolve) => setTimeout(resolve, 0));
 
-            // Should have called removeFromPlanToWatch (covering line 142)
             expect(mockAnimeService.removeFromPlanToWatch).toHaveBeenCalled();
         });
 
@@ -962,14 +805,13 @@ describe("Content Script", () => {
             const { initializeControls } = await import("@/content/index");
             await initializeControls();
 
-            // Create some hidden items in the DOM
             const hiddenItem1 = document.createElement("div");
-            hiddenItem1.className = "flw-item anime-hidden";
+            hiddenItem1.className = "item anime-hidden";
             hiddenItem1.style.display = "none";
             document.body.appendChild(hiddenItem1);
 
             const hiddenItem2 = document.createElement("div");
-            hiddenItem2.className = "flw-item anime-hidden";
+            hiddenItem2.className = "item anime-hidden";
             hiddenItem2.style.display = "none";
             document.body.appendChild(hiddenItem2);
 
@@ -978,16 +820,11 @@ describe("Content Script", () => {
             ) as HTMLButtonElement;
             expect(clearButton).toBeTruthy();
 
-            // Simulate click
             clearButton.click();
-
-            // Wait for async operation
             await new Promise((resolve) => setTimeout(resolve, 0));
 
-            // Verify that AnimeService.clearAllHidden was called
             expect(mockAnimeService.clearAllHidden).toHaveBeenCalled();
 
-            // Verify that hidden items were shown (covering lines 192, 196-197)
             expect(hiddenItem1.classList.contains("anime-hidden")).toBe(false);
             expect(hiddenItem1.style.display).toBe("");
             expect(hiddenItem2.classList.contains("anime-hidden")).toBe(false);
@@ -1018,44 +855,29 @@ describe("Content Script", () => {
             ) as HTMLButtonElement;
             expect(clearButton).toBeTruthy();
 
-            // Simulate click to trigger operation
             clearButton.click();
-
-            // Wait for async operation
             await new Promise((resolve) => setTimeout(resolve, 10));
 
-            // Verify the service was called
             expect(mockAnimeService.clearAllHidden).toHaveBeenCalled();
 
-            // Note: Toast notifications are disabled in test environment
-            // The showToast function returns early when (globalThis as any).vitest is true
             const toastElement = document.querySelector('[data-testid="anime-toast"]');
-            expect(toastElement).toBeNull(); // Should be null in test environment
+            expect(toastElement).toBeNull();
         });
 
         it("should handle extractAnimeData with null href attribute", async () => {
-            // Create anime item with null href attribute (covering line 32 branch)
             const itemWithNullHref = document.createElement("div");
-            itemWithNullHref.className = "flw-item";
+            itemWithNullHref.className = "item";
             itemWithNullHref.innerHTML = `
-                <div class="film-poster">
-                    <img src="poster.jpg" alt="Test Anime">
-                </div>
-                <div class="film-detail">
-                    <h3 class="film-name">
-                        <a title="Test Anime" class="dynamic-name">
-                            Test Anime
-                        </a>
-                    </h3>
+                <div class="ani poster"></div>
+                <div class="b1">
+                    <a class="name d-title">Test Anime</a>
                 </div>
             `;
 
-            // Mock getAttribute to return null for href
-            const linkElement = itemWithNullHref.querySelector(".dynamic-name");
+            const linkElement = itemWithNullHref.querySelector(".name.d-title");
             if (linkElement) {
                 vi.spyOn(linkElement, "getAttribute").mockImplementation((attr) => {
-                    if (attr === "href") return null; // This triggers the || "" branch
-                    if (attr === "title") return "Test Anime";
+                    if (attr === "href") return null;
                     return null;
                 });
             }
@@ -1063,90 +885,37 @@ describe("Content Script", () => {
             const { extractAnimeData } = await import("@/content/index");
 
             const result = extractAnimeData(itemWithNullHref);
-            expect(result).toBeNull(); // Should return null because href is empty string
-        });
-
-        it("should handle extractAnimeData with slug without numeric ID", async () => {
-            // Create anime item with slug that doesn't have numeric ID (covering line 41 branch)
-            const itemWithSlugNoId = document.createElement("div");
-            itemWithSlugNoId.className = "flw-item";
-            itemWithSlugNoId.innerHTML = `
-                <div class="film-poster">
-                    <img src="poster.jpg" alt="Test Anime">
-                </div>
-                <div class="film-detail">
-                    <h3 class="film-name">
-                        <a href="/watch/anime-name-without-id" title="Test Anime" class="dynamic-name">
-                            Test Anime
-                        </a>
-                    </h3>
-                </div>
-            `;
-
-            const { extractAnimeData } = await import("@/content/index");
-
-            const result = extractAnimeData(itemWithSlugNoId);
-            expect(result).not.toBeNull();
-            expect(result?.animeId).toBe("anime-name-without-id"); // Should use full slug as ID
-            expect(result?.animeSlug).toBe("anime-name-without-id");
+            expect(result).toBeNull();
         });
 
         it("should handle addClearHiddenButton when container is null", async () => {
-            // Remove the container to make querySelector return null (covering line 287 branch)
-            const container = document.querySelector(".film_list-wrap");
+            const container = document.querySelector("#list-items");
             container?.remove();
 
             const { addClearHiddenButton } = await import("@/content/index");
 
-            // Should not throw error when container is null
             expect(() => addClearHiddenButton()).not.toThrow();
 
-            // Should not add any button since container is null
             const clearButton = document.querySelector(".anime-list-clear-hidden-btn");
             expect(clearButton).toBeFalsy();
         });
 
-        it("should handle extractAnimeData with null title and empty textContent", async () => {
-            // Create anime item where both title and textContent are null/empty (covering line 32 branch)
-            const itemWithoutTitle = document.createElement("div");
-            itemWithoutTitle.className = "flw-item";
-            itemWithoutTitle.innerHTML = `
-                <div class="film-poster">
-                    <img src="poster.jpg" alt="Test Anime">
-                </div>
-                <div class="film-detail">
-                    <h3 class="film-name">
-                        <a href="/test-anime-123" class="dynamic-name">
-                        </a>
-                    </h3>
+        it("should set animeId equal to the full slug from the watch URL", async () => {
+            const card = document.createElement("div");
+            card.className = "item";
+            card.innerHTML = `
+                <div class="ani poster"></div>
+                <div class="b1">
+                    <a class="name d-title" href="/watch/anime-name-zzzzz/ep-1">Test Anime</a>
                 </div>
             `;
 
-            const linkElement = itemWithoutTitle.querySelector(".dynamic-name");
-            if (linkElement) {
-                // Mock getAttribute to return null for title
-                vi.spyOn(linkElement, "getAttribute").mockImplementation((attr) => {
-                    if (attr === "href") return "/test-anime-123";
-                    if (attr === "title") return null; // No title attribute
-                    return null;
-                });
-
-                // Mock textContent to be empty
-                Object.defineProperty(linkElement, "textContent", {
-                    value: "",
-                    writable: true,
-                });
-
-                // Mock trim to return empty string
-                vi.spyOn(String.prototype, "trim").mockReturnValue("");
-            }
-
             const { extractAnimeData } = await import("@/content/index");
 
-            const result = extractAnimeData(itemWithoutTitle);
+            const result = extractAnimeData(card);
             expect(result).not.toBeNull();
-            expect(result?.animeTitle).toBe(""); // Should fallback to empty string
-            expect(result?.animeId).toBe("123");
+            expect(result?.animeId).toBe("anime-name-zzzzz");
+            expect(result?.animeSlug).toBe("anime-name-zzzzz");
         });
     });
 });

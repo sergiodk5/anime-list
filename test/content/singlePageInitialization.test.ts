@@ -47,8 +47,8 @@ describe("Single Page Initialization Functions", () => {
             // Setup watch page
             Object.defineProperty(window, "location", {
                 value: {
-                    pathname: "/watch/test-anime-episode-1",
-                    href: "https://example.com/watch/test-anime-episode-1",
+                    pathname: "/watch/test-anime-aaaaa/ep-1",
+                    href: "https://anikototv.to/watch/test-anime-aaaaa/ep-1",
                 },
                 writable: true,
             });
@@ -105,8 +105,8 @@ describe("Single Page Initialization Functions", () => {
             // Setup watch page
             Object.defineProperty(window, "location", {
                 value: {
-                    pathname: "/watch/positioned-anime-test",
-                    href: "https://example.com/watch/positioned-anime-test",
+                    pathname: "/watch/positioned-anime-aaaaa/ep-1",
+                    href: "https://anikototv.to/watch/positioned-anime-aaaaa/ep-1",
                 },
                 writable: true,
             });
@@ -125,8 +125,8 @@ describe("Single Page Initialization Functions", () => {
             // Setup watch page
             Object.defineProperty(window, "location", {
                 value: {
-                    pathname: "/watch/replace-test-anime",
-                    href: "https://example.com/watch/replace-test-anime",
+                    pathname: "/watch/replace-test-anime-aaaaa/ep-1",
+                    href: "https://anikototv.to/watch/replace-test-anime-aaaaa/ep-1",
                 },
                 writable: true,
             });
@@ -150,8 +150,8 @@ describe("Single Page Initialization Functions", () => {
             // Setup watch page
             Object.defineProperty(window, "location", {
                 value: {
-                    pathname: "/watch/title-source-test",
-                    href: "https://example.com/watch/title-source-test",
+                    pathname: "/watch/title-source-aaaaa/ep-1",
+                    href: "https://anikototv.to/watch/title-source-aaaaa/ep-1",
                 },
                 writable: true,
             });

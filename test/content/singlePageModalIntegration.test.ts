@@ -49,7 +49,8 @@ describe("Single Page Modal Integration", () => {
         originalLocation = window.location;
         delete (window as any).location;
         (window as any).location = {
-            href: "https://example.com/watch/test-anime-123",
+            href: "https://anikototv.to/watch/test-anime-aaaaa/ep-1",
+            pathname: "/watch/test-anime-aaaaa/ep-1",
         };
 
         // Reset the single page anime service to force mock usage
@@ -93,24 +94,25 @@ describe("Single Page Modal Integration", () => {
         it("should extract anime ID from URL patterns", () => {
             const testCases = [
                 {
-                    url: "https://example.com/watch/demon-slayer-123",
-                    expectedId: "123",
-                    description: "numeric suffix pattern",
+                    pathname: "/watch/demon-slayer-aaaaa/ep-1",
+                    expectedId: "demon-slayer-aaaaa",
+                    description: "standard slug + episode pattern",
                 },
                 {
-                    url: "https://example.com/watch/attack-on-titan",
-                    expectedId: "attack-on-titan",
-                    description: "full slug pattern",
+                    pathname: "/watch/attack-on-titan-bbbbb/ep-2",
+                    expectedId: "attack-on-titan-bbbbb",
+                    description: "multi-word slug",
                 },
                 {
-                    url: "https://example.com/watch/one-piece-1000",
-                    expectedId: "1000",
-                    description: "large numeric suffix",
+                    pathname: "/watch/one-piece-ccccc/ep-1000",
+                    expectedId: "one-piece-ccccc",
+                    description: "large episode number",
                 },
             ];
 
             testCases.forEach((testCase) => {
-                (window as any).location.href = testCase.url;
+                (window as any).location.href = `https://anikototv.to${testCase.pathname}`;
+                (window as any).location.pathname = testCase.pathname;
 
                 // Test actual extractSinglePageAnimeData function
                 const result = extractSinglePageAnimeData();
@@ -443,7 +445,8 @@ describe("Single Page Modal Integration", () => {
         });
 
         it("should handle URL without watch pattern in extractSinglePageAnimeData", () => {
-            (window as any).location.href = "https://example.com/other/page";
+            (window as any).location.href = "https://anikototv.to/other/page";
+            (window as any).location.pathname = "/other/page";
 
             const result = extractSinglePageAnimeData();
             expect(result).toBeNull();
@@ -617,56 +620,34 @@ describe("Single Page Modal Integration", () => {
         it("should handle different URL patterns in extractSinglePageAnimeData", () => {
             const testCases = [
                 {
-                    url: "https://example.com/watch/anime-with-special-chars-@#$",
-                    expectedId: "anime-with-special-chars-@#$",
+                    pathname: "/watch/anime-with-special-chars/ep-1",
+                    expectedId: "anime-with-special-chars",
                 },
                 {
-                    url: "https://example.com/watch/simple",
-                    expectedId: "simple",
+                    pathname: "/watch/simple-aaaaa/ep-1",
+                    expectedId: "simple-aaaaa",
                 },
                 {
-                    url: "https://example.com/watch/multiple-123-numbers-456",
-                    expectedId: "456",
+                    pathname: "/watch/multiple-123-numbers-456/ep-2",
+                    expectedId: "multiple-123-numbers-456",
                 },
             ];
 
             testCases.forEach((testCase) => {
-                (window as any).location.href = testCase.url;
+                (window as any).location.href = `https://anikototv.to${testCase.pathname}`;
+                (window as any).location.pathname = testCase.pathname;
                 const result = extractSinglePageAnimeData();
                 expect(result?.animeId).toBe(testCase.expectedId);
             });
         });
 
         it("should handle different DOM title scenarios", () => {
-            // Test with different DOM structures for title extraction
+            // Test with different DOM structures for title extraction. The
+            // anikoto adapter scans h1.anime-title → h1 → h2 → [class*='title']
+            // → .anime-title as a fallback chain when document.title is empty.
             const testTitleCases = [
                 {
-                    name: "ani_detail-info h2",
-                    setupDOM: () => {
-                        const container = document.createElement("div");
-                        container.className = "ani_detail-info";
-                        const title = document.createElement("h2");
-                        title.textContent = "Title from ani_detail";
-                        container.appendChild(title);
-                        document.body.appendChild(container);
-                    },
-                    expectedTitle: "Title from ani_detail",
-                },
-                {
-                    name: "watch-detail title",
-                    setupDOM: () => {
-                        const container = document.createElement("div");
-                        container.className = "watch-detail";
-                        const title = document.createElement("div");
-                        title.className = "title";
-                        title.textContent = "Title from watch-detail";
-                        container.appendChild(title);
-                        document.body.appendChild(container);
-                    },
-                    expectedTitle: "Title from watch-detail",
-                },
-                {
-                    name: "h1 with class",
+                    name: "h1.anime-title",
                     setupDOM: () => {
                         const title = document.createElement("h1");
                         title.className = "anime-title";
@@ -684,20 +665,43 @@ describe("Single Page Modal Integration", () => {
                     },
                     expectedTitle: "Generic H1 title",
                 },
+                {
+                    name: "fallback h2",
+                    setupDOM: () => {
+                        const title = document.createElement("h2");
+                        title.textContent = "Title from h2";
+                        document.body.appendChild(title);
+                    },
+                    expectedTitle: "Title from h2",
+                },
+                {
+                    name: "[class*='title'] fallback",
+                    setupDOM: () => {
+                        const title = document.createElement("div");
+                        title.className = "page-title";
+                        title.textContent = "Title from generic .title class";
+                        document.body.appendChild(title);
+                    },
+                    expectedTitle: "Title from generic .title class",
+                },
             ];
 
-            (window as any).location.href = "https://example.com/watch/title-test-123";
+            (window as any).location.href = "https://anikototv.to/watch/title-test-aaaaa/ep-1";
+            (window as any).location.pathname = "/watch/title-test-aaaaa/ep-1";
+            const originalDocTitle = document.title;
+            document.title = "";
 
-            testTitleCases.forEach((testCase) => {
-                // Clear previous elements
-                document.body.innerHTML = "";
+            try {
+                testTitleCases.forEach((testCase) => {
+                    document.body.innerHTML = "";
+                    testCase.setupDOM();
 
-                // Set up the DOM for this test case
-                testCase.setupDOM();
-
-                const result = extractSinglePageAnimeData();
-                expect(result?.animeTitle).toBe(testCase.expectedTitle);
-            });
+                    const result = extractSinglePageAnimeData();
+                    expect(result?.animeTitle).toBe(testCase.expectedTitle);
+                });
+            } finally {
+                document.title = originalDocTitle;
+            }
         });
     });
 

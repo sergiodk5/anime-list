@@ -61,14 +61,14 @@ describe("Folder Functionality", () => {
 
         // Setup DOM
         document.body.innerHTML = `
-            <div class="film_list-wrap">
-                <div class="flw-item" data-testid="anime-item-1">
-                    <div class="film-poster"></div>
-                    <div class="film-name"><a href="/watch/anime-one-123" title="Anime One">Anime One</a></div>
+            <div id="list-items">
+                <div class="item" data-testid="anime-item-1">
+                    <div class="ani poster"></div>
+                    <div class="b1"><a class="name d-title" href="/watch/anime-one-onexx/ep-1">Anime One</a></div>
                 </div>
-                <div class="flw-item" data-testid="anime-item-2">
-                    <div class="film-poster"></div>
-                    <div class="film-name"><a href="/watch/anime-two-456" title="Anime Two">Anime Two</a></div>
+                <div class="item" data-testid="anime-item-2">
+                    <div class="ani poster"></div>
+                    <div class="b1"><a class="name d-title" href="/watch/anime-two-twoxx/ep-1">Anime Two</a></div>
                 </div>
             </div>
         `;
@@ -347,7 +347,7 @@ describe("Folder Functionality", () => {
             };
 
             // Create folder element in DOM
-            const container = document.querySelector(".film_list-wrap");
+            const container = document.querySelector("#list-items");
             const folderEl = document.createElement("div");
             folderEl.setAttribute("data-folder-id", "folder-aria");
             folderEl.setAttribute("aria-label", "Folder: Old");
@@ -388,7 +388,7 @@ describe("Folder Functionality", () => {
                 lastUpdated: "2024-01-01",
             };
 
-            const container = document.querySelector(".film_list-wrap");
+            const container = document.querySelector("#list-items");
             const folderEl = document.createElement("div");
             folderEl.setAttribute("data-folder-id", "folder-dom");
             folderEl.style.border = "3px solid #FFD700";
@@ -428,7 +428,7 @@ describe("Folder Functionality", () => {
                 lastUpdated: "2024-01-01",
             };
 
-            const container = document.querySelector(".film_list-wrap");
+            const container = document.querySelector("#list-items");
             const folderEl = document.createElement("div");
             folderEl.className = "anime-folder";
             folderEl.setAttribute("data-folder-id", "folder-remove");
@@ -447,13 +447,13 @@ describe("Folder Functionality", () => {
                 lastUpdated: "2024-01-01",
             };
 
-            const container = document.querySelector(".film_list-wrap");
+            const container = document.querySelector("#list-items");
             const folderEl = document.createElement("div");
             folderEl.className = "anime-folder";
             folderEl.setAttribute("data-folder-id", "folder-contents");
 
             const tileInside = document.createElement("div");
-            tileInside.className = "flw-item";
+            tileInside.className = "item";
             tileInside.setAttribute("data-testid", "tile-inside-folder");
             folderEl.appendChild(tileInside);
 
@@ -470,7 +470,7 @@ describe("Folder Functionality", () => {
 
     describe("updateFolderEmptyState", () => {
         it("should show placeholder for empty folder", () => {
-            const container = document.querySelector(".film_list-wrap");
+            const container = document.querySelector("#list-items");
             const folderEl = document.createElement("div");
             folderEl.className = "anime-folder";
             folderEl.setAttribute("data-folder-id", "folder-empty");
@@ -484,7 +484,7 @@ describe("Folder Functionality", () => {
         });
 
         it("should add empty-state class for empty folder", () => {
-            const container = document.querySelector(".film_list-wrap");
+            const container = document.querySelector("#list-items");
             const folderEl = document.createElement("div");
             folderEl.className = "anime-folder";
             folderEl.setAttribute("data-folder-id", "folder-empty-class");
@@ -498,15 +498,15 @@ describe("Folder Functionality", () => {
         });
 
         it("should hide placeholder for folder with items", () => {
-            const container = document.querySelector(".film_list-wrap");
+            const container = document.querySelector("#list-items");
             const folderEl = document.createElement("div");
             folderEl.className = "anime-folder";
             folderEl.setAttribute("data-folder-id", "folder-with-items");
             folderEl.innerHTML = `
                 <div class="anime-folder-content">
                     <div class="folder-empty-placeholder" style="display: flex;">Drop here</div>
-                    <div class="flw-item"></div>
-                    <div class="flw-item"></div>
+                    <div class="item"></div>
+                    <div class="item"></div>
                 </div>
             `;
             container?.appendChild(folderEl);
@@ -518,14 +518,14 @@ describe("Folder Functionality", () => {
         });
 
         it("should remove empty-state class for folder with items", () => {
-            const container = document.querySelector(".film_list-wrap");
+            const container = document.querySelector("#list-items");
             const folderEl = document.createElement("div");
             folderEl.className = "anime-folder";
             folderEl.setAttribute("data-folder-id", "folder-items-class");
             folderEl.innerHTML = `
                 <div class="anime-folder-content empty-state">
                     <div class="folder-empty-placeholder">Drop here</div>
-                    <div class="flw-item"></div>
+                    <div class="item"></div>
                 </div>
             `;
             container?.appendChild(folderEl);
@@ -590,10 +590,11 @@ describe("Folder Functionality", () => {
             };
 
             // Add a tile that should go into the folder
-            const container = document.querySelector(".film_list-wrap");
+            const container = document.querySelector("#list-items");
             const tile456 = document.createElement("div");
-            tile456.className = "flw-item";
-            tile456.innerHTML = '<div class="film-name"><a href="/watch/anime-456">Anime 456</a></div>';
+            tile456.className = "item";
+            tile456.innerHTML =
+                '<div class="b1"><a class="name d-title" href="/watch/anime-twoxx/ep-1">Anime 456</a></div>';
             container?.appendChild(tile456);
 
             await restoreFolderOrder();
@@ -618,7 +619,7 @@ describe("Folder Functionality", () => {
             await restoreFolderOrder();
 
             // Should not throw and container should still exist
-            expect(document.querySelector(".film_list-wrap")).toBeTruthy();
+            expect(document.querySelector("#list-items")).toBeTruthy();
         });
     });
 
@@ -639,7 +640,7 @@ describe("Folder Functionality", () => {
             };
 
             const element = createFolderElement(folder);
-            const container = document.querySelector(".film_list-wrap");
+            const container = document.querySelector("#list-items");
             container?.appendChild(element);
 
             const nameInput = element.querySelector(".anime-folder-name-input") as HTMLInputElement;
@@ -686,7 +687,7 @@ describe("Folder Functionality", () => {
             };
 
             const element = createFolderElement(folder);
-            const container = document.querySelector(".film_list-wrap");
+            const container = document.querySelector("#list-items");
             container?.appendChild(element);
 
             const deleteBtn = element.querySelector(".folder-delete-btn") as HTMLButtonElement;
@@ -855,7 +856,7 @@ describe("Folder Functionality", () => {
 
     describe("createFolder additional tests", () => {
         it("should append folder to container when container exists", async () => {
-            const container = document.querySelector(".film_list-wrap");
+            const container = document.querySelector("#list-items");
             const initialChildCount = container?.children.length || 0;
 
             await createFolder();
