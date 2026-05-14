@@ -137,6 +137,25 @@ describe("anikototv adapter — watch page", () => {
         expect(watchPage.matches(new URL("https://anikototv.to/genre/fantasy"))).toBe(false);
     });
 
+    it("does not match watch paths with trailing extra segments or text", () => {
+        // Anchoring guard: `/ep-1-extra` and `/ep-1/other` must NOT be treated
+        // as the player URL, otherwise unrelated routes would activate the
+        // single-page modal.
+        expect(watchPage.matches(new URL("https://anikototv.to/watch/foo/ep-1-extra"))).toBe(false);
+        expect(watchPage.matches(new URL("https://anikototv.to/watch/foo/ep-1/other"))).toBe(false);
+        expect(watchPage.matches(new URL("https://anikototv.to/watch/foo/ep-1-bonus"))).toBe(false);
+    });
+
+    it("does not match a valid watch path on a non-anikoto host", () => {
+        // Protects unrelated sites with a similar URL shape from being
+        // hijacked by the single-page modal.
+        expect(watchPage.matches(new URL("https://example.com/watch/foo/ep-1"))).toBe(false);
+    });
+
+    it("matches anikoto subdomains as well as the bare host", () => {
+        expect(watchPage.matches(new URL("https://www.anikototv.to/watch/foo/ep-1"))).toBe(true);
+    });
+
     it("extracts slug from the path and title from document.title", () => {
         vi.spyOn(window, "location", "get").mockReturnValue({
             pathname: "/watch/the-warrior-princess-and-the-barbaric-king-snxwm/ep-6",
@@ -181,5 +200,16 @@ describe("anikototv adapter — watch page", () => {
         } as Location);
         document.title = "Demon Slayer | AnikotoTV";
         expect(watchPage.extractAnime()?.animeTitle).toBe("Demon Slayer");
+    });
+
+    it("preserves dashes inside the anime title and only strips the site suffix", () => {
+        // Titles like "Steins;Gate - The Movie" contain ` - ` legitimately.
+        // We must not split on the first separator — only the trailing site
+        // brand should be removed.
+        vi.spyOn(window, "location", "get").mockReturnValue({
+            pathname: "/watch/steins-gate-movie-aaaaa/ep-1",
+        } as Location);
+        document.title = "Steins;Gate - The Movie - AnikotoTV";
+        expect(watchPage.extractAnime()?.animeTitle).toBe("Steins;Gate - The Movie");
     });
 });

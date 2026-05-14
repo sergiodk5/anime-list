@@ -10,8 +10,20 @@ const SELECTORS = {
 
 // Anikoto has a single per-anime URL shape — the episode player at
 // /watch/{slug}/ep-{n}. There is no separate anime detail page, so both card
-// links and watch-page URLs share this pattern.
-const WATCH_PATH_RE = /^\/watch\/([^/]+)\/ep-\d+/;
+// links and watch-page URLs share this pattern. Anchored at both ends (with
+// an optional trailing slash) so paths like `/watch/foo/ep-1-extra` or
+// `/watch/foo/ep-1/other` don't sneak through.
+const WATCH_PATH_RE = /^\/watch\/([^/]+)\/ep-\d+\/?$/;
+
+// Anikoto host check used to scope watch-page handling. The top-level
+// `matches` stays catch-all so card overlays still attach wherever the list
+// DOM shape happens to appear, but the single-page modal is restricted to
+// the actual site so unrelated pages with similar paths don't get hijacked.
+const ANIKOTOTV_HOST = "anikototv.to";
+
+function isAnikotoHost(hostname: string): boolean {
+    return hostname === ANIKOTOTV_HOST || hostname.endsWith(`.${ANIKOTOTV_HOST}`);
+}
 
 // Watch-page heading candidates, ordered most- to least- specific. Used to
 // recover the anime title from the DOM when document.title isn't usable.
@@ -47,18 +59,28 @@ function extractCardAnime(card: Element): AnimeData | null {
     };
 }
 
+// Trailing-suffix patterns we strip from document.title. Order matters —
+// the site brand suffix is removed before the episode marker so a title like
+// "Title - Episode 6 - AnikotoTV" collapses cleanly to "Title".
+const TITLE_SUFFIX_PATTERNS: RegExp[] = [
+    /\s+[-|]\s+(?:Watch\s+)?Anikoto(?:TV)?(?:\s+.*)?$/i,
+    /\s+Episode\s+\d+.*$/i,
+    /\s+Ep\.?\s*\d+.*$/i,
+];
+
 function readWatchPageTitle(fallback: string): string {
     // Anikoto's document.title typically contains the anime name plus episode
-    // info. The format varies, so we trim any leading "Watch " prefix and any
-    // trailing site suffix separated by " - " or " | ".
+    // info, sometimes prefixed with "Watch " and suffixed with the site brand.
+    // We strip only those known affixes — splitting on every " - " / " | "
+    // would truncate legitimate titles that contain those separators (e.g.
+    // "Steins;Gate - The Movie").
     const docTitle = (document.title || "").trim();
     if (docTitle) {
-        const stripped = docTitle
-            .replace(/^Watch\s+/i, "")
-            .split(/\s+[-|]\s+/)[0]
-            .replace(/\s+Episode\s+\d+.*$/i, "")
-            .replace(/\s+Ep\.?\s*\d+.*$/i, "")
-            .trim();
+        let stripped = docTitle.replace(/^Watch\s+/i, "");
+        for (const pattern of TITLE_SUFFIX_PATTERNS) {
+            stripped = stripped.replace(pattern, "");
+        }
+        stripped = stripped.trim();
         if (stripped) return stripped;
     }
     for (const selector of WATCH_TITLE_SELECTORS) {
@@ -105,7 +127,7 @@ export const anikototvAdapter: SiteAdapter = {
     extractAnime: extractCardAnime,
     getInjectionTarget,
     watchPage: {
-        matches: (url) => WATCH_PATH_RE.test(url.pathname),
+        matches: (url) => isAnikotoHost(url.hostname) && WATCH_PATH_RE.test(url.pathname),
         extractAnime: extractWatchPageAnime,
     },
 };
