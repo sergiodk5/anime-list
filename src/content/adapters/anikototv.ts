@@ -60,12 +60,14 @@ function extractCardAnime(card: Element): AnimeData | null {
 }
 
 // Trailing-suffix patterns we strip from document.title. Order matters —
-// the site brand suffix is removed before the episode marker so a title like
-// "Title - Episode 6 - AnikotoTV" collapses cleanly to "Title".
+// the site brand suffix is removed first, then the episode marker. Each
+// pattern optionally absorbs a preceding " - " / " | " separator so a title
+// like "Title - Episode 6 - AnikotoTV" collapses cleanly to "Title" instead
+// of leaving a dangling "Title -".
 const TITLE_SUFFIX_PATTERNS: RegExp[] = [
-    /\s+[-|]\s+(?:Watch\s+)?Anikoto(?:TV)?(?:\s+.*)?$/i,
-    /\s+Episode\s+\d+.*$/i,
-    /\s+Ep\.?\s*\d+.*$/i,
+    /\s*[-|]\s+(?:Watch\s+)?Anikoto(?:TV)?(?:\s+.*)?$/i,
+    /(?:\s*[-|])?\s+Episode\s+\d+.*$/i,
+    /(?:\s*[-|])?\s+Ep\.?\s*\d+.*$/i,
 ];
 
 function readWatchPageTitle(fallback: string): string {
@@ -117,11 +119,11 @@ function getInjectionTarget(card: Element): Element | null {
 
 export const anikototvAdapter: SiteAdapter = {
     id: "anikototv",
-    // Anikoto is currently our only target site, but the content script runs
-    // on <all_urls>. Returning true keeps the script functional anywhere a
-    // page happens to expose the same DOM shape (e.g. mirrors), and lets the
-    // test suite drive the adapter without spoofing a hostname.
-    matches: () => true,
+    // The content script is loaded on <all_urls> by the manifest, but the
+    // adapter scopes itself to anikototv.to so the MutationObserver and other
+    // page-wide setup don't run on unrelated sites that happen to use generic
+    // `.item` / `#list-items` markup.
+    matches: (url) => isAnikotoHost(url.hostname),
     containerSelector: SELECTORS.CONTAINER,
     cardSelector: SELECTORS.ITEM,
     extractAnime: extractCardAnime,

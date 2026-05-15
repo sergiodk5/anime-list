@@ -35,9 +35,17 @@ describe("anikototv adapter", () => {
         expect(anikototvAdapter.watchPage).not.toBeNull();
     });
 
-    it("matches every URL because it is the only adapter", () => {
+    it("matches the anikototv host (and subdomains) only", () => {
         expect(anikototvAdapter.matches(new URL("https://anikototv.to/recent"))).toBe(true);
-        expect(anikototvAdapter.matches(new URL("https://example.com/whatever"))).toBe(true);
+        expect(anikototvAdapter.matches(new URL("https://www.anikototv.to/browse"))).toBe(true);
+    });
+
+    it("does not match unrelated hosts even though the script runs on <all_urls>", () => {
+        // Guards against the adapter (and its document-wide MutationObserver)
+        // activating on arbitrary pages that happen to share generic markup
+        // like `.item` / `#list-items`.
+        expect(anikototvAdapter.matches(new URL("https://example.com/whatever"))).toBe(false);
+        expect(anikototvAdapter.matches(new URL("https://anikototv.fake.com/watch/foo/ep-1"))).toBe(false);
     });
 
     it("exposes the anikoto list-page selectors", () => {
@@ -211,5 +219,16 @@ describe("anikototv adapter — watch page", () => {
         } as Location);
         document.title = "Steins;Gate - The Movie - AnikotoTV";
         expect(watchPage.extractAnime()?.animeTitle).toBe("Steins;Gate - The Movie");
+    });
+
+    it("does not leave a dangling separator when both episode and brand suffixes are present", () => {
+        // Layered stripping case: brand suffix is removed first, then the
+        // episode marker. Episode pattern must absorb the preceding " - "
+        // separator so we don't end up with "Title -".
+        vi.spyOn(window, "location", "get").mockReturnValue({
+            pathname: "/watch/demon-slayer-aaaaa/ep-6",
+        } as Location);
+        document.title = "Demon Slayer - Episode 6 - AnikotoTV";
+        expect(watchPage.extractAnime()?.animeTitle).toBe("Demon Slayer");
     });
 });

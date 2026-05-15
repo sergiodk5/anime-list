@@ -579,29 +579,37 @@ describe("Folder Functionality", () => {
     });
 
     describe("restoreFolderOrder", () => {
-        it("should create folder elements from storage", async () => {
+        it("should create folder elements from storage and move the listed tile into the folder", async () => {
+            // Folder contents must reference the same slug the adapter would
+            // extract from the tile's href, otherwise the restoration silently
+            // no-ops and the test would only assert the folder shell exists.
             mockStorage["folderOrder"] = {
                 folders: [
                     { id: "folder-restore", name: "Restored Folder", borderColor: "#FFD700", createdAt: "2024-01-01" },
                 ],
-                rootItems: ["folder:folder-restore", "123"],
-                folderContents: { "folder-restore": ["456"] },
+                rootItems: ["folder:folder-restore"],
+                folderContents: { "folder-restore": ["anime-twoxx"] },
                 lastUpdated: "2024-01-01",
             };
 
             // Add a tile that should go into the folder
             const container = document.querySelector("#list-items");
-            const tile456 = document.createElement("div");
-            tile456.className = "item";
-            tile456.innerHTML =
-                '<div class="b1"><a class="name d-title" href="/watch/anime-twoxx/ep-1">Anime 456</a></div>';
-            container?.appendChild(tile456);
+            const tile = document.createElement("div");
+            tile.className = "item";
+            tile.setAttribute("data-testid", "tile-anime-twoxx");
+            tile.innerHTML =
+                '<div class="b1"><a class="name d-title" href="/watch/anime-twoxx/ep-1">Anime Two</a></div>';
+            container?.appendChild(tile);
 
             await restoreFolderOrder();
 
             const folderEl = document.querySelector('[data-folder-id="folder-restore"]');
             expect(folderEl).toBeTruthy();
             expect(folderEl?.getAttribute("aria-label")).toBe("Folder: Restored Folder");
+
+            // The tile must have actually been relocated into the folder body.
+            const movedTile = folderEl?.querySelector('[data-testid="tile-anime-twoxx"]');
+            expect(movedTile).toBeTruthy();
         });
 
         it("should fall back to restoreTileOrder when no folders", async () => {

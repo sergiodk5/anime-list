@@ -7,6 +7,14 @@ export default mergeConfig(
     defineConfig({
         test: {
             environment: "jsdom",
+            // Default page URL for jsdom. Set to the anikoto host so the
+            // content-script adapter selects itself in tests that don't
+            // explicitly spoof window.location.
+            environmentOptions: {
+                jsdom: {
+                    url: "https://anikototv.to/",
+                },
+            },
             // Include test files from the test directory
             include: ["test/**/*.{test,spec}.?(c|m)[jt]s?(x)"],
             exclude: [...configDefaults.exclude, "e2e/**"],

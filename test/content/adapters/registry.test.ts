@@ -11,9 +11,12 @@ describe("content/adapters registry", () => {
         expect(adapter).toBe(anikototvAdapter);
     });
 
-    it("selects the anikototv adapter for any URL because it is the catch-all", () => {
+    it("returns null for non-anikototv hosts so the script self-disables", () => {
+        // The manifest still ships <all_urls>, so the script may load on
+        // unrelated pages. Returning null here is what stops the adapter
+        // from attaching MutationObservers and controls everywhere.
         const adapter = selectAdapter(new URL("https://example.com/anything"));
-        expect(adapter).toBe(anikototvAdapter);
+        expect(adapter).toBeNull();
     });
 
     it("returns null when no adapter matches", () => {
