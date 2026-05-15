@@ -1,9 +1,7 @@
-import { animetsuAdapter } from "./animetsu";
-import { hianimeAdapter } from "./hianime";
+import { anikototvAdapter } from "./anikototv";
 import type { SiteAdapter } from "./types";
 
-// Order matters: more-specific adapters first; hianime is the catch-all fallback.
-export const adapters: SiteAdapter[] = [animetsuAdapter, hianimeAdapter];
+export const adapters: SiteAdapter[] = [anikototvAdapter];
 
 /**
  * Resolve the SiteAdapter that should drive the content script for the given
@@ -18,4 +16,4 @@ export function selectAdapter(
 }
 
 export type { SiteAdapter, WatchPageAdapter } from "./types";
-export { animetsuAdapter, hianimeAdapter };
+export { anikototvAdapter };

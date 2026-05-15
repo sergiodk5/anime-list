@@ -5,10 +5,29 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 Object.defineProperty(window, "location", {
     value: {
         pathname: "/",
-        href: "https://example.com/",
+        href: "https://anikototv.to/",
     },
     writable: true,
 });
+
+function buildCard({
+    href = "/watch/naruto-abcde/ep-1",
+    title = "Naruto",
+}: { href?: string; title?: string } = {}): HTMLDivElement {
+    const card = document.createElement("div");
+    card.className = "item";
+    card.innerHTML = `
+        <div class="inner">
+            <div class="ani poster"><a href="${href}"><img alt="${title}"></a></div>
+            <div class="info">
+                <div class="b1">
+                    <a class="name d-title" href="${href}">${title}</a>
+                </div>
+            </div>
+        </div>
+    `;
+    return card;
+}
 
 describe("Content Script Data Extraction Functions", () => {
     beforeEach(() => {
@@ -18,19 +37,10 @@ describe("Content Script Data Extraction Functions", () => {
 
     describe("extractAnimeData", () => {
         it("should extract anime data from valid element", () => {
-            // Create a mock anime element with correct selector structure
-            const element = document.createElement("div");
-            element.innerHTML = `
-                <div class="film-name">
-                    <a href="/watch/naruto-123" title="Naruto">
-                        Naruto
-                    </a>
-                </div>
-            `;
-
-            const animeData = extractAnimeData(element);
+            const card = buildCard({ href: "/watch/naruto-abcde/ep-1", title: "Naruto" });
+            const animeData = extractAnimeData(card);
             expect(animeData).toBeTruthy();
-            expect(animeData?.animeSlug).toBe("naruto-123");
+            expect(animeData?.animeSlug).toBe("naruto-abcde");
             expect(animeData?.animeTitle).toBe("Naruto");
         });
 
@@ -43,75 +53,69 @@ describe("Content Script Data Extraction Functions", () => {
         });
 
         it("should handle element with invalid href", () => {
-            const element = document.createElement("div");
-            element.innerHTML = `
-                <div class="film-name">
-                    <a href="#">Not anime</a>
+            const card = document.createElement("div");
+            card.className = "item";
+            card.innerHTML = `
+                <div class="b1">
+                    <a class="name d-title" href="#">Not anime</a>
                 </div>
             `;
 
-            const animeData = extractAnimeData(element);
+            const animeData = extractAnimeData(card);
             expect(animeData).toBeNull();
         });
 
-        it("should extract data from link with title attribute", () => {
-            const element = document.createElement("div");
-            element.innerHTML = `
-                <div class="film-name">
-                    <a href="/watch/attack-on-titan-456" title="Attack on Titan">
-                        AOT
-                    </a>
-                </div>
-            `;
-
-            const animeData = extractAnimeData(element);
+        it("should extract title from the name link", () => {
+            const card = buildCard({ href: "/watch/attack-on-titan-aotid/ep-1", title: "Attack on Titan" });
+            const animeData = extractAnimeData(card);
             expect(animeData).toBeTruthy();
             expect(animeData?.animeTitle).toBe("Attack on Titan");
-            expect(animeData?.animeSlug).toBe("attack-on-titan-456");
+            expect(animeData?.animeSlug).toBe("attack-on-titan-aotid");
         });
 
-        it("should handle nested link structure", () => {
-            const element = document.createElement("div");
-            element.innerHTML = `
-                <div class="anime-card">
-                    <div class="image-container">
-                        <img src="/image/op.jpg" alt="One Piece">
-                    </div>
-                    <div class="film-name">
-                        <a href="/watch/one-piece-789">One Piece</a>
+        it("should handle nested structure within the item card", () => {
+            const card = document.createElement("div");
+            card.className = "item";
+            card.innerHTML = `
+                <div class="inner">
+                    <div class="ani poster"><a href="/watch/one-piece-opidd/ep-1"><img alt="One Piece"></a></div>
+                    <div class="info">
+                        <div class="b1">
+                            <a class="name d-title" href="/watch/one-piece-opidd/ep-1">One Piece</a>
+                        </div>
                     </div>
                 </div>
             `;
 
-            const animeData = extractAnimeData(element);
+            const animeData = extractAnimeData(card);
             expect(animeData).toBeTruthy();
-            expect(animeData?.animeSlug).toBe("one-piece-789");
+            expect(animeData?.animeSlug).toBe("one-piece-opidd");
         });
 
-        it("should handle multiple anime links in element", () => {
-            const element = document.createElement("div");
-            element.innerHTML = `
-                <div class="film-name">
-                    <a href="/watch/first-anime-1">First</a>
+        it("should use the first name link when multiple are present", () => {
+            const card = document.createElement("div");
+            card.className = "item";
+            card.innerHTML = `
+                <div class="b1">
+                    <a class="name d-title" href="/watch/first-anime-aaaaa/ep-1">First</a>
                 </div>
-                <div class="film-name">
-                    <a href="/watch/second-anime-2">Second</a>
+                <div class="b1">
+                    <a class="name d-title" href="/watch/second-anime-bbbbb/ep-1">Second</a>
                 </div>
             `;
 
-            const animeData = extractAnimeData(element);
+            const animeData = extractAnimeData(card);
             expect(animeData).toBeTruthy();
-            // Should extract the first valid anime link
-            expect(animeData?.animeSlug).toBe("first-anime-1");
+            expect(animeData?.animeSlug).toBe("first-anime-aaaaa");
         });
     });
 
     describe("isWatchPage", () => {
-        it("should return true for watch page URL", () => {
+        it("should return true for /watch/{slug}/ep-N URL", () => {
             Object.defineProperty(window, "location", {
                 value: {
-                    pathname: "/watch/naruto-episode-1",
-                    href: "https://example.com/watch/naruto-episode-1",
+                    pathname: "/watch/naruto-abcde/ep-1",
+                    href: "https://anikototv.to/watch/naruto-abcde/ep-1",
                 },
                 writable: true,
             });
@@ -123,7 +127,7 @@ describe("Content Script Data Extraction Functions", () => {
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "/anime/naruto",
-                    href: "https://example.com/anime/naruto",
+                    href: "https://anikototv.to/anime/naruto",
                 },
                 writable: true,
             });
@@ -135,7 +139,7 @@ describe("Content Script Data Extraction Functions", () => {
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "/",
-                    href: "https://example.com/",
+                    href: "https://anikototv.to/",
                 },
                 writable: true,
             });
@@ -143,11 +147,11 @@ describe("Content Script Data Extraction Functions", () => {
             expect(isWatchPage()).toBe(false);
         });
 
-        it("should return false for watch-like but invalid URL", () => {
+        it("should return false for /watch/{slug} without an episode segment", () => {
             Object.defineProperty(window, "location", {
                 value: {
-                    pathname: "/watched/something",
-                    href: "https://example.com/watched/something",
+                    pathname: "/watch/some-anime",
+                    href: "https://anikototv.to/watch/some-anime",
                 },
                 writable: true,
             });
@@ -155,11 +159,11 @@ describe("Content Script Data Extraction Functions", () => {
             expect(isWatchPage()).toBe(false);
         });
 
-        it("should handle URLs with query parameters", () => {
+        it("should return true for /watch/{slug}/ep-N with query parameters", () => {
             Object.defineProperty(window, "location", {
                 value: {
-                    pathname: "/watch/anime-episode",
-                    href: "https://example.com/watch/anime-episode?t=123",
+                    pathname: "/watch/anime-abcde/ep-3",
+                    href: "https://anikototv.to/watch/anime-abcde/ep-3?t=123",
                 },
                 writable: true,
             });
@@ -170,11 +174,10 @@ describe("Content Script Data Extraction Functions", () => {
 
     describe("extractSinglePageAnimeData", () => {
         beforeEach(() => {
-            // Set up as watch page
             Object.defineProperty(window, "location", {
                 value: {
-                    pathname: "/watch/test-anime-episode-1",
-                    href: "https://example.com/watch/test-anime-episode-1",
+                    pathname: "/watch/test-anime-abcde/ep-1",
+                    href: "https://anikototv.to/watch/test-anime-abcde/ep-1",
                 },
                 writable: true,
             });
@@ -183,8 +186,8 @@ describe("Content Script Data Extraction Functions", () => {
         it("should extract anime data from watch page URL", () => {
             Object.defineProperty(window, "location", {
                 value: {
-                    pathname: "/watch/naruto-shippuden-episode-100",
-                    href: "https://example.com/watch/naruto-shippuden-episode-100",
+                    pathname: "/watch/naruto-shippuden-snxwm/ep-100",
+                    href: "https://anikototv.to/watch/naruto-shippuden-snxwm/ep-100",
                 },
                 writable: true,
             });
@@ -198,7 +201,7 @@ describe("Content Script Data Extraction Functions", () => {
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "/anime/some-anime",
-                    href: "https://example.com/anime/some-anime",
+                    href: "https://anikototv.to/anime/some-anime",
                 },
                 writable: true,
             });
@@ -207,30 +210,30 @@ describe("Content Script Data Extraction Functions", () => {
             expect(animeData).toBeNull();
         });
 
-        it("should handle watch page without episode info", () => {
+        it("should extract slug exactly without episode info appended", () => {
             Object.defineProperty(window, "location", {
                 value: {
-                    pathname: "/watch/simple-anime",
-                    href: "https://example.com/watch/simple-anime",
+                    pathname: "/watch/simple-anime-aaaaa/ep-1",
+                    href: "https://anikototv.to/watch/simple-anime-aaaaa/ep-1",
                 },
                 writable: true,
             });
 
             const animeData = extractSinglePageAnimeData();
             expect(animeData).toBeTruthy();
-            expect(animeData?.animeSlug).toBe("simple-anime");
+            expect(animeData?.animeSlug).toBe("simple-anime-aaaaa");
         });
 
-        it("should extract title from page title element", () => {
-            // Create page title element (h1 is in the selector list)
+        it("should extract title from the h1 heading element", () => {
+            document.title = "";
             const h1Element = document.createElement("h1");
-            h1Element.textContent = "Attack on Titan Episode 1 - Watch Online";
+            h1Element.textContent = "Attack on Titan";
             document.body.appendChild(h1Element);
 
             Object.defineProperty(window, "location", {
                 value: {
-                    pathname: "/watch/attack-on-titan-episode-1",
-                    href: "https://example.com/watch/attack-on-titan-episode-1",
+                    pathname: "/watch/attack-on-titan-aotid/ep-1",
+                    href: "https://anikototv.to/watch/attack-on-titan-aotid/ep-1",
                 },
                 writable: true,
             });
@@ -240,67 +243,50 @@ describe("Content Script Data Extraction Functions", () => {
             expect(animeData?.animeTitle).toContain("Attack on Titan");
         });
 
-        it("should extract title from h1 element", () => {
-            const h1Element = document.createElement("h1");
-            h1Element.textContent = "One Piece Episode 1000";
-            document.body.appendChild(h1Element);
-
+        it("should fall back to slug when there is no title element or document.title", () => {
+            document.title = "";
             Object.defineProperty(window, "location", {
                 value: {
-                    pathname: "/watch/one-piece-episode-1000",
-                    href: "https://example.com/watch/one-piece-episode-1000",
+                    pathname: "/watch/mystery-anime-aaaaa/ep-5",
+                    href: "https://anikototv.to/watch/mystery-anime-aaaaa/ep-5",
                 },
                 writable: true,
             });
 
             const animeData = extractSinglePageAnimeData();
             expect(animeData).toBeTruthy();
-            expect(animeData?.animeTitle).toContain("One Piece");
+            expect(animeData?.animeSlug).toBe("mystery-anime-aaaaa");
+            expect(animeData?.animeTitle).toBe("mystery-anime-aaaaa");
         });
 
-        it("should handle page without clear title", () => {
-            // No title elements
+        it("should set animeId equal to the slug", () => {
             Object.defineProperty(window, "location", {
                 value: {
-                    pathname: "/watch/mystery-anime-episode-5",
-                    href: "https://example.com/watch/mystery-anime-episode-5",
+                    pathname: "/watch/demon-slayer-aaaaa/ep-1",
+                    href: "https://anikototv.to/watch/demon-slayer-aaaaa/ep-1",
                 },
                 writable: true,
             });
 
             const animeData = extractSinglePageAnimeData();
             expect(animeData).toBeTruthy();
-            expect(animeData?.animeSlug).toBe("mystery-anime-episode-5");
+            expect(animeData?.animeId).toBe("demon-slayer-aaaaa");
+            expect(animeData?.animeSlug).toBe("demon-slayer-aaaaa");
         });
 
-        it("should generate animeId from slug", () => {
+        it("should handle complex slug patterns", () => {
             Object.defineProperty(window, "location", {
                 value: {
-                    pathname: "/watch/demon-slayer-episode-1",
-                    href: "https://example.com/watch/demon-slayer-episode-1",
+                    pathname: "/watch/jujutsu-kaisen-season-2-jkid2/ep-15",
+                    href: "https://anikototv.to/watch/jujutsu-kaisen-season-2-jkid2/ep-15",
                 },
                 writable: true,
             });
 
             const animeData = extractSinglePageAnimeData();
             expect(animeData).toBeTruthy();
-            expect(animeData?.animeId).toBe("1"); // Should extract the numeric suffix
-            expect(animeData?.animeSlug).toBe("demon-slayer-episode-1");
-        });
-
-        it("should handle complex URL patterns", () => {
-            Object.defineProperty(window, "location", {
-                value: {
-                    pathname: "/watch/jujutsu-kaisen-season-2-episode-15",
-                    href: "https://example.com/watch/jujutsu-kaisen-season-2-episode-15",
-                },
-                writable: true,
-            });
-
-            const animeData = extractSinglePageAnimeData();
-            expect(animeData).toBeTruthy();
-            expect(animeData?.animeSlug).toBe("jujutsu-kaisen-season-2-episode-15");
-            expect(animeData?.animeId).toBeTruthy();
+            expect(animeData?.animeSlug).toBe("jujutsu-kaisen-season-2-jkid2");
+            expect(animeData?.animeId).toBe("jujutsu-kaisen-season-2-jkid2");
         });
     });
 
@@ -313,7 +299,7 @@ describe("Content Script Data Extraction Functions", () => {
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "",
-                    href: "https://example.com/",
+                    href: "https://anikototv.to/",
                 },
                 writable: true,
             });
@@ -325,25 +311,25 @@ describe("Content Script Data Extraction Functions", () => {
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "///watch///",
-                    href: "https://example.com///watch///",
+                    href: "https://anikototv.to///watch///",
                 },
                 writable: true,
             });
 
-            // Should not throw
             expect(() => isWatchPage()).not.toThrow();
             expect(() => extractSinglePageAnimeData()).not.toThrow();
         });
 
         it("should handle special characters in anime titles", () => {
+            document.title = "";
             const h1Element = document.createElement("h1");
-            h1Element.textContent = "Anime with Special Characters: éàü Episode 1";
+            h1Element.textContent = "Anime with Special Characters: éàü";
             document.body.appendChild(h1Element);
 
             Object.defineProperty(window, "location", {
                 value: {
-                    pathname: "/watch/anime-special-chars-episode-1",
-                    href: "https://example.com/watch/anime-special-chars-episode-1",
+                    pathname: "/watch/anime-special-chars-aaaaa/ep-1",
+                    href: "https://anikototv.to/watch/anime-special-chars-aaaaa/ep-1",
                 },
                 writable: true,
             });

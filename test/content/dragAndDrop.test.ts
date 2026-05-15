@@ -123,19 +123,19 @@ describe("Drag and Drop Tile Reordering", () => {
 
         it("should extract anime IDs from DOM elements in order", () => {
             document.body.innerHTML = `
-                <div class="film_list-wrap">
-                    <div class="flw-item">
-                        <div class="film-name"><a title="Anime One" href="/watch/anime-one-123">Anime One</a></div>
+                <div id="list-items">
+                    <div class="item">
+                        <div class="b1"><a class="name d-title" href="/watch/anime-one-onexx/ep-1">Anime One</a></div>
                     </div>
-                    <div class="flw-item">
-                        <div class="film-name"><a title="Anime Two" href="/watch/anime-two-456">Anime Two</a></div>
+                    <div class="item">
+                        <div class="b1"><a class="name d-title" href="/watch/anime-two-twoxx/ep-1">Anime Two</a></div>
                     </div>
                 </div>
             `;
 
             const result = getCurrentTileOrder();
 
-            expect(result).toEqual(["123", "456"]);
+            expect(result).toEqual(["anime-one-onexx", "anime-two-twoxx"]);
         });
     });
 
@@ -161,7 +161,7 @@ describe("Drag and Drop Tile Reordering", () => {
         });
 
         it("should insert toolbar when container exists", () => {
-            document.body.innerHTML = '<div class="film_list-wrap"></div>';
+            document.body.innerHTML = '<div id="list-items"></div>';
 
             insertDragToolbar();
 
@@ -177,7 +177,7 @@ describe("Drag and Drop Tile Reordering", () => {
         });
 
         it("should not insert duplicate toolbar", () => {
-            document.body.innerHTML = '<div class="film_list-wrap"></div>';
+            document.body.innerHTML = '<div id="list-items"></div>';
 
             insertDragToolbar();
             insertDragToolbar();
@@ -190,9 +190,9 @@ describe("Drag and Drop Tile Reordering", () => {
     describe("Drag Mode Toggle", () => {
         beforeEach(() => {
             document.body.innerHTML = `
-                <div class="film_list-wrap">
-                    <div class="flw-item">
-                        <div class="film-name"><a title="Anime" href="/watch/anime-123">Anime</a></div>
+                <div id="list-items">
+                    <div class="item">
+                        <div class="b1"><a class="name d-title" href="/watch/anime-onexx/ep-1">Anime</a></div>
                     </div>
                 </div>
             `;
@@ -202,7 +202,7 @@ describe("Drag and Drop Tile Reordering", () => {
         it("should enable drag mode", () => {
             enableDragMode();
 
-            const item = document.querySelector(".flw-item");
+            const item = document.querySelector(".item");
             expect(item?.getAttribute("draggable")).toBe("true");
         });
 
@@ -221,7 +221,7 @@ describe("Drag and Drop Tile Reordering", () => {
             enableDragMode();
             disableDragMode();
 
-            const item = document.querySelector(".flw-item");
+            const item = document.querySelector(".item");
             expect(item?.getAttribute("draggable")).toBeNull();
         });
 
@@ -239,22 +239,22 @@ describe("Drag and Drop Tile Reordering", () => {
 
         it("should toggle drag mode", () => {
             toggleDragMode();
-            expect(document.querySelector(".flw-item")?.getAttribute("draggable")).toBe("true");
+            expect(document.querySelector(".item")?.getAttribute("draggable")).toBe("true");
 
             toggleDragMode();
-            expect(document.querySelector(".flw-item")?.getAttribute("draggable")).toBeNull();
+            expect(document.querySelector(".item")?.getAttribute("draggable")).toBeNull();
         });
     });
 
     describe("Drag Event Handlers", () => {
         beforeEach(() => {
             document.body.innerHTML = `
-                <div class="film_list-wrap">
-                    <div class="flw-item" id="item1">
-                        <div class="film-name"><a title="A" href="/watch/anime-a-111">A</a></div>
+                <div id="list-items">
+                    <div class="item" id="item1">
+                        <div class="b1"><a class="name d-title" href="/watch/anime-a-aaaaa/ep-1">A</a></div>
                     </div>
-                    <div class="flw-item" id="item2">
-                        <div class="film-name"><a title="B" href="/watch/anime-b-222">B</a></div>
+                    <div class="item" id="item2">
+                        <div class="b1"><a class="name d-title" href="/watch/anime-b-bbbbb/ep-1">B</a></div>
                     </div>
                 </div>
             `;
@@ -333,7 +333,7 @@ describe("Drag and Drop Tile Reordering", () => {
 
         it("should not reorder when dropping on same element", () => {
             const item1 = document.querySelector("#item1") as HTMLElement;
-            const container = document.querySelector(".film_list-wrap") as HTMLElement;
+            const container = document.querySelector("#list-items") as HTMLElement;
             const initialOrder = Array.from(container.children).map((el) => el.id);
 
             // Start dragging item1
@@ -352,9 +352,9 @@ describe("Drag and Drop Tile Reordering", () => {
             // Disable any existing drag mode first
             disableDragMode();
             document.body.innerHTML = `
-                <div class="film_list-wrap">
-                    <div class="flw-item" id="item1">
-                        <div class="film-name"><a title="A" href="/watch/anime-a-111">A</a></div>
+                <div id="list-items">
+                    <div class="item" id="item1">
+                        <div class="b1"><a class="name d-title" href="/watch/anime-a-aaaaa/ep-1">A</a></div>
                     </div>
                 </div>
             `;
@@ -396,15 +396,15 @@ describe("Drag and Drop Tile Reordering", () => {
     describe("Order Restoration", () => {
         beforeEach(() => {
             document.body.innerHTML = `
-                <div class="film_list-wrap">
-                    <div class="flw-item" id="item1">
-                        <div class="film-name"><a title="A" href="/watch/anime-a-111">A</a></div>
+                <div id="list-items">
+                    <div class="item" id="item1">
+                        <div class="b1"><a class="name d-title" href="/watch/anime-a-aaaaa/ep-1">A</a></div>
                     </div>
-                    <div class="flw-item" id="item2">
-                        <div class="film-name"><a title="B" href="/watch/anime-b-222">B</a></div>
+                    <div class="item" id="item2">
+                        <div class="b1"><a class="name d-title" href="/watch/anime-b-bbbbb/ep-1">B</a></div>
                     </div>
-                    <div class="flw-item" id="item3">
-                        <div class="film-name"><a title="C" href="/watch/anime-c-333">C</a></div>
+                    <div class="item" id="item3">
+                        <div class="b1"><a class="name d-title" href="/watch/anime-c-ccccc/ep-1">C</a></div>
                     </div>
                 </div>
             `;
@@ -415,7 +415,7 @@ describe("Drag and Drop Tile Reordering", () => {
 
             await restoreTileOrder();
 
-            const items = document.querySelectorAll(".flw-item");
+            const items = document.querySelectorAll(".item");
             expect(items[0].id).toBe("item1");
             expect(items[1].id).toBe("item2");
             expect(items[2].id).toBe("item3");
@@ -423,30 +423,30 @@ describe("Drag and Drop Tile Reordering", () => {
 
         it("should restore order from saved order", async () => {
             mockGet.mockResolvedValue({
-                animeIds: ["333", "111", "222"],
+                animeIds: ["anime-c-ccccc", "anime-a-aaaaa", "anime-b-bbbbb"],
                 lastUpdated: "2024-01-01T00:00:00.000Z",
             });
 
             await restoreTileOrder();
 
-            const items = document.querySelectorAll(".flw-item");
-            expect(items[0].id).toBe("item3"); // 333
-            expect(items[1].id).toBe("item1"); // 111
-            expect(items[2].id).toBe("item2"); // 222
+            const items = document.querySelectorAll(".item");
+            expect(items[0].id).toBe("item3"); // anime-c-ccccc
+            expect(items[1].id).toBe("item1"); // anime-a-aaaaa
+            expect(items[2].id).toBe("item2"); // anime-b-bbbbb
         });
 
         it("should place new tiles at the end", async () => {
             mockGet.mockResolvedValue({
-                animeIds: ["333", "111"], // 222 is not in saved order
+                animeIds: ["anime-c-ccccc", "anime-a-aaaaa"], // anime-b-bbbbb is not in saved order
                 lastUpdated: "2024-01-01T00:00:00.000Z",
             });
 
             await restoreTileOrder();
 
-            const items = document.querySelectorAll(".flw-item");
-            expect(items[0].id).toBe("item3"); // 333
-            expect(items[1].id).toBe("item1"); // 111
-            expect(items[2].id).toBe("item2"); // 222 (new, at end)
+            const items = document.querySelectorAll(".item");
+            expect(items[0].id).toBe("item3"); // anime-c-ccccc
+            expect(items[1].id).toBe("item1"); // anime-a-aaaaa
+            expect(items[2].id).toBe("item2"); // anime-b-bbbbb (new, at end)
         });
     });
 
@@ -476,7 +476,7 @@ describe("Drag and Drop Tile Reordering", () => {
 
     describe("Initialize Drag and Drop", () => {
         it("should insert toolbar and restore order", async () => {
-            document.body.innerHTML = '<div class="film_list-wrap"></div>';
+            document.body.innerHTML = '<div id="list-items"></div>';
             mockGet.mockResolvedValue(null);
 
             await initializeDragAndDrop();
@@ -499,15 +499,15 @@ describe("Drag and Drop Tile Reordering", () => {
     describe("Keyboard Navigation", () => {
         beforeEach(() => {
             document.body.innerHTML = `
-                <div class="film_list-wrap">
-                    <div class="flw-item" id="item1">
-                        <div class="film-name"><a title="A" href="/watch/anime-a-111">A</a></div>
+                <div id="list-items">
+                    <div class="item" id="item1">
+                        <div class="b1"><a class="name d-title" href="/watch/anime-a-aaaaa/ep-1">A</a></div>
                     </div>
-                    <div class="flw-item" id="item2">
-                        <div class="film-name"><a title="B" href="/watch/anime-b-222">B</a></div>
+                    <div class="item" id="item2">
+                        <div class="b1"><a class="name d-title" href="/watch/anime-b-bbbbb/ep-1">B</a></div>
                     </div>
-                    <div class="flw-item" id="item3">
-                        <div class="film-name"><a title="C" href="/watch/anime-c-333">C</a></div>
+                    <div class="item" id="item3">
+                        <div class="b1"><a class="name d-title" href="/watch/anime-c-ccccc/ep-1">C</a></div>
                     </div>
                 </div>
             `;
@@ -583,7 +583,7 @@ describe("Drag and Drop Tile Reordering", () => {
 
             await vi.advanceTimersByTimeAsync(600);
 
-            const items = document.querySelectorAll(".flw-item");
+            const items = document.querySelectorAll(".item");
             expect(items[0].id).toBe("item2");
             expect(items[1].id).toBe("item1");
 
@@ -614,12 +614,12 @@ describe("Drag and Drop Tile Reordering", () => {
     describe("Drop with drag-over cleanup", () => {
         beforeEach(() => {
             document.body.innerHTML = `
-                <div class="film_list-wrap">
-                    <div class="flw-item" id="item1">
-                        <div class="film-name"><a title="A" href="/watch/anime-a-111">A</a></div>
+                <div id="list-items">
+                    <div class="item" id="item1">
+                        <div class="b1"><a class="name d-title" href="/watch/anime-a-aaaaa/ep-1">A</a></div>
                     </div>
-                    <div class="flw-item" id="item2">
-                        <div class="film-name"><a title="B" href="/watch/anime-b-222">B</a></div>
+                    <div class="item" id="item2">
+                        <div class="b1"><a class="name d-title" href="/watch/anime-b-bbbbb/ep-1">B</a></div>
                     </div>
                 </div>
             `;
@@ -671,15 +671,15 @@ describe("Drag and Drop Tile Reordering", () => {
     describe("Move tile with Enter to another position", () => {
         beforeEach(() => {
             document.body.innerHTML = `
-                <div class="film_list-wrap">
-                    <div class="flw-item" id="item1">
-                        <div class="film-name"><a title="A" href="/watch/anime-a-111">A</a></div>
+                <div id="list-items">
+                    <div class="item" id="item1">
+                        <div class="b1"><a class="name d-title" href="/watch/anime-a-aaaaa/ep-1">A</a></div>
                     </div>
-                    <div class="flw-item" id="item2">
-                        <div class="film-name"><a title="B" href="/watch/anime-b-222">B</a></div>
+                    <div class="item" id="item2">
+                        <div class="b1"><a class="name d-title" href="/watch/anime-b-bbbbb/ep-1">B</a></div>
                     </div>
-                    <div class="flw-item" id="item3">
-                        <div class="film-name"><a title="C" href="/watch/anime-c-333">C</a></div>
+                    <div class="item" id="item3">
+                        <div class="b1"><a class="name d-title" href="/watch/anime-c-ccccc/ep-1">C</a></div>
                     </div>
                 </div>
             `;
@@ -708,7 +708,7 @@ describe("Drag and Drop Tile Reordering", () => {
             await vi.advanceTimersByTimeAsync(600);
 
             // item1 should now be after item3
-            const items = document.querySelectorAll(".flw-item");
+            const items = document.querySelectorAll(".item");
             expect(items[2].id).toBe("item1");
 
             vi.useRealTimers();
@@ -748,7 +748,7 @@ describe("Drag and Drop Tile Reordering", () => {
 
             await vi.advanceTimersByTimeAsync(600);
 
-            const items = document.querySelectorAll(".flw-item");
+            const items = document.querySelectorAll(".item");
             expect(items[0].id).toBe("item2");
             expect(items[1].id).toBe("item1");
 
@@ -759,12 +759,12 @@ describe("Drag and Drop Tile Reordering", () => {
     describe("Drop position calculations", () => {
         beforeEach(() => {
             document.body.innerHTML = `
-                <div class="film_list-wrap">
-                    <div class="flw-item" id="item1" style="width: 200px; height: 100px;">
-                        <div class="film-name"><a title="A" href="/watch/anime-a-111">A</a></div>
+                <div id="list-items">
+                    <div class="item" id="item1" style="width: 200px; height: 100px;">
+                        <div class="b1"><a class="name d-title" href="/watch/anime-a-aaaaa/ep-1">A</a></div>
                     </div>
-                    <div class="flw-item" id="item2" style="width: 200px; height: 100px;">
-                        <div class="film-name"><a title="B" href="/watch/anime-b-222">B</a></div>
+                    <div class="item" id="item2" style="width: 200px; height: 100px;">
+                        <div class="b1"><a class="name d-title" href="/watch/anime-b-bbbbb/ep-1">B</a></div>
                     </div>
                 </div>
             `;
