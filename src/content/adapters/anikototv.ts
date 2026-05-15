@@ -15,10 +15,9 @@ const SELECTORS = {
 // `/watch/foo/ep-1/other` don't sneak through.
 const WATCH_PATH_RE = /^\/watch\/([^/]+)\/ep-\d+\/?$/;
 
-// Anikoto host check used to scope watch-page handling. The top-level
-// `matches` stays catch-all so card overlays still attach wherever the list
-// DOM shape happens to appear, but the single-page modal is restricted to
-// the actual site so unrelated pages with similar paths don't get hijacked.
+// Anikoto host check used to scope this adapter's site-specific handling to
+// anikototv hosts, so unrelated pages with similar paths or DOM structures
+// are not treated as Anikoto pages.
 const ANIKOTOTV_HOST = "anikototv.to";
 
 function isAnikotoHost(hostname: string): boolean {
