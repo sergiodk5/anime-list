@@ -41,13 +41,30 @@ function extractSlugFromHref(href: string): string | null {
     return match ? match[1] : null;
 }
 
+function toSafePosterUrl(raw: string | null | undefined): string | undefined {
+    // Poster URLs come from an untrusted third-party page and end up bound to
+    // <img :src> in the privileged options page, so only absolute http/https
+    // URLs are accepted. Resolving against document.baseURI also turns
+    // relative src values into absolute ones (a relative path stored verbatim
+    // would resolve against chrome-extension:// on the options page) and
+    // rejects javascript:/data:/blob: values, including lazy-load
+    // placeholders.
+    if (!raw) return undefined;
+    try {
+        const url = new URL(raw, document.baseURI);
+        return url.protocol === "http:" || url.protocol === "https:" ? url.href : undefined;
+    } catch {
+        return undefined;
+    }
+}
+
 function extractCardPosterUrl(card: Element): string | undefined {
     // The real card markup nests the poster as `.ani.poster > a > img` with a
     // plain absolute `src`. `data-src` is a cheap fallback in case the site
     // ever adopts lazy loading; anything else is treated as "no poster".
     const img = card.querySelector<HTMLImageElement>(`${SELECTORS.POSTER} img`);
     const src = img?.getAttribute("src") || img?.getAttribute("data-src");
-    return src || undefined;
+    return toSafePosterUrl(src);
 }
 
 function extractCardAnime(card: Element): AnimeData | null {
@@ -106,7 +123,7 @@ function extractWatchPagePosterUrl(): string | undefined {
     // Best-effort only — there is no captured watch-page DOM to verify an
     // og:image tag exists, so nothing may depend on this returning a value.
     const content = document.querySelector('meta[property="og:image"]')?.getAttribute("content");
-    return content || undefined;
+    return toSafePosterUrl(content);
 }
 
 function extractWatchPageAnime(): AnimeData | null {

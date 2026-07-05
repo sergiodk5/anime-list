@@ -466,6 +466,19 @@ describe("AnimeService", () => {
             expect(mockEpisodeProgressRepo.update).not.toHaveBeenCalled();
         });
 
+        it.each([
+            ["javascript: scheme", "javascript:alert(1)"],
+            ["data: scheme", "data:image/png;base64,iVBORw0KGgo="],
+            ["blob: scheme", "blob:https://anikototv.to/8f6f3b1c"],
+            ["relative path", "/thumbnail/relative.jpg"],
+            ["not a URL", "not a url"],
+        ])("should not update when the poster URL is not absolute http(s) (%s)", async (_label, unsafeUrl) => {
+            await animeService.updatePosterUrl("test-anime-1", unsafeUrl);
+
+            expect(mockEpisodeProgressRepo.findById).not.toHaveBeenCalled();
+            expect(mockEpisodeProgressRepo.update).not.toHaveBeenCalled();
+        });
+
         it("should not update when the anime is not tracked", async () => {
             mockEpisodeProgressRepo.findById.mockResolvedValue(null);
 

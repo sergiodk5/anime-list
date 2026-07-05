@@ -34,6 +34,13 @@ console.log("AnimeList content script loaded");
 // Initialize the anime service
 const animeService = new AnimeService();
 
+// Poster backfill writes are serialized through this chain. Episode progress
+// is stored as a single record, and updatePosterUrl does a read-modify-write
+// on it — concurrent backfills (initial page scan, MutationObserver batches)
+// would interleave those whole-record writes and drop each other's updates.
+// updatePosterUrl swallows its own errors, so the chain never rejects.
+let posterBackfillQueue: Promise<void> = Promise.resolve();
+
 // Resolve the active site adapter. When no adapter matches, the script self-disables.
 let activeAdapter: SiteAdapter | null = null;
 try {
@@ -880,10 +887,13 @@ export async function addControlsToItem(element: Element): Promise<void> {
         // Opportunistic poster backfill for entries created before posters
         // were captured. Uses the (cached) extraction result — no extra DOM
         // query — and only ever writes when the stored entry has no poster,
-        // so this fires at most once per legacy anime. Fire-and-forget:
-        // updatePosterUrl swallows its own errors.
+        // so this fires at most once per legacy anime. Fire-and-forget from
+        // this function's perspective, but queued through posterBackfillQueue
+        // so read-modify-write cycles on the shared progress record never
+        // overlap and clobber each other.
         if (status.isTracked && status.progress && !status.progress.posterUrl && animeData.posterUrl) {
-            void animeService.updatePosterUrl(animeData.animeId, animeData.posterUrl);
+            const { animeId, posterUrl } = animeData;
+            posterBackfillQueue = posterBackfillQueue.then(() => animeService.updatePosterUrl(animeId, posterUrl));
         }
 
         // Handle hidden anime - no controls shown, the entire tile is hidden

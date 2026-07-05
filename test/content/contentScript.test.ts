@@ -566,6 +566,46 @@ describe("Content Script", () => {
 
             expect(mockAnimeService.updatePosterUrl).not.toHaveBeenCalled();
         });
+
+        it("should serialize backfill writes so a second write only starts after the first resolves", async () => {
+            const firstSlug = "serial-first-ggggg";
+            const secondSlug = "serial-second-hhhhh";
+            const firstPoster = "https://cdn.anipixcdn.co/thumbnail/serial-first.jpg";
+            const secondPoster = "https://cdn.anipixcdn.co/thumbnail/serial-second.jpg";
+            const firstItem = buildTrackedItem(firstSlug, firstPoster);
+            const secondItem = buildTrackedItem(secondSlug, secondPoster);
+            mockAnimeService.getAnimeStatus.mockImplementation((animeId: string) =>
+                Promise.resolve(trackedStatus(animeId)),
+            );
+
+            let resolveFirstBackfill!: () => void;
+            mockAnimeService.updatePosterUrl
+                .mockImplementationOnce(
+                    () =>
+                        new Promise<void>((resolve) => {
+                            resolveFirstBackfill = resolve;
+                        }),
+                )
+                .mockResolvedValueOnce(undefined);
+
+            const { addControlsToItem } = await import("@/content/index");
+            await addControlsToItem(firstItem);
+            await addControlsToItem(secondItem);
+            // Flush microtasks so the queued first backfill has started.
+            await Promise.resolve();
+
+            // The first write is in flight and unresolved — the second must
+            // not have started yet (no overlapping read-modify-write cycles).
+            expect(mockAnimeService.updatePosterUrl).toHaveBeenCalledTimes(1);
+            expect(mockAnimeService.updatePosterUrl).toHaveBeenCalledWith(firstSlug, firstPoster);
+
+            resolveFirstBackfill();
+            await Promise.resolve();
+            await Promise.resolve();
+
+            expect(mockAnimeService.updatePosterUrl).toHaveBeenCalledTimes(2);
+            expect(mockAnimeService.updatePosterUrl).toHaveBeenLastCalledWith(secondSlug, secondPoster);
+        });
     });
 
     describe("Edge Cases", () => {

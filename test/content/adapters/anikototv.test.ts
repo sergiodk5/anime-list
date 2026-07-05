@@ -131,6 +131,30 @@ describe("anikototv adapter", () => {
         expect(anikototvAdapter.extractAnime(card)?.posterUrl).toBeUndefined();
     });
 
+    it("omits posterUrl when the img src uses a javascript: scheme", () => {
+        const card = buildCard({ imgSrc: "javascript:alert(1)" });
+        expect(anikototvAdapter.extractAnime(card)?.posterUrl).toBeUndefined();
+    });
+
+    it("omits posterUrl when the img src is a data: lazy-load placeholder", () => {
+        const card = buildCard({
+            imgSrc: "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==",
+        });
+        expect(anikototvAdapter.extractAnime(card)?.posterUrl).toBeUndefined();
+    });
+
+    it("omits posterUrl when the data-src fallback uses a blob: scheme", () => {
+        const card = buildCard({ imgDataSrc: "blob:https://anikototv.to/8f6f3b1c" });
+        expect(anikototvAdapter.extractAnime(card)?.posterUrl).toBeUndefined();
+    });
+
+    it("resolves relative img src values to absolute URLs", () => {
+        const card = buildCard({ imgSrc: "/thumbnail/relative.jpg" });
+        expect(anikototvAdapter.extractAnime(card)?.posterUrl).toBe(
+            new URL("/thumbnail/relative.jpg", document.baseURI).href,
+        );
+    });
+
     it("omits posterUrl when the poster img is missing entirely", () => {
         const card = buildCard({ includeImg: false });
         const anime = anikototvAdapter.extractAnime(card);
@@ -270,6 +294,22 @@ describe("anikototv adapter — watch page", () => {
             pathname: "/watch/some-slug-abcde/ep-1",
         } as Location);
         appendOgImageMeta("");
+        expect(watchPage.extractAnime()?.posterUrl).toBeUndefined();
+    });
+
+    it("omits posterUrl when the og:image content uses a javascript: scheme", () => {
+        vi.spyOn(window, "location", "get").mockReturnValue({
+            pathname: "/watch/some-slug-abcde/ep-1",
+        } as Location);
+        appendOgImageMeta("javascript:alert(1)");
+        expect(watchPage.extractAnime()?.posterUrl).toBeUndefined();
+    });
+
+    it("omits posterUrl when the og:image content uses a data: scheme", () => {
+        vi.spyOn(window, "location", "get").mockReturnValue({
+            pathname: "/watch/some-slug-abcde/ep-1",
+        } as Location);
+        appendOgImageMeta("data:image/png;base64,iVBORw0KGgo=");
         expect(watchPage.extractAnime()?.posterUrl).toBeUndefined();
     });
 
