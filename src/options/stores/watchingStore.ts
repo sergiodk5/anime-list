@@ -92,6 +92,7 @@ export const useWatchingStore = defineStore("watching", () => {
                 episodeId: `${anime.animeSlug}-episode-1`,
                 lastWatched: new Date().toISOString(),
                 totalEpisodes: 12,
+                posterUrl: anime.posterUrl,
             };
             state.value.items.push(newProgress);
             state.value.itemsMap[anime.animeId] = newProgress;

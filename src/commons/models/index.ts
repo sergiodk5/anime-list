@@ -20,6 +20,7 @@ export interface EpisodeProgress {
     episodeId: string;
     lastWatched: string;
     totalEpisodes?: number;
+    posterUrl?: string;
 }
 
 export interface PlanToWatch {
@@ -33,6 +34,7 @@ export interface AnimeData {
     animeId: string;
     animeTitle: string;
     animeSlug: string;
+    posterUrl?: string;
 }
 
 export interface TileOrder {

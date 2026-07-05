@@ -5,19 +5,33 @@ interface CardOptions {
     href?: string;
     title?: string;
     titleHref?: string;
+    imgSrc?: string;
+    imgDataSrc?: string;
+    includeImg?: boolean;
 }
 
 function buildCard({
     href = "https://anikototv.to/watch/the-warrior-princess-and-the-barbaric-king-snxwm/ep-6",
     title = "The Warrior Princess and the Barbaric King",
     titleHref,
+    imgSrc,
+    imgDataSrc,
+    includeImg = true,
 }: CardOptions = {}): HTMLDivElement {
+    const imgAttrs = [
+        `alt="${title}"`,
+        imgSrc ? `src="${imgSrc}"` : "",
+        imgDataSrc ? `data-src="${imgDataSrc}"` : "",
+    ]
+        .filter(Boolean)
+        .join(" ");
+    const img = includeImg ? `<img ${imgAttrs}>` : "";
     const card = document.createElement("div");
     card.className = "item";
     card.innerHTML = `
         <div class="inner">
             <div class="ani poster tip tooltipstered" data-tip="8741">
-                <a href="${href}"><img alt="${title}"></a>
+                <a href="${href}">${img}</a>
             </div>
             <div class="info">
                 <div class="b1">
@@ -92,6 +106,70 @@ describe("anikototv adapter", () => {
         expect(anikototvAdapter.extractAnime(card)).toBeNull();
     });
 
+    it("extracts the poster URL from the poster img src", () => {
+        const card = buildCard({ imgSrc: "https://cdn.anipixcdn.co/thumbnail/92c2425736b1065fa04616737b9e41b5.jpg" });
+        expect(anikototvAdapter.extractAnime(card)?.posterUrl).toBe(
+            "https://cdn.anipixcdn.co/thumbnail/92c2425736b1065fa04616737b9e41b5.jpg",
+        );
+    });
+
+    it("prefers the src attribute over data-src when both are present", () => {
+        const card = buildCard({
+            imgSrc: "https://cdn.anipixcdn.co/thumbnail/real.jpg",
+            imgDataSrc: "https://cdn.anipixcdn.co/thumbnail/lazy.jpg",
+        });
+        expect(anikototvAdapter.extractAnime(card)?.posterUrl).toBe("https://cdn.anipixcdn.co/thumbnail/real.jpg");
+    });
+
+    it("falls back to the data-src attribute when src is missing", () => {
+        const card = buildCard({ imgDataSrc: "https://cdn.anipixcdn.co/thumbnail/lazy.jpg" });
+        expect(anikototvAdapter.extractAnime(card)?.posterUrl).toBe("https://cdn.anipixcdn.co/thumbnail/lazy.jpg");
+    });
+
+    it("omits posterUrl when the poster img has no usable source", () => {
+        const card = buildCard();
+        expect(anikototvAdapter.extractAnime(card)?.posterUrl).toBeUndefined();
+    });
+
+    it("omits posterUrl when the img src uses a javascript: scheme", () => {
+        const card = buildCard({ imgSrc: "javascript:alert(1)" });
+        expect(anikototvAdapter.extractAnime(card)?.posterUrl).toBeUndefined();
+    });
+
+    it("omits posterUrl when the img src is a data: lazy-load placeholder", () => {
+        const card = buildCard({
+            imgSrc: "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==",
+        });
+        expect(anikototvAdapter.extractAnime(card)?.posterUrl).toBeUndefined();
+    });
+
+    it("falls back to data-src when src is a data: lazy-load placeholder", () => {
+        const card = buildCard({
+            imgSrc: "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==",
+            imgDataSrc: "https://cdn.anipixcdn.co/thumbnail/lazy.jpg",
+        });
+        expect(anikototvAdapter.extractAnime(card)?.posterUrl).toBe("https://cdn.anipixcdn.co/thumbnail/lazy.jpg");
+    });
+
+    it("omits posterUrl when the data-src fallback uses a blob: scheme", () => {
+        const card = buildCard({ imgDataSrc: "blob:https://anikototv.to/8f6f3b1c" });
+        expect(anikototvAdapter.extractAnime(card)?.posterUrl).toBeUndefined();
+    });
+
+    it("resolves relative img src values to absolute URLs", () => {
+        const card = buildCard({ imgSrc: "/thumbnail/relative.jpg" });
+        expect(anikototvAdapter.extractAnime(card)?.posterUrl).toBe(
+            new URL("/thumbnail/relative.jpg", document.baseURI).href,
+        );
+    });
+
+    it("omits posterUrl when the poster img is missing entirely", () => {
+        const card = buildCard({ includeImg: false });
+        const anime = anikototvAdapter.extractAnime(card);
+        expect(anime).not.toBeNull();
+        expect(anime?.posterUrl).toBeUndefined();
+    });
+
     it("returns the poster wrapper as the injection target", () => {
         const card = buildCard();
         const target = anikototvAdapter.getInjectionTarget(card) as HTMLElement | null;
@@ -126,8 +204,17 @@ describe("anikototv adapter — watch page", () => {
 
     afterEach(() => {
         document.title = originalTitle;
+        // setup.ts only clears document.body — og:image metas go in the head.
+        document.head.querySelectorAll('meta[property="og:image"]').forEach((meta) => meta.remove());
         vi.restoreAllMocks();
     });
+
+    function appendOgImageMeta(content: string): void {
+        const meta = document.createElement("meta");
+        meta.setAttribute("property", "og:image");
+        meta.setAttribute("content", content);
+        document.head.appendChild(meta);
+    }
 
     it("matches /watch/{slug}/ep-N URLs only", () => {
         expect(
@@ -193,6 +280,45 @@ describe("anikototv adapter — watch page", () => {
         } as Location);
         document.title = "";
         expect(watchPage.extractAnime()?.animeTitle).toBe("lonely-slug-zzzzz");
+    });
+
+    it("captures the og:image poster URL when the meta tag is present", () => {
+        vi.spyOn(window, "location", "get").mockReturnValue({
+            pathname: "/watch/some-slug-abcde/ep-1",
+        } as Location);
+        appendOgImageMeta("https://cdn.anipixcdn.co/poster/some-slug.jpg");
+        expect(watchPage.extractAnime()?.posterUrl).toBe("https://cdn.anipixcdn.co/poster/some-slug.jpg");
+    });
+
+    it("omits posterUrl when no og:image meta tag is present", () => {
+        vi.spyOn(window, "location", "get").mockReturnValue({
+            pathname: "/watch/some-slug-abcde/ep-1",
+        } as Location);
+        expect(watchPage.extractAnime()?.posterUrl).toBeUndefined();
+    });
+
+    it("omits posterUrl when the og:image meta tag has empty content", () => {
+        vi.spyOn(window, "location", "get").mockReturnValue({
+            pathname: "/watch/some-slug-abcde/ep-1",
+        } as Location);
+        appendOgImageMeta("");
+        expect(watchPage.extractAnime()?.posterUrl).toBeUndefined();
+    });
+
+    it("omits posterUrl when the og:image content uses a javascript: scheme", () => {
+        vi.spyOn(window, "location", "get").mockReturnValue({
+            pathname: "/watch/some-slug-abcde/ep-1",
+        } as Location);
+        appendOgImageMeta("javascript:alert(1)");
+        expect(watchPage.extractAnime()?.posterUrl).toBeUndefined();
+    });
+
+    it("omits posterUrl when the og:image content uses a data: scheme", () => {
+        vi.spyOn(window, "location", "get").mockReturnValue({
+            pathname: "/watch/some-slug-abcde/ep-1",
+        } as Location);
+        appendOgImageMeta("data:image/png;base64,iVBORw0KGgo=");
+        expect(watchPage.extractAnime()?.posterUrl).toBeUndefined();
     });
 
     it("returns null when the path does not match a /watch/{slug}/ep-N shape", () => {

@@ -169,6 +169,12 @@ export class AnimeService {
                 lastWatched: new Date().toISOString(),
             };
 
+            // Same storage chokepoint guard as updatePosterUrl: only persist
+            // absolute http/https URLs since they are later bound to <img :src>.
+            if (animeData.posterUrl && AnimeService.isSafePosterUrl(animeData.posterUrl)) {
+                episodeProgress.posterUrl = animeData.posterUrl;
+            }
+
             await this.episodeProgressRepository.create(episodeProgress);
 
             // Remove from plan to watch if it was there
@@ -247,6 +253,49 @@ export class AnimeService {
                 message: "Failed to update episode progress",
                 error: error instanceof Error ? error.message : String(error),
             };
+        }
+    }
+
+    /**
+     * Backfill/refresh the stored poster URL for a tracked anime.
+     * No-op when the URL is not an absolute http/https URL, the anime is not
+     * tracked, or the stored URL is already up to date. Errors are swallowed
+     * so callers can safely fire-and-forget (used by the content-script
+     * backfill).
+     */
+    async updatePosterUrl(animeId: string, posterUrl: string): Promise<void> {
+        try {
+            // Storage chokepoint guard: poster URLs originate from untrusted
+            // page content and are later bound to <img :src> in extension
+            // pages, so anything but an absolute http/https URL is rejected.
+            if (!AnimeService.isSafePosterUrl(posterUrl)) {
+                return;
+            }
+
+            const existingProgress = await this.episodeProgressRepository.findById(animeId);
+            if (!existingProgress || existingProgress.posterUrl === posterUrl) {
+                return;
+            }
+
+            await this.episodeProgressRepository.update(animeId, { posterUrl });
+        } catch (error) {
+            console.error("Failed to update poster URL:", error);
+        }
+    }
+
+    /**
+     * Returns true only for absolute http/https URLs — the only scheme family
+     * safe to persist and later render as an <img> source.
+     */
+    private static isSafePosterUrl(posterUrl: string): boolean {
+        if (!posterUrl) {
+            return false;
+        }
+        try {
+            const url = new URL(posterUrl);
+            return url.protocol === "http:" || url.protocol === "https:";
+        } catch {
+            return false;
         }
     }
 

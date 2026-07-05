@@ -9,6 +9,7 @@ const mockAnimeService = {
     removeFromPlanToWatch: vi.fn(),
     startWatching: vi.fn(),
     updateEpisodeProgress: vi.fn(),
+    updatePosterUrl: vi.fn(),
     stopWatching: vi.fn(),
     hideAnime: vi.fn(),
     unhideAnime: vi.fn(),
@@ -476,6 +477,134 @@ describe("Content Script", () => {
             expect(startWatchingButtons.length).toBeGreaterThan(0);
             expect(removePlanButtons.length).toBeGreaterThan(0);
             expect(planButtons.length).toBe(0);
+        });
+    });
+
+    describe("Poster Backfill", () => {
+        function buildTrackedItem(slug: string, imgSrc?: string): HTMLElement {
+            const item = document.createElement("div");
+            item.className = "item";
+            item.innerHTML = `
+                <div class="inner">
+                    <div class="ani poster"><a href="/watch/${slug}/ep-1"><img alt="Tracked Anime"${imgSrc ? ` src="${imgSrc}"` : ""}></a></div>
+                    <div class="info">
+                        <div class="b1">
+                            <a class="name d-title" href="/watch/${slug}/ep-1">Tracked Anime</a>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.querySelector("#list-items")?.appendChild(item);
+            return item;
+        }
+
+        function trackedStatus(animeId: string, posterUrl?: string) {
+            return {
+                isTracked: true,
+                isPlanned: false,
+                isHidden: false,
+                progress: {
+                    animeId,
+                    animeTitle: "Tracked Anime",
+                    animeSlug: animeId,
+                    currentEpisode: 3,
+                    episodeId: `${animeId}-episode-3`,
+                    lastWatched: "2024-01-15T10:30:00.000Z",
+                    posterUrl,
+                },
+            };
+        }
+
+        it("should backfill the poster URL when tracked progress has none and the card has one", async () => {
+            const slug = "backfill-target-ccccc";
+            const posterUrl = "https://cdn.anipixcdn.co/thumbnail/backfill.jpg";
+            const item = buildTrackedItem(slug, posterUrl);
+            mockAnimeService.getAnimeStatus.mockResolvedValue(trackedStatus(slug));
+            mockAnimeService.updatePosterUrl.mockResolvedValue(undefined);
+
+            const { addControlsToItem } = await import("@/content/index");
+            await addControlsToItem(item);
+
+            expect(mockAnimeService.updatePosterUrl).toHaveBeenCalledWith(slug, posterUrl);
+        });
+
+        it("should not backfill when the stored progress already has a poster URL", async () => {
+            const slug = "already-postered-ddddd";
+            const item = buildTrackedItem(slug, "https://cdn.anipixcdn.co/thumbnail/fresh.jpg");
+            mockAnimeService.getAnimeStatus.mockResolvedValue(
+                trackedStatus(slug, "https://cdn.anipixcdn.co/thumbnail/stored.jpg"),
+            );
+
+            const { addControlsToItem } = await import("@/content/index");
+            await addControlsToItem(item);
+
+            expect(mockAnimeService.updatePosterUrl).not.toHaveBeenCalled();
+        });
+
+        it("should not backfill when the card has no poster URL to offer", async () => {
+            const slug = "no-poster-eeeee";
+            const item = buildTrackedItem(slug);
+            mockAnimeService.getAnimeStatus.mockResolvedValue(trackedStatus(slug));
+
+            const { addControlsToItem } = await import("@/content/index");
+            await addControlsToItem(item);
+
+            expect(mockAnimeService.updatePosterUrl).not.toHaveBeenCalled();
+        });
+
+        it("should not backfill when the anime is not tracked", async () => {
+            const slug = "untracked-fffff";
+            const item = buildTrackedItem(slug, "https://cdn.anipixcdn.co/thumbnail/untracked.jpg");
+            mockAnimeService.getAnimeStatus.mockResolvedValue({
+                isTracked: false,
+                isPlanned: false,
+                isHidden: false,
+            });
+
+            const { addControlsToItem } = await import("@/content/index");
+            await addControlsToItem(item);
+
+            expect(mockAnimeService.updatePosterUrl).not.toHaveBeenCalled();
+        });
+
+        it("should serialize backfill writes so a second write only starts after the first resolves", async () => {
+            const firstSlug = "serial-first-ggggg";
+            const secondSlug = "serial-second-hhhhh";
+            const firstPoster = "https://cdn.anipixcdn.co/thumbnail/serial-first.jpg";
+            const secondPoster = "https://cdn.anipixcdn.co/thumbnail/serial-second.jpg";
+            const firstItem = buildTrackedItem(firstSlug, firstPoster);
+            const secondItem = buildTrackedItem(secondSlug, secondPoster);
+            mockAnimeService.getAnimeStatus.mockImplementation((animeId: string) =>
+                Promise.resolve(trackedStatus(animeId)),
+            );
+
+            let resolveFirstBackfill!: () => void;
+            mockAnimeService.updatePosterUrl
+                .mockImplementationOnce(
+                    () =>
+                        new Promise<void>((resolve) => {
+                            resolveFirstBackfill = resolve;
+                        }),
+                )
+                .mockResolvedValueOnce(undefined);
+
+            const { addControlsToItem } = await import("@/content/index");
+            await addControlsToItem(firstItem);
+            await addControlsToItem(secondItem);
+            // Flush microtasks so the queued first backfill has started.
+            await Promise.resolve();
+
+            // The first write is in flight and unresolved — the second must
+            // not have started yet (no overlapping read-modify-write cycles).
+            expect(mockAnimeService.updatePosterUrl).toHaveBeenCalledTimes(1);
+            expect(mockAnimeService.updatePosterUrl).toHaveBeenCalledWith(firstSlug, firstPoster);
+
+            resolveFirstBackfill();
+            await Promise.resolve();
+            await Promise.resolve();
+
+            expect(mockAnimeService.updatePosterUrl).toHaveBeenCalledTimes(2);
+            expect(mockAnimeService.updatePosterUrl).toHaveBeenLastCalledWith(secondSlug, secondPoster);
         });
     });
 

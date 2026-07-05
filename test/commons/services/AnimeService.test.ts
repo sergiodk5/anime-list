@@ -389,6 +389,67 @@ describe("AnimeService", () => {
             expect(mockEpisodeProgressRepo.create).not.toHaveBeenCalled();
         });
 
+        it("should persist the poster URL when the anime data includes one", async () => {
+            mockEpisodeProgressRepo.findById.mockResolvedValue(null);
+            mockPlanToWatchRepo.findById.mockResolvedValue(null);
+            mockHiddenAnimeRepo.exists.mockResolvedValue(false);
+            mockEpisodeProgressRepo.create.mockResolvedValue(undefined);
+
+            const animeDataWithPoster: AnimeData = {
+                ...sampleAnimeData,
+                posterUrl: "https://cdn.anipixcdn.co/thumbnail/test.jpg",
+            };
+
+            const result = await animeService.startWatching(animeDataWithPoster, 1);
+
+            expect(result.success).toBe(true);
+            expect(mockEpisodeProgressRepo.create).toHaveBeenCalledWith({
+                animeId: "test-anime-1",
+                animeTitle: "Test Anime",
+                animeSlug: "test-anime",
+                currentEpisode: 1,
+                episodeId: "test-anime-episode-1",
+                lastWatched: "2024-01-15T10:30:00.000Z",
+                posterUrl: "https://cdn.anipixcdn.co/thumbnail/test.jpg",
+            });
+        });
+
+        it("should not include a posterUrl key when the anime data has none", async () => {
+            mockEpisodeProgressRepo.findById.mockResolvedValue(null);
+            mockPlanToWatchRepo.findById.mockResolvedValue(null);
+            mockHiddenAnimeRepo.exists.mockResolvedValue(false);
+            mockEpisodeProgressRepo.create.mockResolvedValue(undefined);
+
+            await animeService.startWatching(sampleAnimeData, 1);
+
+            const createdProgress = mockEpisodeProgressRepo.create.mock.calls[0][0] as EpisodeProgress;
+            expect("posterUrl" in createdProgress).toBe(false);
+        });
+
+        it.each([
+            ["javascript: scheme", "javascript:alert(1)"],
+            ["data: scheme", "data:image/png;base64,iVBORw0KGgo="],
+            ["blob: scheme", "blob:https://anikototv.to/8f6f3b1c"],
+            ["relative path", "/thumbnail/relative.jpg"],
+            ["not a URL", "not a url"],
+        ])("should omit posterUrl when it is not absolute http(s) (%s)", async (_label, unsafeUrl) => {
+            mockEpisodeProgressRepo.findById.mockResolvedValue(null);
+            mockPlanToWatchRepo.findById.mockResolvedValue(null);
+            mockHiddenAnimeRepo.exists.mockResolvedValue(false);
+            mockEpisodeProgressRepo.create.mockResolvedValue(undefined);
+
+            const animeDataWithUnsafePoster: AnimeData = {
+                ...sampleAnimeData,
+                posterUrl: unsafeUrl,
+            };
+
+            const result = await animeService.startWatching(animeDataWithUnsafePoster, 1);
+
+            expect(result.success).toBe(true);
+            const createdProgress = mockEpisodeProgressRepo.create.mock.calls[0][0] as EpisodeProgress;
+            expect("posterUrl" in createdProgress).toBe(false);
+        });
+
         it("should handle repository errors gracefully", async () => {
             // Mock clean state for validation
             mockEpisodeProgressRepo.findById
@@ -407,6 +468,66 @@ describe("AnimeService", () => {
             expect(result.success).toBe(false);
             expect(result.message).toBe("Failed to start watching anime");
             expect(result.error).toBe("Create failed");
+        });
+    });
+
+    describe("updatePosterUrl", () => {
+        const posterUrl = "https://cdn.anipixcdn.co/thumbnail/updated.jpg";
+
+        it("should update the poster URL when the anime is tracked", async () => {
+            mockEpisodeProgressRepo.findById.mockResolvedValue(sampleEpisodeProgress);
+            mockEpisodeProgressRepo.update.mockResolvedValue(undefined);
+
+            await animeService.updatePosterUrl("test-anime-1", posterUrl);
+
+            expect(mockEpisodeProgressRepo.update).toHaveBeenCalledWith("test-anime-1", { posterUrl });
+        });
+
+        it("should not update when the poster URL is empty", async () => {
+            await animeService.updatePosterUrl("test-anime-1", "");
+
+            expect(mockEpisodeProgressRepo.findById).not.toHaveBeenCalled();
+            expect(mockEpisodeProgressRepo.update).not.toHaveBeenCalled();
+        });
+
+        it.each([
+            ["javascript: scheme", "javascript:alert(1)"],
+            ["data: scheme", "data:image/png;base64,iVBORw0KGgo="],
+            ["blob: scheme", "blob:https://anikototv.to/8f6f3b1c"],
+            ["relative path", "/thumbnail/relative.jpg"],
+            ["not a URL", "not a url"],
+        ])("should not update when the poster URL is not absolute http(s) (%s)", async (_label, unsafeUrl) => {
+            await animeService.updatePosterUrl("test-anime-1", unsafeUrl);
+
+            expect(mockEpisodeProgressRepo.findById).not.toHaveBeenCalled();
+            expect(mockEpisodeProgressRepo.update).not.toHaveBeenCalled();
+        });
+
+        it("should not update when the anime is not tracked", async () => {
+            mockEpisodeProgressRepo.findById.mockResolvedValue(null);
+
+            await animeService.updatePosterUrl("test-anime-1", posterUrl);
+
+            expect(mockEpisodeProgressRepo.update).not.toHaveBeenCalled();
+        });
+
+        it("should not update when the stored poster URL is already up to date", async () => {
+            mockEpisodeProgressRepo.findById.mockResolvedValue({
+                ...sampleEpisodeProgress,
+                posterUrl,
+            });
+
+            await animeService.updatePosterUrl("test-anime-1", posterUrl);
+
+            expect(mockEpisodeProgressRepo.update).not.toHaveBeenCalled();
+        });
+
+        it("should swallow repository errors so callers can fire-and-forget", async () => {
+            mockEpisodeProgressRepo.findById.mockRejectedValue(new Error("Storage failed"));
+
+            await expect(animeService.updatePosterUrl("test-anime-1", posterUrl)).resolves.toBeUndefined();
+
+            expect(console.error).toHaveBeenCalledWith("Failed to update poster URL:", expect.any(Error));
         });
     });
 

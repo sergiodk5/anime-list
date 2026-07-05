@@ -2,6 +2,7 @@ import { mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ref } from "vue";
+import { createMemoryHistory, createRouter } from "vue-router";
 
 import { useHiddenStore } from "@/options/stores/hiddenStore";
 import { usePlanToWatchStore } from "@/options/stores/planToWatchStore";
@@ -258,6 +259,31 @@ describe("AllWatchLists - Phase 4 Store Integration", () => {
             // Check header elements
             expect(wrapper.find('[data-testid="watchlists-header"]').exists()).toBe(true);
             expect(wrapper.find('[data-testid="add-list-button"]').exists()).toBe(true);
+        });
+    });
+
+    describe("Navigation", () => {
+        it("should navigate to the watching page when the watching View button is clicked", async () => {
+            const router = createRouter({
+                history: createMemoryHistory(),
+                routes: [
+                    { path: "/", name: "home", component: { template: "<div />" } },
+                    { path: "/watching", name: "watching", component: { template: "<div />" } },
+                ],
+            });
+            router.push("/");
+            await router.isReady();
+
+            const wrapper = mount(AllWatchLists, {
+                global: {
+                    plugins: [pinia, router],
+                },
+            });
+
+            await wrapper.vm.$nextTick();
+            await wrapper.find('[data-testid="view-watching"]').trigger("click");
+
+            await vi.waitFor(() => expect(router.currentRoute.value.name).toBe("watching"));
         });
     });
 
