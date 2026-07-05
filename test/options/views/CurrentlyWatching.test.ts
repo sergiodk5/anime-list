@@ -45,6 +45,8 @@ function mockGetAllAnime(currentlyWatching: EpisodeProgress[]): void {
                     hiddenAnime: [],
                     totalCount: currentlyWatching.length,
                 }),
+                updateEpisodeProgress: vi.fn().mockResolvedValue({ success: true }),
+                stopWatching: vi.fn().mockResolvedValue({ success: true }),
             }) as any,
     );
 }
@@ -188,6 +190,71 @@ describe("CurrentlyWatching", () => {
             expect(cards[1].find('[data-testid="watching-card-poster"]').attributes("src")).toBe(
                 "https://cdn.anipixcdn.co/thumbnail/demon-slayer.jpg",
             );
+        });
+    });
+
+    describe("Card Interactions", () => {
+        // Fresh copies per test — the store mutates items optimistically and the
+        // module-level fixtures must not leak state between tests.
+        const cloneItems = () => sampleItems.map((item) => ({ ...item }));
+
+        const mountWithGrid = async (items: EpisodeProgress[]) => {
+            mockGetAllAnime(items);
+            const wrapper = mountView();
+            await vi.waitFor(() => expect(wrapper.find('[data-testid="watching-grid"]').exists()).toBe(true));
+            return wrapper;
+        };
+
+        it("should bump the episode text when the increment button is clicked", async () => {
+            const wrapper = await mountWithGrid(cloneItems());
+
+            // Sorted by title: cards[0] = Attack on Titan (Ep 5 / 25)
+            const cards = wrapper.findAll('[data-testid="watching-card"]');
+            await cards[0].find('[data-testid="watching-card-increment"]').trigger("click");
+
+            await vi.waitFor(() =>
+                expect(wrapper.findAll('[data-testid="watching-card-episodes"]')[0].text()).toBe("Ep 6 / 25"),
+            );
+        });
+
+        it("should lower the episode text when the decrement button is clicked", async () => {
+            const wrapper = await mountWithGrid(cloneItems());
+
+            const cards = wrapper.findAll('[data-testid="watching-card"]');
+            await cards[0].find('[data-testid="watching-card-decrement"]').trigger("click");
+
+            await vi.waitFor(() =>
+                expect(wrapper.findAll('[data-testid="watching-card-episodes"]')[0].text()).toBe("Ep 4 / 25"),
+            );
+        });
+
+        it("should disable the stepper buttons at the episode boundaries", async () => {
+            const wrapper = await mountWithGrid([
+                { ...sampleItems[1], currentEpisode: 1, totalEpisodes: 1, episodeId: "attack-on-titan-aaaaa-episode-1" },
+            ]);
+
+            const card = wrapper.find('[data-testid="watching-card"]');
+            expect(card.find('[data-testid="watching-card-decrement"]').attributes("disabled")).toBeDefined();
+            expect(card.find('[data-testid="watching-card-increment"]').attributes("disabled")).toBeDefined();
+        });
+
+        it("should remove the card immediately when the remove button is clicked", async () => {
+            const wrapper = await mountWithGrid(cloneItems());
+
+            const cards = wrapper.findAll('[data-testid="watching-card"]');
+            await cards[0].find('[data-testid="watching-card-remove"]').trigger("click");
+
+            await vi.waitFor(() => expect(wrapper.findAll('[data-testid="watching-card"]')).toHaveLength(1));
+            expect(wrapper.find('[data-testid="watching-card-title"]').text()).toBe("Demon Slayer");
+        });
+
+        it("should show the empty state after removing the last watched anime", async () => {
+            const wrapper = await mountWithGrid([{ ...sampleItems[0] }]);
+
+            await wrapper.find('[data-testid="watching-card-remove"]').trigger("click");
+
+            await vi.waitFor(() => expect(wrapper.find('[data-testid="empty-state"]').exists()).toBe(true));
+            expect(wrapper.find('[data-testid="watching-grid"]').exists()).toBe(false);
         });
     });
 });
