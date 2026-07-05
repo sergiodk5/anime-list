@@ -877,6 +877,15 @@ export async function addControlsToItem(element: Element): Promise<void> {
         // Get unified anime status
         const status = await animeService.getAnimeStatus(animeData.animeId);
 
+        // Opportunistic poster backfill for entries created before posters
+        // were captured. Uses the (cached) extraction result — no extra DOM
+        // query — and only ever writes when the stored entry has no poster,
+        // so this fires at most once per legacy anime. Fire-and-forget:
+        // updatePosterUrl swallows its own errors.
+        if (status.isTracked && status.progress && !status.progress.posterUrl && animeData.posterUrl) {
+            void animeService.updatePosterUrl(animeData.animeId, animeData.posterUrl);
+        }
+
         // Handle hidden anime - no controls shown, the entire tile is hidden
         if (status.isHidden) {
             tile.classList.add("anime-hidden");

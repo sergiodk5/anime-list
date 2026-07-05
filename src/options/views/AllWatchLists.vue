@@ -108,6 +108,7 @@
                         <button
                             data-testid="view-watching"
                             class="rounded-lg border border-white/20 bg-white/10 px-3 py-1 text-sm text-white/90 transition-colors hover:bg-white/20"
+                            @click="viewWatching"
                         >
                             View →
                         </button>
@@ -323,10 +324,18 @@ import { useHiddenStore } from "@/options/stores/hiddenStore";
 import { usePlanToWatchStore } from "@/options/stores/planToWatchStore";
 import { useWatchingStore } from "@/options/stores/watchingStore";
 import { computed, onMounted } from "vue";
+import { useRouter } from "vue-router";
 import { useToast } from "vue-toastification";
 
 // Enhanced statistics with VueUse integration
 const { stats } = useSmartStats();
+
+// Router (may be absent in isolated component tests — guarded in viewWatching)
+const router = useRouter();
+
+function viewWatching(): void {
+    router?.push({ name: "watching" });
+}
 
 // Stores
 const watchingStore = useWatchingStore();

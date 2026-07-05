@@ -14,6 +14,11 @@ const router = createRouter({
             name: "watch-lists",
             component: () => import("@/options/views/AllWatchLists.vue"),
         },
+        {
+            path: "/watching",
+            name: "watching",
+            component: () => import("@/options/views/CurrentlyWatching.vue"),
+        },
     ],
 });
 

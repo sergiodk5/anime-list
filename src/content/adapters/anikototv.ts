@@ -41,6 +41,15 @@ function extractSlugFromHref(href: string): string | null {
     return match ? match[1] : null;
 }
 
+function extractCardPosterUrl(card: Element): string | undefined {
+    // The real card markup nests the poster as `.ani.poster > a > img` with a
+    // plain absolute `src`. `data-src` is a cheap fallback in case the site
+    // ever adopts lazy loading; anything else is treated as "no poster".
+    const img = card.querySelector<HTMLImageElement>(`${SELECTORS.POSTER} img`);
+    const src = img?.getAttribute("src") || img?.getAttribute("data-src");
+    return src || undefined;
+}
+
 function extractCardAnime(card: Element): AnimeData | null {
     const titleLink = card.querySelector(SELECTORS.TITLE_LINK) as HTMLAnchorElement | null;
     if (!titleLink) return null;
@@ -55,6 +64,7 @@ function extractCardAnime(card: Element): AnimeData | null {
         animeId: slug,
         animeTitle,
         animeSlug: slug,
+        posterUrl: extractCardPosterUrl(card),
     };
 }
 
@@ -92,6 +102,13 @@ function readWatchPageTitle(fallback: string): string {
     return fallback;
 }
 
+function extractWatchPagePosterUrl(): string | undefined {
+    // Best-effort only — there is no captured watch-page DOM to verify an
+    // og:image tag exists, so nothing may depend on this returning a value.
+    const content = document.querySelector('meta[property="og:image"]')?.getAttribute("content");
+    return content || undefined;
+}
+
 function extractWatchPageAnime(): AnimeData | null {
     const match = window.location.pathname.match(WATCH_PATH_RE);
     if (!match) return null;
@@ -103,6 +120,7 @@ function extractWatchPageAnime(): AnimeData | null {
         animeId: slug,
         animeTitle,
         animeSlug: slug,
+        posterUrl: extractWatchPagePosterUrl(),
     };
 }
 
