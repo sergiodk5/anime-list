@@ -60,11 +60,13 @@ function toSafePosterUrl(raw: string | null | undefined): string | undefined {
 
 function extractCardPosterUrl(card: Element): string | undefined {
     // The real card markup nests the poster as `.ani.poster > a > img` with a
-    // plain absolute `src`. `data-src` is a cheap fallback in case the site
-    // ever adopts lazy loading; anything else is treated as "no poster".
+    // plain absolute `src`. `data-src` is a fallback in case the site ever
+    // adopts lazy loading; each candidate is validated independently so a
+    // data: placeholder in `src` (the standard lazy-load pattern) doesn't
+    // shadow a real URL in `data-src`. Anything else is treated as "no
+    // poster".
     const img = card.querySelector<HTMLImageElement>(`${SELECTORS.POSTER} img`);
-    const src = img?.getAttribute("src") || img?.getAttribute("data-src");
-    return toSafePosterUrl(src);
+    return toSafePosterUrl(img?.getAttribute("src")) ?? toSafePosterUrl(img?.getAttribute("data-src"));
 }
 
 function extractCardAnime(card: Element): AnimeData | null {

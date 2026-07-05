@@ -143,6 +143,14 @@ describe("anikototv adapter", () => {
         expect(anikototvAdapter.extractAnime(card)?.posterUrl).toBeUndefined();
     });
 
+    it("falls back to data-src when src is a data: lazy-load placeholder", () => {
+        const card = buildCard({
+            imgSrc: "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==",
+            imgDataSrc: "https://cdn.anipixcdn.co/thumbnail/lazy.jpg",
+        });
+        expect(anikototvAdapter.extractAnime(card)?.posterUrl).toBe("https://cdn.anipixcdn.co/thumbnail/lazy.jpg");
+    });
+
     it("omits posterUrl when the data-src fallback uses a blob: scheme", () => {
         const card = buildCard({ imgDataSrc: "blob:https://anikototv.to/8f6f3b1c" });
         expect(anikototvAdapter.extractAnime(card)?.posterUrl).toBeUndefined();
