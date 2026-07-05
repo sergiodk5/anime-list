@@ -23,6 +23,16 @@
             >
                 <span class="text-5xl font-bold text-white drop-shadow-md">{{ titleInitial }}</span>
             </div>
+            <button
+                data-testid="watching-card-remove"
+                type="button"
+                title="Remove from watching"
+                :aria-label="`Remove ${item.animeTitle} from watching`"
+                class="absolute top-2 right-2 z-10 flex h-6 w-6 items-center justify-center rounded-md border border-white/20 bg-black/40 text-xs text-white/90 opacity-0 backdrop-blur-xs transition-all duration-200 group-hover:opacity-100 hover:bg-red-500/60 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-pink-400 focus-visible:outline-hidden active:scale-95"
+                @click="handleRemove"
+            >
+                ✕
+            </button>
         </div>
 
         <!-- Details -->
@@ -34,12 +44,39 @@
             >
                 {{ item.animeTitle }}
             </h3>
-            <p
-                data-testid="watching-card-episodes"
-                class="text-sm text-white/80 drop-shadow-xs"
+            <div
+                data-testid="watching-card-episode-controls"
+                class="flex items-center gap-2"
             >
-                {{ episodeLabel }}
-            </p>
+                <button
+                    data-testid="watching-card-decrement"
+                    type="button"
+                    title="Previous episode"
+                    aria-label="Previous episode"
+                    :disabled="isDecrementDisabled"
+                    class="flex h-6 w-6 items-center justify-center rounded-md border border-white/20 bg-white/10 text-sm font-bold text-white/90 transition-all duration-200 hover:bg-white/20 focus-visible:ring-2 focus-visible:ring-pink-400 focus-visible:outline-hidden active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white/10"
+                    @click="handleDecrement"
+                >
+                    −
+                </button>
+                <p
+                    data-testid="watching-card-episodes"
+                    class="text-sm text-white/80 drop-shadow-xs"
+                >
+                    {{ episodeLabel }}
+                </p>
+                <button
+                    data-testid="watching-card-increment"
+                    type="button"
+                    title="Next episode"
+                    aria-label="Next episode"
+                    :disabled="isIncrementDisabled"
+                    class="flex h-6 w-6 items-center justify-center rounded-md border border-white/20 bg-white/10 text-sm font-bold text-white/90 transition-all duration-200 hover:bg-white/20 focus-visible:ring-2 focus-visible:ring-pink-400 focus-visible:outline-hidden active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white/10"
+                    @click="handleIncrement"
+                >
+                    +
+                </button>
+            </div>
             <a
                 data-testid="watching-card-link"
                 :href="watchUrl"
@@ -59,8 +96,11 @@ import { computed, ref, watch } from "vue";
 
 import type { EpisodeProgress } from "@/commons/models";
 import { getContinueWatchingUrl } from "@/commons/utils/watchUrl";
+import { useWatchingStore } from "@/options/stores/watchingStore";
 
 const props = defineProps<{ item: EpisodeProgress }>();
+
+const watchingStore = useWatchingStore();
 
 const imageFailed = ref(false);
 
@@ -76,4 +116,25 @@ watch(
 const titleInitial = computed(() => props.item.animeTitle.charAt(0).toUpperCase());
 const episodeLabel = computed(() => `Ep ${props.item.currentEpisode} / ${props.item.totalEpisodes ?? "?"}`);
 const watchUrl = computed(() => getContinueWatchingUrl(props.item));
+
+// Disabled states mirror the store's clamping (min 1, max totalEpisodes when known).
+// An unknown totalEpisodes keeps [+] enabled — the store clamps at 999 internally.
+const isDecrementDisabled = computed(() => props.item.currentEpisode <= 1);
+const isIncrementDisabled = computed(
+    () => props.item.totalEpisodes !== undefined && props.item.currentEpisode >= props.item.totalEpisodes,
+);
+
+// All feedback (optimistic update, rollback, toasts, offline queueing, undo
+// snapshotting) is handled by the store action pipeline — fire and forget.
+function handleIncrement(): void {
+    void watchingStore.incrementEpisode(props.item.animeId);
+}
+
+function handleDecrement(): void {
+    void watchingStore.decrementEpisode(props.item.animeId);
+}
+
+function handleRemove(): void {
+    void watchingStore.stopWatching(props.item.animeId);
+}
 </script>
