@@ -169,7 +169,9 @@ export class AnimeService {
                 lastWatched: new Date().toISOString(),
             };
 
-            if (animeData.posterUrl) {
+            // Same storage chokepoint guard as updatePosterUrl: only persist
+            // absolute http/https URLs since they are later bound to <img :src>.
+            if (animeData.posterUrl && AnimeService.isSafePosterUrl(animeData.posterUrl)) {
                 episodeProgress.posterUrl = animeData.posterUrl;
             }
 

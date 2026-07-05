@@ -426,6 +426,30 @@ describe("AnimeService", () => {
             expect("posterUrl" in createdProgress).toBe(false);
         });
 
+        it.each([
+            ["javascript: scheme", "javascript:alert(1)"],
+            ["data: scheme", "data:image/png;base64,iVBORw0KGgo="],
+            ["blob: scheme", "blob:https://anikototv.to/8f6f3b1c"],
+            ["relative path", "/thumbnail/relative.jpg"],
+            ["not a URL", "not a url"],
+        ])("should omit posterUrl when it is not absolute http(s) (%s)", async (_label, unsafeUrl) => {
+            mockEpisodeProgressRepo.findById.mockResolvedValue(null);
+            mockPlanToWatchRepo.findById.mockResolvedValue(null);
+            mockHiddenAnimeRepo.exists.mockResolvedValue(false);
+            mockEpisodeProgressRepo.create.mockResolvedValue(undefined);
+
+            const animeDataWithUnsafePoster: AnimeData = {
+                ...sampleAnimeData,
+                posterUrl: unsafeUrl,
+            };
+
+            const result = await animeService.startWatching(animeDataWithUnsafePoster, 1);
+
+            expect(result.success).toBe(true);
+            const createdProgress = mockEpisodeProgressRepo.create.mock.calls[0][0] as EpisodeProgress;
+            expect("posterUrl" in createdProgress).toBe(false);
+        });
+
         it("should handle repository errors gracefully", async () => {
             // Mock clean state for validation
             mockEpisodeProgressRepo.findById
