@@ -48,7 +48,7 @@ describe("Single Page Initialization Functions", () => {
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "/watch/test-anime-aaaaa/ep-1",
-                    href: "https://anikototv.to/watch/test-anime-aaaaa/ep-1",
+                    href: "https://anichi.to/watch/test-anime-aaaaa/ep-1",
                 },
                 writable: true,
             });
@@ -65,6 +65,22 @@ describe("Single Page Initialization Functions", () => {
             const button = document.getElementById("anime-list-info-button");
             expect(button).toBeTruthy();
             expect(button?.textContent).toBe("Anime Info");
+        });
+
+        it("should initialize on the anime detail page too", () => {
+            // Setup detail page
+            Object.defineProperty(window, "location", {
+                value: {
+                    pathname: "/anime/some-anime-aaaaa",
+                    href: "https://anichi.to/anime/some-anime-aaaaa",
+                },
+                writable: true,
+            });
+
+            initializeSinglePage();
+
+            const button = document.getElementById("anime-list-info-button");
+            expect(button).toBeTruthy();
         });
 
         it("should handle watch page with no valid anime data", () => {
@@ -106,7 +122,7 @@ describe("Single Page Initialization Functions", () => {
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "/watch/positioned-anime-aaaaa/ep-1",
-                    href: "https://anikototv.to/watch/positioned-anime-aaaaa/ep-1",
+                    href: "https://anichi.to/watch/positioned-anime-aaaaa/ep-1",
                 },
                 writable: true,
             });
@@ -126,7 +142,7 @@ describe("Single Page Initialization Functions", () => {
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "/watch/replace-test-anime-aaaaa/ep-1",
-                    href: "https://anikototv.to/watch/replace-test-anime-aaaaa/ep-1",
+                    href: "https://anichi.to/watch/replace-test-anime-aaaaa/ep-1",
                 },
                 writable: true,
             });
@@ -151,7 +167,7 @@ describe("Single Page Initialization Functions", () => {
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "/watch/title-source-aaaaa/ep-1",
-                    href: "https://anikototv.to/watch/title-source-aaaaa/ep-1",
+                    href: "https://anichi.to/watch/title-source-aaaaa/ep-1",
                 },
                 writable: true,
             });

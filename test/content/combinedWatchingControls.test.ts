@@ -24,10 +24,10 @@ describe("Combined Watching Controls", () => {
             <body>
                 <div class="item">
                     <div class="inner">
-                        <div class="ani poster"><a href="/watch/test-anime-snxwm/ep-1"><img alt="Test Anime"></a></div>
+                        <div class="ani poster"><a href="/anime/test-anime-snxwm"><img alt="Test Anime"></a></div>
                         <div class="info">
                             <div class="b1">
-                                <a class="name d-title" href="/watch/test-anime-snxwm/ep-1">Test Anime</a>
+                                <a class="name d-title" href="/anime/test-anime-snxwm">Test Anime</a>
                             </div>
                         </div>
                     </div>
@@ -35,7 +35,7 @@ describe("Combined Watching Controls", () => {
             </body>
             </html>
         `,
-            { url: "https://anikototv.to" },
+            { url: "https://anichi.to" },
         );
 
         // Setup globals

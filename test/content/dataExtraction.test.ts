@@ -5,13 +5,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 Object.defineProperty(window, "location", {
     value: {
         pathname: "/",
-        href: "https://anikototv.to/",
+        href: "https://anichi.to/",
     },
     writable: true,
 });
 
 function buildCard({
-    href = "/watch/naruto-abcde/ep-1",
+    href = "/anime/naruto-abcde",
     title = "Naruto",
 }: { href?: string; title?: string } = {}): HTMLDivElement {
     const card = document.createElement("div");
@@ -37,7 +37,7 @@ describe("Content Script Data Extraction Functions", () => {
 
     describe("extractAnimeData", () => {
         it("should extract anime data from valid element", () => {
-            const card = buildCard({ href: "/watch/naruto-abcde/ep-1", title: "Naruto" });
+            const card = buildCard({ href: "/anime/naruto-abcde", title: "Naruto" });
             const animeData = extractAnimeData(card);
             expect(animeData).toBeTruthy();
             expect(animeData?.animeSlug).toBe("naruto-abcde");
@@ -65,8 +65,14 @@ describe("Content Script Data Extraction Functions", () => {
             expect(animeData).toBeNull();
         });
 
+        it("should return null when the card links to the player instead of the detail page", () => {
+            const card = buildCard({ href: "/watch/naruto-abcde/ep-1", title: "Naruto" });
+            const animeData = extractAnimeData(card);
+            expect(animeData).toBeNull();
+        });
+
         it("should extract title from the name link", () => {
-            const card = buildCard({ href: "/watch/attack-on-titan-aotid/ep-1", title: "Attack on Titan" });
+            const card = buildCard({ href: "/anime/attack-on-titan-aotid", title: "Attack on Titan" });
             const animeData = extractAnimeData(card);
             expect(animeData).toBeTruthy();
             expect(animeData?.animeTitle).toBe("Attack on Titan");
@@ -78,10 +84,10 @@ describe("Content Script Data Extraction Functions", () => {
             card.className = "item";
             card.innerHTML = `
                 <div class="inner">
-                    <div class="ani poster"><a href="/watch/one-piece-opidd/ep-1"><img alt="One Piece"></a></div>
+                    <div class="ani poster"><a href="/anime/one-piece-opidd"><img alt="One Piece"></a></div>
                     <div class="info">
                         <div class="b1">
-                            <a class="name d-title" href="/watch/one-piece-opidd/ep-1">One Piece</a>
+                            <a class="name d-title" href="/anime/one-piece-opidd">One Piece</a>
                         </div>
                     </div>
                 </div>
@@ -97,10 +103,10 @@ describe("Content Script Data Extraction Functions", () => {
             card.className = "item";
             card.innerHTML = `
                 <div class="b1">
-                    <a class="name d-title" href="/watch/first-anime-aaaaa/ep-1">First</a>
+                    <a class="name d-title" href="/anime/first-anime-aaaaa">First</a>
                 </div>
                 <div class="b1">
-                    <a class="name d-title" href="/watch/second-anime-bbbbb/ep-1">Second</a>
+                    <a class="name d-title" href="/anime/second-anime-bbbbb">Second</a>
                 </div>
             `;
 
@@ -115,7 +121,7 @@ describe("Content Script Data Extraction Functions", () => {
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "/watch/naruto-abcde/ep-1",
-                    href: "https://anikototv.to/watch/naruto-abcde/ep-1",
+                    href: "https://anichi.to/watch/naruto-abcde/ep-1",
                 },
                 writable: true,
             });
@@ -123,11 +129,23 @@ describe("Content Script Data Extraction Functions", () => {
             expect(isWatchPage()).toBe(true);
         });
 
-        it("should return false for non-watch page URL", () => {
+        it("should return true for anime detail page URL", () => {
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "/anime/naruto",
-                    href: "https://anikototv.to/anime/naruto",
+                    href: "https://anichi.to/anime/naruto",
+                },
+                writable: true,
+            });
+
+            expect(isWatchPage()).toBe(true);
+        });
+
+        it("should return false for an unrelated page", () => {
+            Object.defineProperty(window, "location", {
+                value: {
+                    pathname: "/genre/fantasy",
+                    href: "https://anichi.to/genre/fantasy",
                 },
                 writable: true,
             });
@@ -139,7 +157,7 @@ describe("Content Script Data Extraction Functions", () => {
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "/",
-                    href: "https://anikototv.to/",
+                    href: "https://anichi.to/",
                 },
                 writable: true,
             });
@@ -151,7 +169,7 @@ describe("Content Script Data Extraction Functions", () => {
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "/watch/some-anime",
-                    href: "https://anikototv.to/watch/some-anime",
+                    href: "https://anichi.to/watch/some-anime",
                 },
                 writable: true,
             });
@@ -163,7 +181,7 @@ describe("Content Script Data Extraction Functions", () => {
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "/watch/anime-abcde/ep-3",
-                    href: "https://anikototv.to/watch/anime-abcde/ep-3?t=123",
+                    href: "https://anichi.to/watch/anime-abcde/ep-3?t=123",
                 },
                 writable: true,
             });
@@ -177,7 +195,7 @@ describe("Content Script Data Extraction Functions", () => {
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "/watch/test-anime-abcde/ep-1",
-                    href: "https://anikototv.to/watch/test-anime-abcde/ep-1",
+                    href: "https://anichi.to/watch/test-anime-abcde/ep-1",
                 },
                 writable: true,
             });
@@ -187,7 +205,7 @@ describe("Content Script Data Extraction Functions", () => {
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "/watch/naruto-shippuden-snxwm/ep-100",
-                    href: "https://anikototv.to/watch/naruto-shippuden-snxwm/ep-100",
+                    href: "https://anichi.to/watch/naruto-shippuden-snxwm/ep-100",
                 },
                 writable: true,
             });
@@ -197,11 +215,27 @@ describe("Content Script Data Extraction Functions", () => {
             expect(animeData?.animeSlug).toContain("naruto-shippuden");
         });
 
-        it("should return null for non-watch page", () => {
+        it("should extract anime data from the detail page URL", () => {
+            document.body.innerHTML = `<h1 class="series-title d-title" data-en="Tomb Raider King">Dogulwang</h1>`;
             Object.defineProperty(window, "location", {
                 value: {
-                    pathname: "/anime/some-anime",
-                    href: "https://anikototv.to/anime/some-anime",
+                    pathname: "/anime/tomb-raider-king-91d21",
+                    href: "https://anichi.to/anime/tomb-raider-king-91d21",
+                },
+                writable: true,
+            });
+
+            const animeData = extractSinglePageAnimeData();
+            expect(animeData).toBeTruthy();
+            expect(animeData?.animeSlug).toBe("tomb-raider-king-91d21");
+            expect(animeData?.animeTitle).toBe("Tomb Raider King");
+        });
+
+        it("should return null for a genuinely unrelated page", () => {
+            Object.defineProperty(window, "location", {
+                value: {
+                    pathname: "/genre/fantasy",
+                    href: "https://anichi.to/genre/fantasy",
                 },
                 writable: true,
             });
@@ -214,7 +248,7 @@ describe("Content Script Data Extraction Functions", () => {
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "/watch/simple-anime-aaaaa/ep-1",
-                    href: "https://anikototv.to/watch/simple-anime-aaaaa/ep-1",
+                    href: "https://anichi.to/watch/simple-anime-aaaaa/ep-1",
                 },
                 writable: true,
             });
@@ -224,16 +258,14 @@ describe("Content Script Data Extraction Functions", () => {
             expect(animeData?.animeSlug).toBe("simple-anime-aaaaa");
         });
 
-        it("should extract title from the h1 heading element", () => {
+        it("should extract title from the data-en attribute", () => {
             document.title = "";
-            const h1Element = document.createElement("h1");
-            h1Element.textContent = "Attack on Titan";
-            document.body.appendChild(h1Element);
+            document.body.innerHTML = `<h1 class="media-title"><a class="d-title" data-en="Attack on Titan">Shingeki</a></h1>`;
 
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "/watch/attack-on-titan-aotid/ep-1",
-                    href: "https://anikototv.to/watch/attack-on-titan-aotid/ep-1",
+                    href: "https://anichi.to/watch/attack-on-titan-aotid/ep-1",
                 },
                 writable: true,
             });
@@ -243,12 +275,12 @@ describe("Content Script Data Extraction Functions", () => {
             expect(animeData?.animeTitle).toContain("Attack on Titan");
         });
 
-        it("should fall back to slug when there is no title element or document.title", () => {
+        it("should fall back to slug when there is no title source available", () => {
             document.title = "";
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "/watch/mystery-anime-aaaaa/ep-5",
-                    href: "https://anikototv.to/watch/mystery-anime-aaaaa/ep-5",
+                    href: "https://anichi.to/watch/mystery-anime-aaaaa/ep-5",
                 },
                 writable: true,
             });
@@ -263,7 +295,7 @@ describe("Content Script Data Extraction Functions", () => {
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "/watch/demon-slayer-aaaaa/ep-1",
-                    href: "https://anikototv.to/watch/demon-slayer-aaaaa/ep-1",
+                    href: "https://anichi.to/watch/demon-slayer-aaaaa/ep-1",
                 },
                 writable: true,
             });
@@ -278,7 +310,7 @@ describe("Content Script Data Extraction Functions", () => {
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "/watch/jujutsu-kaisen-season-2-jkid2/ep-15",
-                    href: "https://anikototv.to/watch/jujutsu-kaisen-season-2-jkid2/ep-15",
+                    href: "https://anichi.to/watch/jujutsu-kaisen-season-2-jkid2/ep-15",
                 },
                 writable: true,
             });
@@ -299,7 +331,7 @@ describe("Content Script Data Extraction Functions", () => {
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "",
-                    href: "https://anikototv.to/",
+                    href: "https://anichi.to/",
                 },
                 writable: true,
             });
@@ -311,7 +343,7 @@ describe("Content Script Data Extraction Functions", () => {
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "///watch///",
-                    href: "https://anikototv.to///watch///",
+                    href: "https://anichi.to///watch///",
                 },
                 writable: true,
             });
@@ -321,15 +353,12 @@ describe("Content Script Data Extraction Functions", () => {
         });
 
         it("should handle special characters in anime titles", () => {
-            document.title = "";
-            const h1Element = document.createElement("h1");
-            h1Element.textContent = "Anime with Special Characters: éàü";
-            document.body.appendChild(h1Element);
+            document.title = "Anime with Special Characters: éàü";
 
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "/watch/anime-special-chars-aaaaa/ep-1",
-                    href: "https://anikototv.to/watch/anime-special-chars-aaaaa/ep-1",
+                    href: "https://anichi.to/watch/anime-special-chars-aaaaa/ep-1",
                 },
                 writable: true,
             });

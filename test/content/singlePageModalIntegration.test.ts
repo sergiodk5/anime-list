@@ -49,7 +49,7 @@ describe("Single Page Modal Integration", () => {
         originalLocation = window.location;
         delete (window as any).location;
         (window as any).location = {
-            href: "https://anikototv.to/watch/test-anime-aaaaa/ep-1",
+            href: "https://anichi.to/watch/test-anime-aaaaa/ep-1",
             pathname: "/watch/test-anime-aaaaa/ep-1",
         };
 
@@ -108,10 +108,15 @@ describe("Single Page Modal Integration", () => {
                     expectedId: "one-piece-ccccc",
                     description: "large episode number",
                 },
+                {
+                    pathname: "/anime/tomb-raider-king-91d21",
+                    expectedId: "tomb-raider-king-91d21",
+                    description: "detail page pattern",
+                },
             ];
 
             testCases.forEach((testCase) => {
-                (window as any).location.href = `https://anikototv.to${testCase.pathname}`;
+                (window as any).location.href = `https://anichi.to${testCase.pathname}`;
                 (window as any).location.pathname = testCase.pathname;
 
                 // Test actual extractSinglePageAnimeData function
@@ -445,7 +450,7 @@ describe("Single Page Modal Integration", () => {
         });
 
         it("should handle URL without watch pattern in extractSinglePageAnimeData", () => {
-            (window as any).location.href = "https://anikototv.to/other/page";
+            (window as any).location.href = "https://anichi.to/other/page";
             (window as any).location.pathname = "/other/page";
 
             const result = extractSinglePageAnimeData();
@@ -631,10 +636,14 @@ describe("Single Page Modal Integration", () => {
                     pathname: "/watch/multiple-123-numbers-456/ep-2",
                     expectedId: "multiple-123-numbers-456",
                 },
+                {
+                    pathname: "/anime/multiple-123-numbers-456",
+                    expectedId: "multiple-123-numbers-456",
+                },
             ];
 
             testCases.forEach((testCase) => {
-                (window as any).location.href = `https://anikototv.to${testCase.pathname}`;
+                (window as any).location.href = `https://anichi.to${testCase.pathname}`;
                 (window as any).location.pathname = testCase.pathname;
                 const result = extractSinglePageAnimeData();
                 expect(result?.animeId).toBe(testCase.expectedId);
@@ -642,65 +651,39 @@ describe("Single Page Modal Integration", () => {
         });
 
         it("should handle different DOM title scenarios", () => {
-            // Test with different DOM structures for title extraction. The
-            // anikoto adapter scans h1.anime-title → h1 → h2 → [class*='title']
-            // → .anime-title as a fallback chain when document.title is empty.
-            const testTitleCases = [
-                {
-                    name: "h1.anime-title",
-                    setupDOM: () => {
-                        const title = document.createElement("h1");
-                        title.className = "anime-title";
-                        title.textContent = "Title from h1.anime-title";
-                        document.body.appendChild(title);
-                    },
-                    expectedTitle: "Title from h1.anime-title",
-                },
-                {
-                    name: "generic h1",
-                    setupDOM: () => {
-                        const title = document.createElement("h1");
-                        title.textContent = "Generic H1 title";
-                        document.body.appendChild(title);
-                    },
-                    expectedTitle: "Generic H1 title",
-                },
-                {
-                    name: "fallback h2",
-                    setupDOM: () => {
-                        const title = document.createElement("h2");
-                        title.textContent = "Title from h2";
-                        document.body.appendChild(title);
-                    },
-                    expectedTitle: "Title from h2",
-                },
-                {
-                    name: "[class*='title'] fallback",
-                    setupDOM: () => {
-                        const title = document.createElement("div");
-                        title.className = "page-title";
-                        title.textContent = "Title from generic .title class";
-                        document.body.appendChild(title);
-                    },
-                    expectedTitle: "Title from generic .title class",
-                },
-            ];
-
-            (window as any).location.href = "https://anikototv.to/watch/title-test-aaaaa/ep-1";
+            // Test the anichi adapter's title precedence: data-en attribute on
+            // the page's primary title element -> meta og:title (stripped) ->
+            // document.title (stripped) -> slug fallback.
+            (window as any).location.href = "https://anichi.to/watch/title-test-aaaaa/ep-1";
             (window as any).location.pathname = "/watch/title-test-aaaaa/ep-1";
             const originalDocTitle = document.title;
-            document.title = "";
 
             try {
-                testTitleCases.forEach((testCase) => {
-                    document.body.innerHTML = "";
-                    testCase.setupDOM();
+                document.body.innerHTML = "";
+                document.head.querySelectorAll('meta[property="og:title"]').forEach((meta) => meta.remove());
+                document.title = "";
+                document.body.innerHTML = `<h1 class="media-title"><a class="d-title" data-en="Data En Title">Fallback</a></h1>`;
+                expect(extractSinglePageAnimeData()?.animeTitle).toBe("Data En Title");
 
-                    const result = extractSinglePageAnimeData();
-                    expect(result?.animeTitle).toBe(testCase.expectedTitle);
-                });
+                document.body.innerHTML = "";
+                document.title = "";
+                const ogTitleMeta = document.createElement("meta");
+                ogTitleMeta.setAttribute("property", "og:title");
+                ogTitleMeta.setAttribute("content", "Og Title - Anichi");
+                document.head.appendChild(ogTitleMeta);
+                expect(extractSinglePageAnimeData()?.animeTitle).toBe("Og Title");
+                ogTitleMeta.remove();
+
+                document.body.innerHTML = "";
+                document.title = "Watch Doc Title Episode 1 Anime Online | Anichi";
+                expect(extractSinglePageAnimeData()?.animeTitle).toBe("Doc Title");
+
+                document.body.innerHTML = "";
+                document.title = "";
+                expect(extractSinglePageAnimeData()?.animeTitle).toBe("title-test-aaaaa");
             } finally {
                 document.title = originalDocTitle;
+                document.head.querySelectorAll('meta[property="og:title"]').forEach((meta) => meta.remove());
             }
         });
     });

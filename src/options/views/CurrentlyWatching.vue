@@ -63,16 +63,16 @@
             >
                 <span class="mb-3 block text-3xl opacity-50">▶️</span>
                 <h3 class="mb-2 text-lg font-semibold text-white/80 drop-shadow-xs">Nothing here yet</h3>
+                <!-- prettier-ignore -->
                 <p class="text-sm text-white/60 drop-shadow-xs">
                     Start watching on
                     <a
                         data-testid="empty-state-link"
-                        href="https://anikototv.to/"
+                        href="https://anichi.to/"
                         target="_blank"
                         rel="noopener noreferrer"
                         class="text-purple-200 underline transition-colors hover:text-white"
-                        >anikototv</a
-                    >
+                        >anichi</a>
                     and your anime will show up here.
                 </p>
             </div>

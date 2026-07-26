@@ -1,7 +1,7 @@
-import { anikototvAdapter } from "./anikototv";
+import { anichiAdapter } from "./anichi";
 import type { SiteAdapter } from "./types";
 
-export const adapters: SiteAdapter[] = [anikototvAdapter];
+export const adapters: SiteAdapter[] = [anichiAdapter];
 
 /**
  * Resolve the SiteAdapter that should drive the content script for the given
@@ -16,4 +16,4 @@ export function selectAdapter(
 }
 
 export type { SiteAdapter, WatchPageAdapter } from "./types";
-export { anikototvAdapter };
+export { anichiAdapter };

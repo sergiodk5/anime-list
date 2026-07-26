@@ -134,7 +134,8 @@ describe("CurrentlyWatching", () => {
             expect(wrapper.find('[data-testid="watching-grid"]').exists()).toBe(false);
 
             const link = wrapper.find('[data-testid="empty-state-link"]');
-            expect(link.attributes("href")).toBe("https://anikototv.to/");
+            expect(link.attributes("href")).toBe("https://anichi.to/");
+            expect(link.text()).toBe("anichi");
             expect(link.attributes("target")).toBe("_blank");
             expect(link.attributes("rel")).toBe("noopener noreferrer");
         });
@@ -174,8 +175,8 @@ describe("CurrentlyWatching", () => {
             expect(episodes[1].text()).toBe("Ep 12 / 26");
 
             const links = wrapper.findAll('[data-testid="watching-card-link"]');
-            expect(links[0].attributes("href")).toBe("https://anikototv.to/watch/attack-on-titan-aaaaa/ep-5");
-            expect(links[1].attributes("href")).toBe("https://anikototv.to/watch/demon-slayer-bbbbb/ep-12");
+            expect(links[0].attributes("href")).toBe("https://anichi.to/watch/attack-on-titan-aaaaa/ep-5");
+            expect(links[1].attributes("href")).toBe("https://anichi.to/watch/demon-slayer-bbbbb/ep-12");
         });
 
         it("should render the poster image only for items with a posterUrl", async () => {

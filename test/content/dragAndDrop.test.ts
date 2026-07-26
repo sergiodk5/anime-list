@@ -125,10 +125,10 @@ describe("Drag and Drop Tile Reordering", () => {
             document.body.innerHTML = `
                 <div id="list-items">
                     <div class="item">
-                        <div class="b1"><a class="name d-title" href="/watch/anime-one-onexx/ep-1">Anime One</a></div>
+                        <div class="b1"><a class="name d-title" href="/anime/anime-one-onexx">Anime One</a></div>
                     </div>
                     <div class="item">
-                        <div class="b1"><a class="name d-title" href="/watch/anime-two-twoxx/ep-1">Anime Two</a></div>
+                        <div class="b1"><a class="name d-title" href="/anime/anime-two-twoxx">Anime Two</a></div>
                     </div>
                 </div>
             `;
@@ -192,7 +192,7 @@ describe("Drag and Drop Tile Reordering", () => {
             document.body.innerHTML = `
                 <div id="list-items">
                     <div class="item">
-                        <div class="b1"><a class="name d-title" href="/watch/anime-onexx/ep-1">Anime</a></div>
+                        <div class="b1"><a class="name d-title" href="/anime/anime-onexx">Anime</a></div>
                     </div>
                 </div>
             `;
@@ -251,10 +251,10 @@ describe("Drag and Drop Tile Reordering", () => {
             document.body.innerHTML = `
                 <div id="list-items">
                     <div class="item" id="item1">
-                        <div class="b1"><a class="name d-title" href="/watch/anime-a-aaaaa/ep-1">A</a></div>
+                        <div class="b1"><a class="name d-title" href="/anime/anime-a-aaaaa">A</a></div>
                     </div>
                     <div class="item" id="item2">
-                        <div class="b1"><a class="name d-title" href="/watch/anime-b-bbbbb/ep-1">B</a></div>
+                        <div class="b1"><a class="name d-title" href="/anime/anime-b-bbbbb">B</a></div>
                     </div>
                 </div>
             `;
@@ -354,7 +354,7 @@ describe("Drag and Drop Tile Reordering", () => {
             document.body.innerHTML = `
                 <div id="list-items">
                     <div class="item" id="item1">
-                        <div class="b1"><a class="name d-title" href="/watch/anime-a-aaaaa/ep-1">A</a></div>
+                        <div class="b1"><a class="name d-title" href="/anime/anime-a-aaaaa">A</a></div>
                     </div>
                 </div>
             `;
@@ -398,13 +398,13 @@ describe("Drag and Drop Tile Reordering", () => {
             document.body.innerHTML = `
                 <div id="list-items">
                     <div class="item" id="item1">
-                        <div class="b1"><a class="name d-title" href="/watch/anime-a-aaaaa/ep-1">A</a></div>
+                        <div class="b1"><a class="name d-title" href="/anime/anime-a-aaaaa">A</a></div>
                     </div>
                     <div class="item" id="item2">
-                        <div class="b1"><a class="name d-title" href="/watch/anime-b-bbbbb/ep-1">B</a></div>
+                        <div class="b1"><a class="name d-title" href="/anime/anime-b-bbbbb">B</a></div>
                     </div>
                     <div class="item" id="item3">
-                        <div class="b1"><a class="name d-title" href="/watch/anime-c-ccccc/ep-1">C</a></div>
+                        <div class="b1"><a class="name d-title" href="/anime/anime-c-ccccc">C</a></div>
                     </div>
                 </div>
             `;
@@ -501,13 +501,13 @@ describe("Drag and Drop Tile Reordering", () => {
             document.body.innerHTML = `
                 <div id="list-items">
                     <div class="item" id="item1">
-                        <div class="b1"><a class="name d-title" href="/watch/anime-a-aaaaa/ep-1">A</a></div>
+                        <div class="b1"><a class="name d-title" href="/anime/anime-a-aaaaa">A</a></div>
                     </div>
                     <div class="item" id="item2">
-                        <div class="b1"><a class="name d-title" href="/watch/anime-b-bbbbb/ep-1">B</a></div>
+                        <div class="b1"><a class="name d-title" href="/anime/anime-b-bbbbb">B</a></div>
                     </div>
                     <div class="item" id="item3">
-                        <div class="b1"><a class="name d-title" href="/watch/anime-c-ccccc/ep-1">C</a></div>
+                        <div class="b1"><a class="name d-title" href="/anime/anime-c-ccccc">C</a></div>
                     </div>
                 </div>
             `;
@@ -616,10 +616,10 @@ describe("Drag and Drop Tile Reordering", () => {
             document.body.innerHTML = `
                 <div id="list-items">
                     <div class="item" id="item1">
-                        <div class="b1"><a class="name d-title" href="/watch/anime-a-aaaaa/ep-1">A</a></div>
+                        <div class="b1"><a class="name d-title" href="/anime/anime-a-aaaaa">A</a></div>
                     </div>
                     <div class="item" id="item2">
-                        <div class="b1"><a class="name d-title" href="/watch/anime-b-bbbbb/ep-1">B</a></div>
+                        <div class="b1"><a class="name d-title" href="/anime/anime-b-bbbbb">B</a></div>
                     </div>
                 </div>
             `;
@@ -673,13 +673,13 @@ describe("Drag and Drop Tile Reordering", () => {
             document.body.innerHTML = `
                 <div id="list-items">
                     <div class="item" id="item1">
-                        <div class="b1"><a class="name d-title" href="/watch/anime-a-aaaaa/ep-1">A</a></div>
+                        <div class="b1"><a class="name d-title" href="/anime/anime-a-aaaaa">A</a></div>
                     </div>
                     <div class="item" id="item2">
-                        <div class="b1"><a class="name d-title" href="/watch/anime-b-bbbbb/ep-1">B</a></div>
+                        <div class="b1"><a class="name d-title" href="/anime/anime-b-bbbbb">B</a></div>
                     </div>
                     <div class="item" id="item3">
-                        <div class="b1"><a class="name d-title" href="/watch/anime-c-ccccc/ep-1">C</a></div>
+                        <div class="b1"><a class="name d-title" href="/anime/anime-c-ccccc">C</a></div>
                     </div>
                 </div>
             `;
@@ -761,10 +761,10 @@ describe("Drag and Drop Tile Reordering", () => {
             document.body.innerHTML = `
                 <div id="list-items">
                     <div class="item" id="item1" style="width: 200px; height: 100px;">
-                        <div class="b1"><a class="name d-title" href="/watch/anime-a-aaaaa/ep-1">A</a></div>
+                        <div class="b1"><a class="name d-title" href="/anime/anime-a-aaaaa">A</a></div>
                     </div>
                     <div class="item" id="item2" style="width: 200px; height: 100px;">
-                        <div class="b1"><a class="name d-title" href="/watch/anime-b-bbbbb/ep-1">B</a></div>
+                        <div class="b1"><a class="name d-title" href="/anime/anime-b-bbbbb">B</a></div>
                     </div>
                 </div>
             `;

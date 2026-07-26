@@ -7,12 +7,16 @@ export default mergeConfig(
     defineConfig({
         test: {
             environment: "jsdom",
-            // Default page URL for jsdom. Set to the anikoto host so the
-            // content-script adapter selects itself in tests that don't
-            // explicitly spoof window.location.
+            // Default page URL for jsdom. Set to an anichi.to watch URL so
+            // the content-script adapter selects itself (host-only match)
+            // AND isWatchPage()/initializeSinglePage() also resolve true for
+            // any test that calls them without first overriding
+            // window.location — activeAdapter is resolved once at module
+            // import time (src/content/index.ts:~47), before any per-test
+            // location mock runs.
             environmentOptions: {
                 jsdom: {
-                    url: "https://anikototv.to/",
+                    url: "https://anichi.to/watch/vitest-fixture/ep-1",
                 },
             },
             // Include test files from the test directory
