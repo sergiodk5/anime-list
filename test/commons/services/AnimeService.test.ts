@@ -429,7 +429,7 @@ describe("AnimeService", () => {
         it.each([
             ["javascript: scheme", "javascript:alert(1)"],
             ["data: scheme", "data:image/png;base64,iVBORw0KGgo="],
-            ["blob: scheme", "blob:https://anikototv.to/8f6f3b1c"],
+            ["blob: scheme", "blob:https://anichi.to/8f6f3b1c"],
             ["relative path", "/thumbnail/relative.jpg"],
             ["not a URL", "not a url"],
         ])("should omit posterUrl when it is not absolute http(s) (%s)", async (_label, unsafeUrl) => {
@@ -493,7 +493,7 @@ describe("AnimeService", () => {
         it.each([
             ["javascript: scheme", "javascript:alert(1)"],
             ["data: scheme", "data:image/png;base64,iVBORw0KGgo="],
-            ["blob: scheme", "blob:https://anikototv.to/8f6f3b1c"],
+            ["blob: scheme", "blob:https://anichi.to/8f6f3b1c"],
             ["relative path", "/thumbnail/relative.jpg"],
             ["not a URL", "not a url"],
         ])("should not update when the poster URL is not absolute http(s) (%s)", async (_label, unsafeUrl) => {

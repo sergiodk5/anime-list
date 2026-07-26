@@ -64,11 +64,11 @@ describe("Folder Functionality", () => {
             <div id="list-items">
                 <div class="item" data-testid="anime-item-1">
                     <div class="ani poster"></div>
-                    <div class="b1"><a class="name d-title" href="/watch/anime-one-onexx/ep-1">Anime One</a></div>
+                    <div class="b1"><a class="name d-title" href="/anime/anime-one-onexx">Anime One</a></div>
                 </div>
                 <div class="item" data-testid="anime-item-2">
                     <div class="ani poster"></div>
-                    <div class="b1"><a class="name d-title" href="/watch/anime-two-twoxx/ep-1">Anime Two</a></div>
+                    <div class="b1"><a class="name d-title" href="/anime/anime-two-twoxx">Anime Two</a></div>
                 </div>
             </div>
         `;
@@ -598,7 +598,7 @@ describe("Folder Functionality", () => {
             tile.className = "item";
             tile.setAttribute("data-testid", "tile-anime-twoxx");
             tile.innerHTML =
-                '<div class="b1"><a class="name d-title" href="/watch/anime-twoxx/ep-1">Anime Two</a></div>';
+                '<div class="b1"><a class="name d-title" href="/anime/anime-twoxx">Anime Two</a></div>';
             container?.appendChild(tile);
 
             await restoreFolderOrder();

@@ -114,7 +114,7 @@ describe("WatchingAnimeCard", () => {
             const wrapper = mountCard();
 
             const link = wrapper.find('[data-testid="watching-card-link"]');
-            expect(link.attributes("href")).toBe("https://anikototv.to/watch/attack-on-titan-aaaaa/ep-5");
+            expect(link.attributes("href")).toBe("https://anichi.to/watch/attack-on-titan-aaaaa/ep-5");
             expect(link.attributes("target")).toBe("_blank");
             expect(link.attributes("rel")).toBe("noopener noreferrer");
         });
@@ -125,7 +125,7 @@ describe("WatchingAnimeCard", () => {
             await wrapper.setProps({ item: { ...baseItem, currentEpisode: 6 } });
 
             expect(wrapper.find('[data-testid="watching-card-link"]').attributes("href")).toBe(
-                "https://anikototv.to/watch/attack-on-titan-aaaaa/ep-6",
+                "https://anichi.to/watch/attack-on-titan-aaaaa/ep-6",
             );
         });
     });

@@ -35,10 +35,10 @@ vi.mock("@/commons/adapters/StorageAdapter", () => ({
 const ITEM_ONE_HTML = `
     <div class="item" data-testid="anime-item-1">
         <div class="inner">
-            <div class="ani poster"><a href="/watch/test-anime-aaaaa/ep-1"><img alt="Test Anime"></a></div>
+            <div class="ani poster"><a href="/anime/test-anime-aaaaa"><img alt="Test Anime"></a></div>
             <div class="info">
                 <div class="b1">
-                    <a class="name d-title" href="/watch/test-anime-aaaaa/ep-1">Test Anime</a>
+                    <a class="name d-title" href="/anime/test-anime-aaaaa">Test Anime</a>
                 </div>
             </div>
         </div>
@@ -48,10 +48,10 @@ const ITEM_ONE_HTML = `
 const ITEM_TWO_HTML = `
     <div class="item" data-testid="anime-item-2">
         <div class="inner">
-            <div class="ani poster"><a href="/watch/another-anime-bbbbb/ep-1"><img alt="Another Anime"></a></div>
+            <div class="ani poster"><a href="/anime/another-anime-bbbbb"><img alt="Another Anime"></a></div>
             <div class="info">
                 <div class="b1">
-                    <a class="name d-title" href="/watch/another-anime-bbbbb/ep-1">Another Anime</a>
+                    <a class="name d-title" href="/anime/another-anime-bbbbb">Another Anime</a>
                 </div>
             </div>
         </div>
@@ -415,7 +415,7 @@ describe("Content Script", () => {
                     animeElement.innerHTML = `
                         <div class="ani poster"></div>
                         <div class="b1">
-                            <a class="name d-title" href="/watch/test-anime-aaaaa/ep-1">Test Anime</a>
+                            <a class="name d-title" href="/anime/test-anime-aaaaa">Test Anime</a>
                         </div>
                     `;
 
@@ -425,7 +425,7 @@ describe("Content Script", () => {
                     innerAnimeElement.innerHTML = `
                         <div class="ani poster"></div>
                         <div class="b1">
-                            <a class="name d-title" href="/watch/container-anime-bbbbb/ep-1">Container Anime</a>
+                            <a class="name d-title" href="/anime/container-anime-bbbbb">Container Anime</a>
                         </div>
                     `;
                     containerElement.appendChild(innerAnimeElement);
@@ -486,10 +486,10 @@ describe("Content Script", () => {
             item.className = "item";
             item.innerHTML = `
                 <div class="inner">
-                    <div class="ani poster"><a href="/watch/${slug}/ep-1"><img alt="Tracked Anime"${imgSrc ? ` src="${imgSrc}"` : ""}></a></div>
+                    <div class="ani poster"><a href="/anime/${slug}"><img alt="Tracked Anime"${imgSrc ? ` src="${imgSrc}"` : ""}></a></div>
                     <div class="info">
                         <div class="b1">
-                            <a class="name d-title" href="/watch/${slug}/ep-1">Tracked Anime</a>
+                            <a class="name d-title" href="/anime/${slug}">Tracked Anime</a>
                         </div>
                     </div>
                 </div>
@@ -660,7 +660,7 @@ describe("Content Script", () => {
             itemWithoutPoster.className = "item";
             itemWithoutPoster.innerHTML = `
                 <div class="b1">
-                    <a class="name d-title" href="/watch/test-anime-zzzzz/ep-1">Test Anime</a>
+                    <a class="name d-title" href="/anime/test-anime-zzzzz">Test Anime</a>
                 </div>
             `;
 
@@ -1035,7 +1035,7 @@ describe("Content Script", () => {
             card.innerHTML = `
                 <div class="ani poster"></div>
                 <div class="b1">
-                    <a class="name d-title" href="/watch/anime-name-zzzzz/ep-1">Test Anime</a>
+                    <a class="name d-title" href="/anime/anime-name-zzzzz">Test Anime</a>
                 </div>
             `;
 

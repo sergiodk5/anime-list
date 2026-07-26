@@ -16,7 +16,7 @@
             >
                 <div class="flex items-center justify-between gap-1">
                     <a
-                        :href="`https://anikototv.to/watch/${anime.animeSlug}/ep-${anime.currentEpisode}`"
+                        :href="getContinueWatchingUrl(anime)"
                         target="_blank"
                         class="block w-full grow-0 rounded-xs bg-gray-100 px-2 py-1 text-gray-800 hover:bg-blue-500 hover:text-white"
                     >
@@ -37,6 +37,7 @@
 <script setup lang="ts">
 import type { EpisodeProgress } from "@/commons/models";
 import { AnimeService } from "@/commons/services";
+import { getContinueWatchingUrl } from "@/commons/utils/watchUrl";
 import { onMounted, onUnmounted, ref } from "vue";
 
 const watchList = ref<EpisodeProgress[]>([]);

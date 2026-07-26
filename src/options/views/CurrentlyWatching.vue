@@ -67,11 +67,11 @@
                     Start watching on
                     <a
                         data-testid="empty-state-link"
-                        href="https://anikototv.to/"
+                        href="https://anichi.to/"
                         target="_blank"
                         rel="noopener noreferrer"
                         class="text-purple-200 underline transition-colors hover:text-white"
-                        >anikototv</a
+                        >anichi</a
                     >
                     and your anime will show up here.
                 </p>
