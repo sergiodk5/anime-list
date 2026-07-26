@@ -68,9 +68,8 @@ function toSafePosterUrl(raw: string | null | undefined): string | undefined {
 
 function extractCardPosterUrl(card: Element): string | undefined {
     // Real card markup nests the poster as `.ani.poster > a > img` with a
-    // plain absolute `src` (verified in html-examples/list.html). `data-src`
-    // is kept as defense-in-depth in case the site adopts lazy loading; each
-    // candidate is validated independently.
+    // plain absolute `src`. `data-src` is kept as defense-in-depth in case the
+    // site adopts lazy loading; each candidate is validated independently.
     const img = card.querySelector<HTMLImageElement>(`${SELECTORS.POSTER} img`);
     return toSafePosterUrl(img?.getAttribute("src")) ?? toSafePosterUrl(img?.getAttribute("data-src"));
 }
@@ -138,9 +137,8 @@ function readWatchPageTitle(fallback: string): string {
 }
 
 function extractWatchPagePosterUrl(): string | undefined {
-    // Verified against html-examples/anime.html and play.html: og:image is
-    // present and correct on both pages (same CDN URL as the list-card
-    // poster for the same title).
+    // On both single-anime pages, og:image is present and correct (same CDN
+    // URL as the list-card poster for the same title).
     const content = document.querySelector('meta[property="og:image"]')?.getAttribute("content");
     return toSafePosterUrl(content);
 }
