@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { ButtonType } from "@/commons/models";
 
 // Mock the AnimeService before importing the modules
 vi.mock("@/commons/services", () => {
@@ -368,8 +369,8 @@ describe("Single Page Modal Integration", () => {
 
             const actions = getSinglePageModalActions(mockStatus);
             expect(actions).toHaveLength(2);
-            expect(actions[0].type).toBe("episodeControls");
-            expect(actions[1].type).toBe("stopWatching");
+            expect(actions[0].type).toBe(ButtonType.EPISODE_CONTROLS);
+            expect(actions[1].type).toBe(ButtonType.REMOVE_FROM_WATCH);
         });
 
         it("should test initializeSinglePage function", () => {
@@ -401,13 +402,13 @@ describe("Single Page Modal Integration", () => {
         it("should return correct modal actions for different states", () => {
             const hiddenStatus = { isHidden: true, isTracked: false, isPlanned: false, progress: undefined };
             const hiddenActions = getSinglePageModalActions(hiddenStatus);
-            expect(hiddenActions).toEqual([{ type: "unhide", label: "Remove from Hidden", style: "success" }]);
+            expect(hiddenActions).toEqual([{ type: ButtonType.UNHIDE, label: "Remove from Hidden", style: "success" }]);
 
             const plannedStatus = { isHidden: false, isTracked: false, isPlanned: true, progress: undefined };
             const plannedActions = getSinglePageModalActions(plannedStatus);
             expect(plannedActions).toEqual([
-                { type: "removePlan", label: "Remove from Plan", style: "danger" },
-                { type: "startWatching", label: "Start Watching", style: "primary" },
+                { type: ButtonType.REMOVE_FROM_PLAN, label: "Remove from Plan", style: "danger" },
+                { type: ButtonType.ADD_TO_WATCH, label: "Start Watching", style: "primary" },
             ]);
         });
 
@@ -513,30 +514,30 @@ describe("Single Page Modal Integration", () => {
             // Test hidden status actions
             const hiddenStatus = { isHidden: true, isTracked: false, isPlanned: false, progress: undefined };
             const hiddenActions = getSinglePageModalActions(hiddenStatus);
-            expect(hiddenActions).toEqual([{ type: "unhide", label: "Remove from Hidden", style: "success" }]);
+            expect(hiddenActions).toEqual([{ type: ButtonType.UNHIDE, label: "Remove from Hidden", style: "success" }]);
 
             // Test planned status actions
             const plannedStatus = { isHidden: false, isTracked: false, isPlanned: true, progress: undefined };
             const plannedActions = getSinglePageModalActions(plannedStatus);
             expect(plannedActions).toEqual([
-                { type: "removePlan", label: "Remove from Plan", style: "danger" },
-                { type: "startWatching", label: "Start Watching", style: "primary" },
+                { type: ButtonType.REMOVE_FROM_PLAN, label: "Remove from Plan", style: "danger" },
+                { type: ButtonType.ADD_TO_WATCH, label: "Start Watching", style: "primary" },
             ]);
 
             // Test tracked status actions
             const trackedStatus = { isHidden: false, isTracked: true, isPlanned: false, progress: undefined };
             const trackedActions = getSinglePageModalActions(trackedStatus);
             expect(trackedActions).toEqual([
-                { type: "episodeControls", label: "Episode Controls", style: "primary" },
-                { type: "stopWatching", label: "Stop Watching", style: "danger" },
+                { type: ButtonType.EPISODE_CONTROLS, label: "Episode Controls", style: "primary" },
+                { type: ButtonType.REMOVE_FROM_WATCH, label: "Stop Watching", style: "danger" },
             ]);
 
             // Test not tracked status actions
             const notTrackedStatus = { isHidden: false, isTracked: false, isPlanned: false, progress: undefined };
             const notTrackedActions = getSinglePageModalActions(notTrackedStatus);
             expect(notTrackedActions).toEqual([
-                { type: "addToPlan", label: "Add to Plan", style: "primary" },
-                { type: "hide", label: "Hide Anime", style: "warning" },
+                { type: ButtonType.ADD_TO_PLAN, label: "Add to Plan", style: "primary" },
+                { type: ButtonType.HIDE, label: "Hide Anime", style: "warning" },
             ]);
         });
     });

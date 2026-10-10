@@ -1,5 +1,5 @@
 import type { AnimeData, AnimeStatus, TileOrder, Folder, FolderOrder } from "@/commons/models";
-import { StorageKeys } from "@/commons/models";
+import { ButtonType, StorageKeys } from "@/commons/models";
 import { AnimeService } from "@/commons/services";
 import { StorageAdapter } from "@/commons/adapters/StorageAdapter";
 import { selectAdapter, type SiteAdapter } from "@/content/adapters";
@@ -2081,7 +2081,7 @@ export function showSinglePageModal(animeData: AnimeData, status: AnimeStatus): 
     actionsContainer.style.cssText = "margin-bottom: 1.5rem;";
 
     actions.forEach((action) => {
-        if (action.type === "episodeControls") {
+        if (action.type === ButtonType.EPISODE_CONTROLS) {
             // Create episode controls instead of a button
             const episodeControlsContainer = document.createElement("div");
             episodeControlsContainer.style.cssText = `
@@ -2279,21 +2279,21 @@ export function getSinglePageStatusText(status: AnimeStatus): string {
  */
 export function getSinglePageModalActions(status: AnimeStatus) {
     if (status.isHidden) {
-        return [{ type: "unhide", label: "Remove from Hidden", style: "success" }];
+        return [{ type: ButtonType.UNHIDE, label: "Remove from Hidden", style: "success" }];
     } else if (status.isPlanned) {
         return [
-            { type: "removePlan", label: "Remove from Plan", style: "danger" },
-            { type: "startWatching", label: "Start Watching", style: "primary" },
+            { type: ButtonType.REMOVE_FROM_PLAN, label: "Remove from Plan", style: "danger" },
+            { type: ButtonType.ADD_TO_WATCH, label: "Start Watching", style: "primary" },
         ];
     } else if (status.isTracked) {
         return [
-            { type: "episodeControls", label: "Episode Controls", style: "primary" },
-            { type: "stopWatching", label: "Stop Watching", style: "danger" },
+            { type: ButtonType.EPISODE_CONTROLS, label: "Episode Controls", style: "primary" },
+            { type: ButtonType.REMOVE_FROM_WATCH, label: "Stop Watching", style: "danger" },
         ];
     } else {
         return [
-            { type: "addToPlan", label: "Add to Plan", style: "primary" },
-            { type: "hide", label: "Hide Anime", style: "warning" },
+            { type: ButtonType.ADD_TO_PLAN, label: "Add to Plan", style: "primary" },
+            { type: ButtonType.HIDE, label: "Hide Anime", style: "warning" },
         ];
     }
 }
@@ -2319,30 +2319,30 @@ function getSinglePageButtonStyles(style: string): string {
 /**
  * Handle modal action clicks
  */
-async function handleSinglePageAction(actionType: string, animeData: AnimeData): Promise<void> {
+async function handleSinglePageAction(actionType: ButtonType, animeData: AnimeData): Promise<void> {
     try {
         switch (actionType) {
-            case "addToPlan":
+            case ButtonType.ADD_TO_PLAN:
                 await getSinglePageAnimeService().addToPlanToWatch(animeData);
                 showToast("Added to plan to watch", "success");
                 break;
-            case "removePlan":
+            case ButtonType.REMOVE_FROM_PLAN:
                 await getSinglePageAnimeService().removeFromPlanToWatch(animeData.animeId);
                 showToast("Removed from plan to watch", "info");
                 break;
-            case "startWatching":
+            case ButtonType.ADD_TO_WATCH:
                 await getSinglePageAnimeService().startWatching(animeData, 1);
                 showToast("Started watching", "success");
                 break;
-            case "stopWatching":
+            case ButtonType.REMOVE_FROM_WATCH:
                 await getSinglePageAnimeService().stopWatching(animeData.animeId);
                 showToast("Stopped watching", "info");
                 break;
-            case "hide":
+            case ButtonType.HIDE:
                 await getSinglePageAnimeService().hideAnime(animeData.animeId);
                 showToast("Anime hidden", "info");
                 break;
-            case "unhide":
+            case ButtonType.UNHIDE:
                 await getSinglePageAnimeService().unhideAnime(animeData.animeId);
                 showToast("Removed from hidden", "success");
                 break;
