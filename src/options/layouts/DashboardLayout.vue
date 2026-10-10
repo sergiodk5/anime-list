@@ -32,7 +32,7 @@
                 <slot name="content"></slot>
             </main>
         </div>
-        <!-- vue-toastification renders containers globally; no custom markup required here -->
+        <!-- vue3-toastify renders its container globally; no custom markup required here -->
     </div>
 </template>
 

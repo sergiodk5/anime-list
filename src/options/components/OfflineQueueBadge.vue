@@ -90,11 +90,10 @@
 import { getOfflineQueue } from "@/options/composables";
 import { useNetwork } from "@vueuse/core";
 import { computed, ref, watch } from "vue";
-import { useToast } from "vue-toastification";
+import { toast } from "vue3-toastify";
 
 const queue = getOfflineQueue();
 const { isOnline } = useNetwork();
-const toast = useToast();
 
 const panelOpen = ref(false);
 const lastProcessedSnapshot = ref({ processed: 0, dropped: 0 });

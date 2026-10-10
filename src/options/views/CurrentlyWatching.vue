@@ -98,7 +98,7 @@
 <script setup lang="ts">
 import { useIntervalFn, useNow } from "@vueuse/core";
 import { computed, onMounted } from "vue";
-import { useToast } from "vue-toastification";
+import { toast } from "vue3-toastify";
 
 import type { EpisodeProgress } from "@/commons/models";
 import WatchingAnimeCard from "@/options/components/watching/WatchingAnimeCard.vue";
@@ -121,7 +121,6 @@ const hasError = computed(() => resolveFlag(watchingStore.hasError));
 
 const items = computed<EpisodeProgress[]>(() => watchingStore.sortedByTitle);
 
-const toast = useToast();
 onMounted(async () => {
     await Promise.all([watchingStore.init?.(), metadataStore.init?.()]);
     toast.info("Watching list loaded");

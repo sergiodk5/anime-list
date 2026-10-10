@@ -4,7 +4,9 @@ import { useWatchingStore } from "@/options/stores/watchingStore";
 import { setActivePinia } from "pinia";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("vue-toastification", () => ({ useToast: () => ({ success: vi.fn(), error: vi.fn() }) }));
+vi.mock("vue3-toastify", () => ({
+    toast: { success: vi.fn(), error: vi.fn() },
+}));
 
 vi.mock("@/commons/services/AnimeService", () => {
     return {

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("vue-toastification", () => ({
-    useToast: () => ({ success: vi.fn(), error: vi.fn() }),
+vi.mock("vue3-toastify", () => ({
+    toast: { success: vi.fn(), error: vi.fn() },
 }));
 
 const executeWithRetryMock = vi.fn((fn: any) => fn());

@@ -4,8 +4,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { AnimeData } from "@/commons/models";
 import { AnimeService } from "@/commons/services/AnimeService";
 import { useWatchingStore } from "@/options/stores/watchingStore";
-vi.mock("vue-toastification", () => ({
-    useToast: () => ({ success: vi.fn(), error: vi.fn(), info: vi.fn(), warning: vi.fn() }),
+vi.mock("vue3-toastify", () => ({
+    toast: { success: vi.fn(), error: vi.fn(), info: vi.fn(), warn: vi.fn() },
 }));
 
 // Mock the AnimeService

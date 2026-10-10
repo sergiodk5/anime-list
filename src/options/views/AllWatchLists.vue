@@ -326,7 +326,7 @@ import { usePlanToWatchStore } from "@/options/stores/planToWatchStore";
 import { useWatchingStore } from "@/options/stores/watchingStore";
 import { computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
-import { useToast } from "vue-toastification";
+import { toast } from "vue3-toastify";
 
 // Enhanced statistics with VueUse integration
 const { stats } = useSmartStats();
@@ -358,7 +358,6 @@ const hasError = computed(
         resolveFlag(completedStore.hasError),
 );
 
-const toast = useToast();
 onMounted(async () => {
     await Promise.all([watchingStore.init?.(), planStore.init?.(), hiddenStore.init?.(), completedStore.init?.()]);
     toast.info("Lists loaded");
