@@ -1,7 +1,7 @@
 import { mount } from "@vue/test-utils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { EpisodeProgress } from "@/commons/models";
+import type { AnimeMetadata, EpisodeProgress } from "@/commons/models";
 import WatchingAnimeCard from "@/options/components/watching/WatchingAnimeCard.vue";
 import { useWatchingStore } from "@/options/stores/watchingStore";
 
@@ -230,6 +230,48 @@ describe("WatchingAnimeCard", () => {
             expect(remove.classes()).toContain("opacity-0");
             expect(remove.classes()).toContain("group-hover:opacity-100");
             expect(remove.classes()).toContain("focus-visible:opacity-100");
+        });
+    });
+
+    describe("AniList metadata", () => {
+        const NOW = Date.parse("2026-10-10T12:00:00Z");
+        const metadata: AnimeMetadata = {
+            animeId: baseItem.animeId,
+            anilistId: 16498,
+            totalEpisodes: 5,
+            nextEpisode: { episode: 6, airingAt: (NOW + 3 * 60 * 60 * 1000) / 1000 },
+            nextRefreshAt: null,
+        };
+        const mountWithMetadata = (overrides: Partial<AnimeMetadata> = {}) =>
+            mount(WatchingAnimeCard, {
+                props: { item: baseItem, metadata: { ...metadata, ...overrides }, now: NOW },
+            });
+
+        it("uses the AniList total over the stored total", () => {
+            const wrapper = mountWithMetadata();
+
+            expect(wrapper.find('[data-testid="watching-card-episodes"]').text()).toBe("Ep 5 / 5");
+            expect(wrapper.find('[data-testid="watching-card-increment"]').attributes("disabled")).toBeDefined();
+        });
+
+        it("falls back to the stored total when AniList does not know it", () => {
+            const wrapper = mountWithMetadata({ totalEpisodes: null });
+
+            expect(wrapper.find('[data-testid="watching-card-episodes"]').text()).toBe("Ep 5 / 25");
+        });
+
+        it("shows the next episode countdown", () => {
+            const wrapper = mountWithMetadata();
+
+            expect(wrapper.find('[data-testid="watching-card-next-episode"]').text()).toBe("Next: Ep 6 · in 3h");
+        });
+
+        it("hides the countdown when no episode is scheduled", () => {
+            const withoutSchedule = mountWithMetadata({ nextEpisode: undefined });
+            const withoutMetadata = mount(WatchingAnimeCard, { props: { item: baseItem, now: NOW } });
+
+            expect(withoutSchedule.find('[data-testid="watching-card-next-episode"]').exists()).toBe(false);
+            expect(withoutMetadata.find('[data-testid="watching-card-next-episode"]').exists()).toBe(false);
         });
     });
 });

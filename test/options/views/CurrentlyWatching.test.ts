@@ -12,6 +12,12 @@ vi.mock("vue-toastification", () => ({
 }));
 
 vi.mock("@/commons/services/AnimeService");
+const metadataEntries = vi.hoisted(() => ({ value: [] as unknown[] }));
+vi.mock("@/commons/repositories/AnimeMetadataRepository", () => ({
+    AnimeMetadataRepository: class {
+        findAll = vi.fn(async () => metadataEntries.value);
+    },
+}));
 
 const sampleItems: EpisodeProgress[] = [
     {
@@ -60,6 +66,7 @@ describe("CurrentlyWatching", () => {
         vi.clearAllMocks();
 
         mockGetAllAnime(sampleItems);
+        metadataEntries.value = [];
     });
 
     const mountView = () => mount(CurrentlyWatching, { global: { plugins: [pinia] } });
@@ -177,6 +184,19 @@ describe("CurrentlyWatching", () => {
             const links = wrapper.findAll('[data-testid="watching-card-link"]');
             expect(links[0].attributes("href")).toBe("https://anichi.to/watch/attack-on-titan-aaaaa/ep-5");
             expect(links[1].attributes("href")).toBe("https://anichi.to/watch/demon-slayer-bbbbb/ep-12");
+        });
+
+        it("should pass AniList metadata to the matching card", async () => {
+            metadataEntries.value = [
+                { animeId: "demon-slayer-bbbbb", anilistId: 101922, totalEpisodes: 30, nextRefreshAt: null },
+            ];
+            const wrapper = mountView();
+
+            await vi.waitFor(() =>
+                expect(wrapper.findAll('[data-testid="watching-card-episodes"]').map((e) => e.text())).toContain(
+                    "Ep 12 / 30",
+                ),
+            );
         });
 
         it("should render the poster image only for items with a posterUrl", async () => {

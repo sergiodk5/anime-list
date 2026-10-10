@@ -1,9 +1,10 @@
-import type { AnimeData, AnimeStatus, TileOrder, Folder, FolderOrder } from "@/commons/models";
+import type { AnimeData, AnimeMetadata, AnimeStatus, TileOrder, Folder, FolderOrder } from "@/commons/models";
 import { ButtonType, StorageKeys } from "@/commons/models";
 import { AnimeService } from "@/commons/services";
 import { StorageAdapter } from "@/commons/adapters/StorageAdapter";
 import { selectAdapter, type SiteAdapter } from "@/content/adapters";
 import { linkCurrentPageMetadata } from "@/content/metadataLink";
+import { formatAiringDate, formatNextEpisode, resolveTotalEpisodes } from "@/commons/utils/episodeInfo";
 
 /**
  * Content script for anime website integration
@@ -383,7 +384,12 @@ export function createStopWatchingButton(animeData: AnimeData): HTMLButtonElemen
 /**
  * Create combined watching controls with episode display visible and stop button on hover
  */
-export function createCombinedWatchingControls(animeData: AnimeData, currentEpisode: number): HTMLDivElement {
+export function createCombinedWatchingControls(
+    animeData: AnimeData,
+    currentEpisode: number,
+    metadata?: AnimeMetadata,
+    totalEpisodes?: number,
+): HTMLDivElement {
     const container = document.createElement("div");
     container.className = "anime-list-combined-watching-controls";
     container.setAttribute("data-testid", "anime-combined-watching-controls");
@@ -414,6 +420,19 @@ export function createCombinedWatchingControls(animeData: AnimeData, currentEpis
     const episodeInput = container.querySelector(".episode-current") as HTMLInputElement;
     const stopBtn = container.querySelector(".stop-watching-btn") as HTMLButtonElement;
     const completeBtn = container.querySelector(".complete-btn") as HTMLButtonElement;
+
+    if (totalEpisodes) {
+        const total = document.createElement("span");
+        total.className = "episode-total";
+        total.setAttribute("data-testid", "anime-episode-total");
+        total.textContent = `/ ${totalEpisodes}`;
+        episodeInput.after(total);
+    }
+
+    const nextEpisodeLine = createNextEpisodeLine(metadata);
+    if (nextEpisodeLine) {
+        container.querySelector(".episode-display")?.after(nextEpisodeLine);
+    }
 
     decrementBtn.addEventListener("click", async (e) => {
         e.preventDefault();
@@ -473,6 +492,42 @@ export function createRemovePlanButton(animeData: AnimeData): HTMLButtonElement 
     });
 
     return button;
+}
+
+/**
+ * "Next: Ep 4 · in 1d 2h" line, or null when no upcoming episode is known
+ */
+export function createNextEpisodeLine(metadata?: AnimeMetadata, now: number = Date.now()): HTMLDivElement | null {
+    if (!metadata?.nextEpisode) return null;
+    const line = document.createElement("div");
+    line.className = "anime-list-next-episode";
+    line.setAttribute("data-testid", "anime-next-episode");
+    line.setAttribute("title", formatAiringDate(metadata.nextEpisode));
+    line.textContent = `Next: ${formatNextEpisode(metadata.nextEpisode, now)}`;
+    return line;
+}
+
+/**
+ * Episode total and next episode for planned/completed tiles, or null when nothing is known
+ */
+export function createEpisodeInfo(metadata?: AnimeMetadata, now: number = Date.now()): HTMLDivElement | null {
+    const total = resolveTotalEpisodes(metadata?.totalEpisodes);
+    const nextEpisodeLine = createNextEpisodeLine(metadata, now);
+    if (!total && !nextEpisodeLine) return null;
+
+    const info = document.createElement("div");
+    info.className = "anime-list-episode-info";
+    info.setAttribute("data-testid", "anime-episode-info");
+    if (total) {
+        const totalLine = document.createElement("div");
+        totalLine.setAttribute("data-testid", "anime-episode-info-total");
+        totalLine.textContent = `${total} eps`;
+        info.appendChild(totalLine);
+    }
+    if (nextEpisodeLine) {
+        info.appendChild(nextEpisodeLine);
+    }
+    return info;
 }
 
 /**
@@ -1034,9 +1089,12 @@ export async function addControlsToItem(element: Element): Promise<void> {
         controlsContainer.setAttribute("data-testid", "anime-controls");
 
         // Add state-based controls per business requirements
+        const episodeInfo = createEpisodeInfo(status.metadata);
+
         if (status.isCompleted) {
             controlsContainer.appendChild(createCompletedBadge());
             controlsContainer.appendChild(createRemoveCompletedButton(animeData));
+            if (episodeInfo) controlsContainer.appendChild(episodeInfo);
             controlsContainer.classList.add("completed-state");
         } else if (status.isTracked) {
             // Watching: Combined episode controls with stop button on hover
@@ -1045,6 +1103,8 @@ export async function addControlsToItem(element: Element): Promise<void> {
                 const combinedWatchingControls = createCombinedWatchingControls(
                     animeData,
                     episodeProgress.currentEpisode,
+                    status.metadata,
+                    resolveTotalEpisodes(status.metadata?.totalEpisodes, episodeProgress.totalEpisodes),
                 );
 
                 controlsContainer.appendChild(combinedWatchingControls);
@@ -1059,6 +1119,7 @@ export async function addControlsToItem(element: Element): Promise<void> {
 
             controlsContainer.appendChild(startWatchingButton);
             controlsContainer.appendChild(removePlanButton);
+            if (episodeInfo) controlsContainer.appendChild(episodeInfo);
 
             // Add visual indicator for planned state
             controlsContainer.classList.add("planned-state");
@@ -1316,6 +1377,34 @@ function injectStyles(): void {
             background: rgba(251, 146, 60, 0.3);
             border-color: rgba(251, 146, 60, 0.5);
             color: white;
+        }
+
+        .anime-list-combined-watching-controls .episode-total {
+            font-size: 10px;
+            font-weight: 500;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+        }
+
+        .anime-list-next-episode {
+            font-size: 9px;
+            font-weight: 500;
+            color: rgb(253, 230, 138);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+            white-space: nowrap;
+        }
+
+        .anime-list-episode-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            padding: 4px 8px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 10px;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
         }
 
         /* Completed badge */
@@ -2254,6 +2343,11 @@ export function showSinglePageModal(animeData: AnimeData, status: AnimeStatus): 
     statusText.textContent = getSinglePageStatusText(status);
     statusText.style.cssText = "margin: 0 0 1.5rem 0; opacity: 0.8;";
 
+    const nextEpisodeLine = createNextEpisodeLine(status.metadata);
+    if (nextEpisodeLine) {
+        nextEpisodeLine.style.cssText = "margin: -1rem 0 1.5rem 0; font-size: 0.9rem; color: rgb(253, 230, 138);";
+    }
+
     // Add actions
     const actions = getSinglePageModalActions(status);
     const actionsContainer = document.createElement("div");
@@ -2414,6 +2508,7 @@ export function showSinglePageModal(animeData: AnimeData, status: AnimeStatus): 
     // Assemble modal
     modalContent.appendChild(title);
     modalContent.appendChild(statusText);
+    if (nextEpisodeLine) modalContent.appendChild(nextEpisodeLine);
     modalContent.appendChild(actionsContainer);
     modalContent.appendChild(closeButton);
     singlePageModalElement.appendChild(modalContent);
@@ -2447,7 +2542,9 @@ export function getSinglePageStatusText(status: AnimeStatus): string {
     if (status.isHidden) return "Hidden from lists";
     if (status.isCompleted) return "Completed";
     if (status.isTracked && status.progress) {
-        return `Currently watching - Episode ${status.progress.currentEpisode}`;
+        const total = resolveTotalEpisodes(status.metadata?.totalEpisodes, status.progress.totalEpisodes);
+        const ofTotal = total ? ` of ${total}` : "";
+        return `Currently watching - Episode ${status.progress.currentEpisode}${ofTotal}`;
     }
     if (status.isTracked) return "Currently watching";
     if (status.isPlanned) return "Planned to watch";
