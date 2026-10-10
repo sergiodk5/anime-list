@@ -9,11 +9,13 @@ import type {
 } from "@/commons/models";
 import { AnimeAction } from "@/commons/models";
 import {
+    AnimeMetadataRepository,
     CompletedAnimeRepository,
     EpisodeProgressRepository,
     HiddenAnimeRepository,
     PlanToWatchRepository,
 } from "@/commons/repositories";
+import { resolveTotalEpisodes } from "@/commons/utils/episodeInfo";
 import { AnimeStateValidator } from "./AnimeStateValidator";
 
 /**
@@ -25,6 +27,7 @@ export class AnimeService {
     private readonly planToWatchRepository: PlanToWatchRepository;
     private readonly hiddenAnimeRepository: HiddenAnimeRepository;
     private readonly completedAnimeRepository: CompletedAnimeRepository;
+    private readonly animeMetadataRepository: AnimeMetadataRepository;
     private readonly stateValidator: AnimeStateValidator;
 
     constructor(
@@ -32,11 +35,13 @@ export class AnimeService {
         planToWatchRepository?: PlanToWatchRepository,
         hiddenAnimeRepository?: HiddenAnimeRepository,
         completedAnimeRepository?: CompletedAnimeRepository,
+        animeMetadataRepository?: AnimeMetadataRepository,
     ) {
         this.episodeProgressRepository = episodeProgressRepository ?? new EpisodeProgressRepository();
         this.planToWatchRepository = planToWatchRepository ?? new PlanToWatchRepository();
         this.hiddenAnimeRepository = hiddenAnimeRepository ?? new HiddenAnimeRepository();
         this.completedAnimeRepository = completedAnimeRepository ?? new CompletedAnimeRepository();
+        this.animeMetadataRepository = animeMetadataRepository ?? new AnimeMetadataRepository();
         this.stateValidator = new AnimeStateValidator();
     }
 
@@ -44,11 +49,12 @@ export class AnimeService {
      * Get the current status of an anime
      */
     async getAnimeStatus(animeId: string): Promise<AnimeStatus> {
-        const [episodeProgress, planToWatch, isHidden, completed] = await Promise.all([
+        const [episodeProgress, planToWatch, isHidden, completed, metadata] = await Promise.all([
             this.episodeProgressRepository.findById(animeId),
             this.planToWatchRepository.findById(animeId),
             this.hiddenAnimeRepository.exists(animeId),
             this.completedAnimeRepository.findById(animeId),
+            this.animeMetadataRepository.findById(animeId),
         ]);
 
         return {
@@ -59,6 +65,7 @@ export class AnimeService {
             progress: episodeProgress || undefined,
             plan: planToWatch || undefined,
             completed: completed || undefined,
+            metadata: metadata || undefined,
         };
     }
 
@@ -382,7 +389,9 @@ export class AnimeService {
                 animeTitle: progress.animeTitle,
                 animeSlug: progress.animeSlug,
                 completedAt: new Date().toISOString(),
-                totalEpisodes: progress.totalEpisodes ?? progress.currentEpisode,
+                totalEpisodes:
+                    resolveTotalEpisodes(currentStatus.metadata?.totalEpisodes, progress.totalEpisodes) ??
+                    progress.currentEpisode,
             };
 
             if (progress.posterUrl) {

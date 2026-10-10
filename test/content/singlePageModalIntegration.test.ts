@@ -513,7 +513,7 @@ describe("Single Page Modal Integration", () => {
                     lastWatched: new Date().toISOString(),
                 },
             };
-            expect(getSinglePageStatusText(trackedWithProgress)).toBe("Currently watching - Episode 8");
+            expect(getSinglePageStatusText(trackedWithProgress)).toBe("Currently watching - Episode 8 of 12");
 
             const notTrackedStatus = { isHidden: false, isCompleted: false, isTracked: false, isPlanned: false, progress: undefined };
             expect(getSinglePageStatusText(notTrackedStatus)).toBe("Not tracked");

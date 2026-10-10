@@ -87,6 +87,8 @@
                     v-for="item in items"
                     :key="item.animeId"
                     :item="item"
+                    :metadata="metadataStore.byId(item.animeId)"
+                    :now="now.getTime()"
                 />
             </div>
         </template>
@@ -94,16 +96,20 @@
 </template>
 
 <script setup lang="ts">
+import { useNow } from "@vueuse/core";
 import { computed, onMounted } from "vue";
 import { useToast } from "vue-toastification";
 
 import type { EpisodeProgress } from "@/commons/models";
 import WatchingAnimeCard from "@/options/components/watching/WatchingAnimeCard.vue";
 import SkeletonCard from "@/options/components/ui/SkeletonCard.vue";
+import { useAnimeMetadataStore } from "@/options/stores/animeMetadataStore";
 import { useWatchingStore } from "@/options/stores/watchingStore";
 
 // Store
 const watchingStore = useWatchingStore();
+const metadataStore = useAnimeMetadataStore();
+const now = useNow({ interval: 60_000 });
 
 function resolveFlag(flag: any): boolean {
     if (typeof flag === "boolean") return flag;
@@ -117,7 +123,7 @@ const items = computed<EpisodeProgress[]>(() => watchingStore.sortedByTitle);
 
 const toast = useToast();
 onMounted(async () => {
-    await Promise.all([watchingStore.init?.()]);
+    await Promise.all([watchingStore.init?.(), metadataStore.init?.()]);
     toast.info("Watching list loaded");
 });
 </script>

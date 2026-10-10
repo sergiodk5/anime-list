@@ -41,6 +41,7 @@ export interface AnimeStatus {
     progress?: EpisodeProgress;
     plan?: PlanToWatch;
     completed?: CompletedAnime;
+    metadata?: AnimeMetadata;
 }
 
 // UI Control configuration
@@ -71,7 +72,7 @@ export interface Toast {
 }
 
 // Import existing models
-import type { AnimeData, CompletedAnime, EpisodeProgress, PlanToWatch } from "./index";
+import type { AnimeData, AnimeMetadata, CompletedAnime, EpisodeProgress, PlanToWatch } from "./index";
 
 // Re-export existing models for convenience
 export type { AnimeData, EpisodeProgress, PlanToWatch };

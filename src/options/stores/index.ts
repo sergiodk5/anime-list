@@ -33,6 +33,7 @@ export function setupPinia(app: App): void {
 export * from "@/options/stores/types";
 
 // Export stores
+export * from "@/options/stores/animeMetadataStore";
 export * from "@/options/stores/completedStore";
 export * from "@/options/stores/hiddenStore";
 export * from "@/options/stores/planToWatchStore";

@@ -1,5 +1,6 @@
 import type { AnimeData, EpisodeProgress, PlanToWatch } from "@/commons/models";
 import {
+    AnimeMetadataRepository,
     CompletedAnimeRepository,
     EpisodeProgressRepository,
     HiddenAnimeRepository,
@@ -59,6 +60,10 @@ const createMockCompletedAnimeRepository = () => ({
     count: vi.fn(),
 });
 
+const createMockAnimeMetadataRepository = () => ({
+    findById: vi.fn().mockResolvedValue(null),
+});
+
 type MockEpisodeProgressRepository = ReturnType<typeof createMockEpisodeProgressRepository>;
 type MockPlanToWatchRepository = ReturnType<typeof createMockPlanToWatchRepository>;
 type MockHiddenAnimeRepository = ReturnType<typeof createMockHiddenAnimeRepository>;
@@ -70,6 +75,7 @@ describe("AnimeService", () => {
     let mockPlanToWatchRepo: MockPlanToWatchRepository;
     let mockHiddenAnimeRepo: MockHiddenAnimeRepository;
     let mockCompletedAnimeRepo: MockCompletedAnimeRepository;
+    let mockAnimeMetadataRepo: ReturnType<typeof createMockAnimeMetadataRepository>;
 
     const sampleAnimeData: AnimeData = {
         animeId: "test-anime-1",
@@ -101,12 +107,14 @@ describe("AnimeService", () => {
         mockPlanToWatchRepo = createMockPlanToWatchRepository();
         mockHiddenAnimeRepo = createMockHiddenAnimeRepository();
         mockCompletedAnimeRepo = createMockCompletedAnimeRepository();
+        mockAnimeMetadataRepo = createMockAnimeMetadataRepository();
 
         animeService = new AnimeService(
             mockEpisodeProgressRepo as unknown as EpisodeProgressRepository,
             mockPlanToWatchRepo as unknown as PlanToWatchRepository,
             mockHiddenAnimeRepo as unknown as HiddenAnimeRepository,
             mockCompletedAnimeRepo as unknown as CompletedAnimeRepository,
+            mockAnimeMetadataRepo as unknown as AnimeMetadataRepository,
         );
     });
 
@@ -953,6 +961,38 @@ describe("AnimeService", () => {
             expect(result.success).toBe(false);
             expect(result.error).toBe("Storage error");
             expect(mockEpisodeProgressRepo.delete).not.toHaveBeenCalled();
+        });
+    });
+
+    describe("AniList metadata", () => {
+        const metadata = {
+            animeId: "test-anime-1",
+            anilistId: 1,
+            totalEpisodes: 24,
+            nextEpisode: { episode: 6, airingAt: 1791729000 },
+            nextRefreshAt: null,
+        };
+
+        it("includes stored metadata in the anime status", async () => {
+            mockEpisodeProgressRepo.findById.mockResolvedValue(sampleEpisodeProgress);
+            mockPlanToWatchRepo.findById.mockResolvedValue(null);
+            mockHiddenAnimeRepo.exists.mockResolvedValue(false);
+            mockAnimeMetadataRepo.findById.mockResolvedValue(metadata);
+
+            const status = await animeService.getAnimeStatus("test-anime-1");
+
+            expect(status.metadata).toEqual(metadata);
+        });
+
+        it("completes with the AniList total over the stored progress total", async () => {
+            mockEpisodeProgressRepo.findById.mockResolvedValue(sampleEpisodeProgress);
+            mockPlanToWatchRepo.findById.mockResolvedValue(null);
+            mockHiddenAnimeRepo.exists.mockResolvedValue(false);
+            mockAnimeMetadataRepo.findById.mockResolvedValue(metadata);
+
+            await animeService.markCompleted("test-anime-1");
+
+            expect(mockCompletedAnimeRepo.create).toHaveBeenCalledWith(expect.objectContaining({ totalEpisodes: 24 }));
         });
     });
 

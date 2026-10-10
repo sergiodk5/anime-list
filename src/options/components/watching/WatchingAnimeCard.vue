@@ -77,6 +77,14 @@
                     +
                 </button>
             </div>
+            <p
+                v-if="nextEpisodeLabel"
+                data-testid="watching-card-next-episode"
+                :title="nextEpisodeDate"
+                class="text-xs text-amber-200 drop-shadow-xs"
+            >
+                Next: {{ nextEpisodeLabel }}
+            </p>
             <a
                 data-testid="watching-card-link"
                 :href="watchUrl"
@@ -94,11 +102,17 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 
-import type { EpisodeProgress } from "@/commons/models";
+import type { AnimeMetadata, EpisodeProgress } from "@/commons/models";
+import {
+    formatAiringDate,
+    formatEpisodeProgress,
+    formatNextEpisode,
+    resolveTotalEpisodes,
+} from "@/commons/utils/episodeInfo";
 import { getContinueWatchingUrl } from "@/commons/utils/watchUrl";
 import { useWatchingStore } from "@/options/stores/watchingStore";
 
-const props = defineProps<{ item: EpisodeProgress }>();
+const props = defineProps<{ item: EpisodeProgress; metadata?: AnimeMetadata; now?: number }>();
 
 const watchingStore = useWatchingStore();
 
@@ -114,14 +128,20 @@ watch(
 );
 
 const titleInitial = computed(() => props.item.animeTitle.charAt(0).toUpperCase());
-const episodeLabel = computed(() => `Ep ${props.item.currentEpisode} / ${props.item.totalEpisodes ?? "?"}`);
+const totalEpisodes = computed(() => resolveTotalEpisodes(props.metadata?.totalEpisodes, props.item.totalEpisodes));
+const episodeLabel = computed(() => formatEpisodeProgress(props.item.currentEpisode, totalEpisodes.value));
+const nextEpisode = computed(() => props.metadata?.nextEpisode);
+const nextEpisodeLabel = computed(() =>
+    nextEpisode.value ? formatNextEpisode(nextEpisode.value, props.now ?? Date.now()) : null,
+);
+const nextEpisodeDate = computed(() => (nextEpisode.value ? formatAiringDate(nextEpisode.value) : undefined));
 const watchUrl = computed(() => getContinueWatchingUrl(props.item));
 
 // Disabled states mirror the store's clamping (min 1, max totalEpisodes when known).
 // An unknown totalEpisodes keeps [+] enabled — the store clamps at 999 internally.
 const isDecrementDisabled = computed(() => props.item.currentEpisode <= 1);
 const isIncrementDisabled = computed(
-    () => props.item.totalEpisodes !== undefined && props.item.currentEpisode >= props.item.totalEpisodes,
+    () => totalEpisodes.value !== undefined && props.item.currentEpisode >= totalEpisodes.value,
 );
 
 // All feedback (optimistic update, rollback, toasts, offline queueing, undo

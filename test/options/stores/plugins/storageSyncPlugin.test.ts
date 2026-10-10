@@ -186,6 +186,24 @@ describe("storageSyncPlugin", () => {
             vi.useRealTimers();
         });
 
+        it("should handle animeMetadata storage changes for the metadata store", async () => {
+            vi.useFakeTimers();
+            const mockRefresh = vi.fn();
+            const useTestStore = defineStore("animeMetadata", () => ({
+                data: [] as any[],
+                refreshFromStorage: mockRefresh,
+            }));
+
+            useTestStore();
+
+            mockStorageListener({ animeMetadata: { newValue: {}, oldValue: null } }, "local");
+
+            vi.advanceTimersByTime(600);
+
+            expect(mockRefresh).toHaveBeenCalled();
+            vi.useRealTimers();
+        });
+
         it("should handle completedAnime storage changes for completed store", async () => {
             vi.useFakeTimers();
             const mockRefresh = vi.fn();
