@@ -180,62 +180,29 @@ Content scripts are complex to test because they manipulate DOM, handle async op
 Content scripts need a realistic DOM environment:
 
 ```typescript
-import { JSDOM } from "jsdom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+// Vitest already runs in jsdom (see vitest.config.ts); set the page markup on the existing document.
 describe("Content Script", () => {
-    let dom: JSDOM;
-    let document: Document;
-    let window: Window;
-
     beforeEach(() => {
-        // Create realistic DOM structure that matches target websites
-        dom = new JSDOM(`
-            <!DOCTYPE html>
-            <html>
-            <head><title>Test</title></head>
-            <body>
-                <div class="film_list-wrap">
-                    <div class="flw-item" data-testid="anime-item-1">
-                        <div class="film-poster">
-                            <img src="poster1.jpg" alt="Anime 1">
-                        </div>
-                        <div class="film-detail">
-                            <h3 class="film-name">
-                                <a href="/test-anime-123" title="Test Anime" class="dynamic-name">
-                                    Test Anime
-                                </a>
-                            </h3>
-                        </div>
-                    </div>
+        // Markup that matches the target website's anime cards
+        document.body.innerHTML = `
+            <div id="list-items">
+                <div class="item">
+                    <div class="ani poster"><a href="/anime/test-anime-snxwm"><img alt="Test Anime"></a></div>
+                    <div class="info"><a class="name d-title" href="/anime/test-anime-snxwm">Test Anime</a></div>
                 </div>
-            </body>
-            </html>
-        `);
+            </div>
+        `;
 
-        document = dom.window.document;
-        window = dom.window as unknown as Window;
-
-        // Setup global objects for content script environment
-        global.document = document;
-        global.window = window as any;
-
-        // Mock browser APIs that content scripts use
-        global.MutationObserver = vi.fn(() => ({
-            observe: vi.fn(),
-            disconnect: vi.fn(),
-        })) as any;
+        // Mocks called with `new` must use `function` or `class`, not an arrow function (Vitest 4+).
+        global.MutationObserver = vi.fn(function () {
+            return { observe: vi.fn(), disconnect: vi.fn() };
+        }) as any;
 
         // Mock console methods to avoid noise
         vi.spyOn(console, "log").mockImplementation(() => {});
         vi.spyOn(console, "error").mockImplementation(() => {});
-
-        // Reset all mocks for clean state
-        vi.clearAllMocks();
-    });
-
-    afterEach(() => {
-        dom.window.close();
     });
 });
 ```
@@ -259,7 +226,9 @@ describe("Initialization", () => {
                 isHidden: false,
             }),
         };
-        vi.mocked(AnimeService).mockImplementation(() => mockAnimeService);
+        vi.mocked(AnimeService).mockImplementation(function () {
+            return mockAnimeService;
+        });
 
         const contentScript = await import("@/content/index");
         await contentScript.init();
@@ -279,7 +248,9 @@ describe("DOM Manipulation", () => {
                 isHidden: false,
             }),
         };
-        vi.mocked(AnimeService).mockImplementation(() => mockAnimeService);
+        vi.mocked(AnimeService).mockImplementation(function () {
+            return mockAnimeService;
+        });
         vi.mocked(PlanToWatchUtil.isPlanned).mockResolvedValue(false);
 
         const { initializeControls } = await import("@/content/index");

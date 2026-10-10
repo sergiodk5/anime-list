@@ -8,16 +8,18 @@ vi.mock("vue-toastification", () => ({ useToast: () => ({ success: vi.fn(), erro
 
 vi.mock("@/commons/services/AnimeService", () => {
     return {
-        AnimeService: vi.fn().mockImplementation(() => ({
-            getAllAnime: vi.fn().mockResolvedValue({
-                currentlyWatching: [],
-                planToWatch: [],
-                hiddenAnime: [],
-            }),
-            updateEpisodeProgress: vi.fn().mockResolvedValue({ success: true, message: "ok" }),
-            startWatching: vi.fn().mockResolvedValue({ success: true, message: "started" }),
-            stopWatching: vi.fn().mockResolvedValue({ success: true, message: "stopped" }),
-        })),
+        AnimeService: vi.fn().mockImplementation(function () {
+            return {
+                getAllAnime: vi.fn().mockResolvedValue({
+                    currentlyWatching: [],
+                    planToWatch: [],
+                    hiddenAnime: [],
+                }),
+                updateEpisodeProgress: vi.fn().mockResolvedValue({ success: true, message: "ok" }),
+                startWatching: vi.fn().mockResolvedValue({ success: true, message: "started" }),
+                stopWatching: vi.fn().mockResolvedValue({ success: true, message: "stopped" }),
+            };
+        }),
     };
 });
 

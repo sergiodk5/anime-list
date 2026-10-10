@@ -53,7 +53,7 @@ StorageAdapter (commons/adapters/) → chrome.storage.local
 ## Testing
 
 - Chrome APIs mocked in `test/setup.ts` (storage, runtime, matchMedia)
-- Coverage: 85% functions/lines/statements, 80% branches
+- Coverage: 85% functions, 84% lines, 83% statements, 73% branches (Vitest 5 AST-based measurement)
 - Mock pattern: `vi.mock()` before imports, `vi.clearAllMocks()` in beforeEach
 - Stores: use `createPinia()`/`setActivePinia()` for isolation
 

@@ -33,7 +33,9 @@ describe("Store refreshFromStorage - Enhanced Phase 6", () => {
             }),
         };
 
-        vi.mocked(AnimeService).mockImplementation(() => mockAnimeService);
+        vi.mocked(AnimeService).mockImplementation(function () {
+            return mockAnimeService;
+        });
     });
 
     afterEach(() => {

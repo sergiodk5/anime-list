@@ -37,15 +37,14 @@ describe("useWatchingStore extended actions", () => {
         mockUpdateEpisodeProgress = vi.fn().mockResolvedValue({ success: true, message: "ok" });
         mockStopWatching = vi.fn().mockResolvedValue({ success: true, message: "removed" });
         mockStartWatching = vi.fn().mockResolvedValue({ success: true, message: "started" });
-        vi.mocked(AnimeService).mockImplementation(
-            () =>
-                ({
-                    getAllAnime: mockGetAllAnime,
-                    updateEpisodeProgress: mockUpdateEpisodeProgress,
-                    stopWatching: mockStopWatching,
-                    startWatching: mockStartWatching,
-                }) as any,
-        );
+        vi.mocked(AnimeService).mockImplementation(function () {
+            return {
+                getAllAnime: mockGetAllAnime,
+                updateEpisodeProgress: mockUpdateEpisodeProgress,
+                stopWatching: mockStopWatching,
+                startWatching: mockStartWatching,
+            } as any;
+        });
         const store = useWatchingStore();
         return store;
     }

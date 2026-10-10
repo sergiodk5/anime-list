@@ -36,12 +36,11 @@ describe("usePlanToWatchStore", () => {
             totalCount: 2,
         });
 
-        vi.mocked(AnimeService).mockImplementation(
-            () =>
-                ({
-                    getAllAnime: mockGetAllAnime,
-                }) as any,
-        );
+        vi.mocked(AnimeService).mockImplementation(function () {
+            return {
+                getAllAnime: mockGetAllAnime,
+            } as any;
+        });
     });
 
     describe("initial state", () => {
@@ -93,12 +92,11 @@ describe("usePlanToWatchStore", () => {
             const errorMessage = "Service error";
 
             const mockGetAllAnime = vi.fn().mockRejectedValue(new Error(errorMessage));
-            vi.mocked(AnimeService).mockImplementation(
-                () =>
-                    ({
-                        getAllAnime: mockGetAllAnime,
-                    }) as any,
-            );
+            vi.mocked(AnimeService).mockImplementation(function () {
+                return {
+                    getAllAnime: mockGetAllAnime,
+                } as any;
+            });
 
             const store = usePlanToWatchStore();
             await store.init();
@@ -181,12 +179,11 @@ describe("usePlanToWatchStore", () => {
                 totalCount: 3,
             });
 
-            vi.mocked(AnimeService).mockImplementation(
-                () =>
-                    ({
-                        getAllAnime: mockGetAllAnime,
-                    }) as any,
-            );
+            vi.mocked(AnimeService).mockImplementation(function () {
+                return {
+                    getAllAnime: mockGetAllAnime,
+                } as any;
+            });
 
             const store = usePlanToWatchStore();
             await store.init();
@@ -207,12 +204,11 @@ describe("usePlanToWatchStore", () => {
             });
 
             const mockGetAllAnime = vi.fn().mockReturnValue(pendingPromise);
-            vi.mocked(AnimeService).mockImplementation(
-                () =>
-                    ({
-                        getAllAnime: mockGetAllAnime,
-                    }) as any,
-            );
+            vi.mocked(AnimeService).mockImplementation(function () {
+                return {
+                    getAllAnime: mockGetAllAnime,
+                } as any;
+            });
 
             const store = usePlanToWatchStore();
             const initPromise = store.init();

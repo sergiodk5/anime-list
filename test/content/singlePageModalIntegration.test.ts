@@ -16,7 +16,9 @@ vi.mock("@/commons/services", () => {
     };
 
     return {
-        AnimeService: vi.fn(() => mockAnimeService),
+        AnimeService: vi.fn(function () {
+            return mockAnimeService;
+        }),
         __mockAnimeService: mockAnimeService, // Export for test usage with a different name
     };
 });
@@ -394,25 +396,55 @@ describe("Single Page Modal Integration", () => {
         });
 
         it("should return correct status text for different states", () => {
-            const hiddenStatus = { isHidden: true, isCompleted: false, isTracked: false, isPlanned: false, progress: undefined };
+            const hiddenStatus = {
+                isHidden: true,
+                isCompleted: false,
+                isTracked: false,
+                isPlanned: false,
+                progress: undefined,
+            };
             const hiddenStatusText = getSinglePageStatusText(hiddenStatus);
             expect(hiddenStatusText).toBe("Hidden from lists");
 
-            const plannedStatus = { isHidden: false, isCompleted: false, isTracked: false, isPlanned: true, progress: undefined };
+            const plannedStatus = {
+                isHidden: false,
+                isCompleted: false,
+                isTracked: false,
+                isPlanned: true,
+                progress: undefined,
+            };
             const plannedStatusText = getSinglePageStatusText(plannedStatus);
             expect(plannedStatusText).toBe("Planned to watch");
 
-            const basicTrackedStatus = { isHidden: false, isCompleted: false, isTracked: true, isPlanned: false, progress: undefined };
+            const basicTrackedStatus = {
+                isHidden: false,
+                isCompleted: false,
+                isTracked: true,
+                isPlanned: false,
+                progress: undefined,
+            };
             const basicStatusText = getSinglePageStatusText(basicTrackedStatus);
             expect(basicStatusText).toBe("Currently watching");
         });
 
         it("should return correct modal actions for different states", () => {
-            const hiddenStatus = { isHidden: true, isCompleted: false, isTracked: false, isPlanned: false, progress: undefined };
+            const hiddenStatus = {
+                isHidden: true,
+                isCompleted: false,
+                isTracked: false,
+                isPlanned: false,
+                progress: undefined,
+            };
             const hiddenActions = getSinglePageModalActions(hiddenStatus);
             expect(hiddenActions).toEqual([{ type: ButtonType.UNHIDE, label: "Remove from Hidden", style: "success" }]);
 
-            const plannedStatus = { isHidden: false, isCompleted: false, isTracked: false, isPlanned: true, progress: undefined };
+            const plannedStatus = {
+                isHidden: false,
+                isCompleted: false,
+                isTracked: false,
+                isPlanned: true,
+                progress: undefined,
+            };
             const plannedActions = getSinglePageModalActions(plannedStatus);
             expect(plannedActions).toEqual([
                 { type: ButtonType.REMOVE_FROM_PLAN, label: "Remove from Plan", style: "danger" },
@@ -489,13 +521,31 @@ describe("Single Page Modal Integration", () => {
 
         it("should test all status text combinations", () => {
             // Test all possible status combinations
-            const hiddenStatus = { isHidden: true, isCompleted: false, isTracked: false, isPlanned: false, progress: undefined };
+            const hiddenStatus = {
+                isHidden: true,
+                isCompleted: false,
+                isTracked: false,
+                isPlanned: false,
+                progress: undefined,
+            };
             expect(getSinglePageStatusText(hiddenStatus)).toBe("Hidden from lists");
 
-            const plannedStatus = { isHidden: false, isCompleted: false, isTracked: false, isPlanned: true, progress: undefined };
+            const plannedStatus = {
+                isHidden: false,
+                isCompleted: false,
+                isTracked: false,
+                isPlanned: true,
+                progress: undefined,
+            };
             expect(getSinglePageStatusText(plannedStatus)).toBe("Planned to watch");
 
-            const basicTrackedStatus = { isHidden: false, isCompleted: false, isTracked: true, isPlanned: false, progress: undefined };
+            const basicTrackedStatus = {
+                isHidden: false,
+                isCompleted: false,
+                isTracked: true,
+                isPlanned: false,
+                progress: undefined,
+            };
             expect(getSinglePageStatusText(basicTrackedStatus)).toBe("Currently watching");
 
             const trackedWithProgress = {
@@ -515,18 +565,36 @@ describe("Single Page Modal Integration", () => {
             };
             expect(getSinglePageStatusText(trackedWithProgress)).toBe("Currently watching - Episode 8 of 12");
 
-            const notTrackedStatus = { isHidden: false, isCompleted: false, isTracked: false, isPlanned: false, progress: undefined };
+            const notTrackedStatus = {
+                isHidden: false,
+                isCompleted: false,
+                isTracked: false,
+                isPlanned: false,
+                progress: undefined,
+            };
             expect(getSinglePageStatusText(notTrackedStatus)).toBe("Not tracked");
         });
 
         it("should test all modal action combinations", () => {
             // Test hidden status actions
-            const hiddenStatus = { isHidden: true, isCompleted: false, isTracked: false, isPlanned: false, progress: undefined };
+            const hiddenStatus = {
+                isHidden: true,
+                isCompleted: false,
+                isTracked: false,
+                isPlanned: false,
+                progress: undefined,
+            };
             const hiddenActions = getSinglePageModalActions(hiddenStatus);
             expect(hiddenActions).toEqual([{ type: ButtonType.UNHIDE, label: "Remove from Hidden", style: "success" }]);
 
             // Test planned status actions
-            const plannedStatus = { isHidden: false, isCompleted: false, isTracked: false, isPlanned: true, progress: undefined };
+            const plannedStatus = {
+                isHidden: false,
+                isCompleted: false,
+                isTracked: false,
+                isPlanned: true,
+                progress: undefined,
+            };
             const plannedActions = getSinglePageModalActions(plannedStatus);
             expect(plannedActions).toEqual([
                 { type: ButtonType.REMOVE_FROM_PLAN, label: "Remove from Plan", style: "danger" },
@@ -556,7 +624,13 @@ describe("Single Page Modal Integration", () => {
             ]);
 
             // Test not tracked status actions
-            const notTrackedStatus = { isHidden: false, isCompleted: false, isTracked: false, isPlanned: false, progress: undefined };
+            const notTrackedStatus = {
+                isHidden: false,
+                isCompleted: false,
+                isTracked: false,
+                isPlanned: false,
+                progress: undefined,
+            };
             const notTrackedActions = getSinglePageModalActions(notTrackedStatus);
             expect(notTrackedActions).toEqual([
                 { type: ButtonType.ADD_TO_PLAN, label: "Add to Plan", style: "primary" },

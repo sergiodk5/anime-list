@@ -15,7 +15,9 @@ vi.mock("@/commons/services", () => {
     };
 
     return {
-        AnimeService: vi.fn().mockImplementation(() => mockAnimeService),
+        AnimeService: vi.fn().mockImplementation(function () {
+            return mockAnimeService;
+        }),
         mockAnimeService, // Export for test usage
     };
 });

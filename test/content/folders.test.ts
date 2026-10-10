@@ -3,22 +3,24 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // Mock chrome API before importing module
 vi.mock("@/commons/services", () => ({
-    AnimeService: vi.fn().mockImplementation(() => ({
-        getAnimeStatus: vi.fn().mockResolvedValue({
-            isTracked: false,
-            isPlanned: false,
-            isHidden: false,
-            progress: null,
-        }),
-        addToPlanToWatch: vi.fn().mockResolvedValue({ success: true }),
-        removeFromPlanToWatch: vi.fn().mockResolvedValue({ success: true }),
-        startWatching: vi.fn().mockResolvedValue({ success: true }),
-        stopWatching: vi.fn().mockResolvedValue({ success: true }),
-        hideAnime: vi.fn().mockResolvedValue({ success: true }),
-        unhideAnime: vi.fn().mockResolvedValue({ success: true }),
-        updateEpisodeProgress: vi.fn().mockResolvedValue({ success: true }),
-        clearAllHidden: vi.fn().mockResolvedValue({ success: true, message: "Cleared" }),
-    })),
+    AnimeService: vi.fn().mockImplementation(function () {
+        return {
+            getAnimeStatus: vi.fn().mockResolvedValue({
+                isTracked: false,
+                isPlanned: false,
+                isHidden: false,
+                progress: null,
+            }),
+            addToPlanToWatch: vi.fn().mockResolvedValue({ success: true }),
+            removeFromPlanToWatch: vi.fn().mockResolvedValue({ success: true }),
+            startWatching: vi.fn().mockResolvedValue({ success: true }),
+            stopWatching: vi.fn().mockResolvedValue({ success: true }),
+            hideAnime: vi.fn().mockResolvedValue({ success: true }),
+            unhideAnime: vi.fn().mockResolvedValue({ success: true }),
+            updateEpisodeProgress: vi.fn().mockResolvedValue({ success: true }),
+            clearAllHidden: vi.fn().mockResolvedValue({ success: true, message: "Cleared" }),
+        };
+    }),
 }));
 
 // Mock StorageAdapter
@@ -247,10 +249,13 @@ describe("Folder Functionality", () => {
 
             await saveFolderOrder(folderOrder);
 
-            expect(StorageAdapter.set).toHaveBeenCalledWith("folderOrder", expect.objectContaining({
-                folders: folderOrder.folders,
-                rootItems: folderOrder.rootItems,
-            }));
+            expect(StorageAdapter.set).toHaveBeenCalledWith(
+                "folderOrder",
+                expect.objectContaining({
+                    folders: folderOrder.folders,
+                    rootItems: folderOrder.rootItems,
+                }),
+            );
         });
 
         it("should update lastUpdated timestamp", async () => {
@@ -296,9 +301,7 @@ describe("Folder Functionality", () => {
             expect(StorageAdapter.set).toHaveBeenCalledWith(
                 "folderOrder",
                 expect.objectContaining({
-                    folders: expect.arrayContaining([
-                        expect.objectContaining({ name: "New Folder" }),
-                    ]),
+                    folders: expect.arrayContaining([expect.objectContaining({ name: "New Folder" })]),
                 }),
             );
         });
@@ -318,9 +321,7 @@ describe("Folder Functionality", () => {
             expect(StorageAdapter.set).toHaveBeenCalledWith(
                 "folderOrder",
                 expect.objectContaining({
-                    folders: expect.arrayContaining([
-                        expect.objectContaining({ id: "folder-1", name: "New Name" }),
-                    ]),
+                    folders: expect.arrayContaining([expect.objectContaining({ id: "folder-1", name: "New Name" })]),
                 }),
             );
         });
@@ -474,7 +475,8 @@ describe("Folder Functionality", () => {
             const folderEl = document.createElement("div");
             folderEl.className = "anime-folder";
             folderEl.setAttribute("data-folder-id", "folder-empty");
-            folderEl.innerHTML = '<div class="anime-folder-content"><div class="folder-empty-placeholder" style="display: none;">Drop here</div></div>';
+            folderEl.innerHTML =
+                '<div class="anime-folder-content"><div class="folder-empty-placeholder" style="display: none;">Drop here</div></div>';
             container?.appendChild(folderEl);
 
             updateFolderEmptyState("folder-empty");
@@ -488,7 +490,8 @@ describe("Folder Functionality", () => {
             const folderEl = document.createElement("div");
             folderEl.className = "anime-folder";
             folderEl.setAttribute("data-folder-id", "folder-empty-class");
-            folderEl.innerHTML = '<div class="anime-folder-content"><div class="folder-empty-placeholder">Drop here</div></div>';
+            folderEl.innerHTML =
+                '<div class="anime-folder-content"><div class="folder-empty-placeholder">Drop here</div></div>';
             container?.appendChild(folderEl);
 
             updateFolderEmptyState("folder-empty-class");
@@ -535,7 +538,6 @@ describe("Folder Functionality", () => {
             const content = folderEl.querySelector(".anime-folder-content");
             expect(content?.classList.contains("empty-state")).toBe(false);
         });
-
     });
 
     describe("makeFolderDraggable / removeFolderDraggable", () => {
@@ -597,8 +599,7 @@ describe("Folder Functionality", () => {
             const tile = document.createElement("div");
             tile.className = "item";
             tile.setAttribute("data-testid", "tile-anime-twoxx");
-            tile.innerHTML =
-                '<div class="b1"><a class="name d-title" href="/anime/anime-twoxx">Anime Two</a></div>';
+            tile.innerHTML = '<div class="b1"><a class="name d-title" href="/anime/anime-twoxx">Anime Two</a></div>';
             container?.appendChild(tile);
 
             await restoreFolderOrder();

@@ -50,14 +50,13 @@ describe("usePlanToWatchStore - Actions", () => {
         });
 
         // Mock the AnimeService constructor
-        vi.mocked(AnimeService).mockImplementation(
-            () =>
-                ({
-                    getAllAnime: mockGetAllAnime,
-                    addToPlanToWatch: mockAddToPlanToWatch,
-                    removeFromPlanToWatch: mockRemoveFromPlanToWatch,
-                }) as any,
-        );
+        vi.mocked(AnimeService).mockImplementation(function () {
+            return {
+                getAllAnime: mockGetAllAnime,
+                addToPlanToWatch: mockAddToPlanToWatch,
+                removeFromPlanToWatch: mockRemoveFromPlanToWatch,
+            } as any;
+        });
 
         // Create store instance
         store = usePlanToWatchStore();

@@ -56,15 +56,14 @@ describe("useHiddenStore - Actions", () => {
         });
 
         // Mock the AnimeService constructor
-        vi.mocked(AnimeService).mockImplementation(
-            () =>
-                ({
-                    getAllAnime: mockGetAllAnime,
-                    hideAnime: mockHideAnime,
-                    unhideAnime: mockUnhideAnime,
-                    clearAllHidden: mockClearAllHidden,
-                }) as any,
-        );
+        vi.mocked(AnimeService).mockImplementation(function () {
+            return {
+                getAllAnime: mockGetAllAnime,
+                hideAnime: mockHideAnime,
+                unhideAnime: mockUnhideAnime,
+                clearAllHidden: mockClearAllHidden,
+            } as any;
+        });
 
         // Create store instance
         store = useHiddenStore();

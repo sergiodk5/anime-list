@@ -13,9 +13,11 @@ global.chrome = {
 // Mock AnimeService
 const mockClearAllHidden = vi.fn();
 vi.mock("@/commons/services/AnimeService", () => ({
-    AnimeService: vi.fn(() => ({
-        clearAllHidden: mockClearAllHidden,
-    })),
+    AnimeService: vi.fn(function () {
+        return {
+            clearAllHidden: mockClearAllHidden,
+        };
+    }),
 }));
 
 describe("PopupPage", () => {

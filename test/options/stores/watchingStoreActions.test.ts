@@ -56,15 +56,14 @@ describe("useWatchingStore - Actions", () => {
         });
 
         // Mock the AnimeService constructor
-        vi.mocked(AnimeService).mockImplementation(
-            () =>
-                ({
-                    getAllAnime: mockGetAllAnime,
-                    startWatching: mockStartWatching,
-                    updateEpisodeProgress: mockUpdateEpisodeProgress,
-                    stopWatching: mockStopWatching,
-                }) as any,
-        );
+        vi.mocked(AnimeService).mockImplementation(function () {
+            return {
+                getAllAnime: mockGetAllAnime,
+                startWatching: mockStartWatching,
+                updateEpisodeProgress: mockUpdateEpisodeProgress,
+                stopWatching: mockStopWatching,
+            } as any;
+        });
 
         // Create store instance
         store = useWatchingStore();

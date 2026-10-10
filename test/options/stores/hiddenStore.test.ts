@@ -22,12 +22,11 @@ describe("useHiddenStore", () => {
             totalCount: 2,
         });
 
-        vi.mocked(AnimeService).mockImplementation(
-            () =>
-                ({
-                    getAllAnime: mockGetAllAnime,
-                }) as any,
-        );
+        vi.mocked(AnimeService).mockImplementation(function () {
+            return {
+                getAllAnime: mockGetAllAnime,
+            } as any;
+        });
     });
 
     describe("initial state", () => {
@@ -101,12 +100,11 @@ describe("useHiddenStore", () => {
                 totalCount: 0,
             });
 
-            vi.mocked(AnimeService).mockImplementation(
-                () =>
-                    ({
-                        getAllAnime: mockGetAllAnime,
-                    }) as any,
-            );
+            vi.mocked(AnimeService).mockImplementation(function () {
+                return {
+                    getAllAnime: mockGetAllAnime,
+                } as any;
+            });
 
             const store = useHiddenStore();
             await store.init();
@@ -121,12 +119,11 @@ describe("useHiddenStore", () => {
             const errorMessage = "Service error";
 
             const mockGetAllAnime = vi.fn().mockRejectedValue(new Error(errorMessage));
-            vi.mocked(AnimeService).mockImplementation(
-                () =>
-                    ({
-                        getAllAnime: mockGetAllAnime,
-                    }) as any,
-            );
+            vi.mocked(AnimeService).mockImplementation(function () {
+                return {
+                    getAllAnime: mockGetAllAnime,
+                } as any;
+            });
 
             const store = useHiddenStore();
             await store.init();
@@ -199,12 +196,11 @@ describe("useHiddenStore", () => {
                 totalCount: 3,
             });
 
-            vi.mocked(AnimeService).mockImplementation(
-                () =>
-                    ({
-                        getAllAnime: mockGetAllAnime,
-                    }) as any,
-            );
+            vi.mocked(AnimeService).mockImplementation(function () {
+                return {
+                    getAllAnime: mockGetAllAnime,
+                } as any;
+            });
 
             const store = useHiddenStore();
             await store.init();
@@ -225,12 +221,11 @@ describe("useHiddenStore", () => {
             });
 
             const mockGetAllAnime = vi.fn().mockReturnValue(pendingPromise);
-            vi.mocked(AnimeService).mockImplementation(
-                () =>
-                    ({
-                        getAllAnime: mockGetAllAnime,
-                    }) as any,
-            );
+            vi.mocked(AnimeService).mockImplementation(function () {
+                return {
+                    getAllAnime: mockGetAllAnime,
+                } as any;
+            });
 
             const store = useHiddenStore();
             const initPromise = store.init();

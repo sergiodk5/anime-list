@@ -1,4 +1,3 @@
-import { JSDOM } from "jsdom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock the AnimeService
@@ -10,39 +9,25 @@ const mockAnimeService = {
 };
 
 vi.doMock("@/commons/services", () => ({
-    AnimeService: vi.fn(() => mockAnimeService),
+    AnimeService: vi.fn(function () {
+        return mockAnimeService;
+    }),
 }));
 
 describe("Combined Watching Controls", () => {
     beforeEach(() => {
-        // Mock DOM
-        const dom = new JSDOM(
-            `
-            <!DOCTYPE html>
-            <html>
-            <head><title>Test</title></head>
-            <body>
-                <div class="item">
-                    <div class="inner">
-                        <div class="ani poster"><a href="/anime/test-anime-snxwm"><img alt="Test Anime"></a></div>
-                        <div class="info">
-                            <div class="b1">
-                                <a class="name d-title" href="/anime/test-anime-snxwm">Test Anime</a>
-                            </div>
+        document.body.innerHTML = `
+            <div class="item">
+                <div class="inner">
+                    <div class="ani poster"><a href="/anime/test-anime-snxwm"><img alt="Test Anime"></a></div>
+                    <div class="info">
+                        <div class="b1">
+                            <a class="name d-title" href="/anime/test-anime-snxwm">Test Anime</a>
                         </div>
                     </div>
                 </div>
-            </body>
-            </html>
-        `,
-            { url: "https://anichi.to" },
-        );
-
-        // Setup globals
-        global.document = dom.window.document;
-        global.window = dom.window as any;
-        global.HTMLElement = dom.window.HTMLElement;
-        global.Element = dom.window.Element;
+            </div>
+        `;
 
         // Reset mocks
         vi.clearAllMocks();
