@@ -53,7 +53,6 @@ describe("undoPlugin direct", () => {
         expect(entries.value.length).toBe(0);
         trigger("incrementEpisode", () => {
             // mutation so after snapshot differs
-            store as any; // keep store referenced
             // mutate internal state via snapshot closure (not directly on store)
             // state is enclosed; simulate by redefining snapshot to changed value
             (store.__snapshot as any) = () => ({ count: 1 });

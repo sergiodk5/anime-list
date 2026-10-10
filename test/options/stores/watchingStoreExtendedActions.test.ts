@@ -5,8 +5,8 @@ import type { EpisodeProgress } from "@/commons/models";
 import { AnimeService } from "@/commons/services/AnimeService";
 import { useWatchingStore } from "@/options/stores/watchingStore";
 
-vi.mock("vue-toastification", () => ({
-    useToast: () => ({ success: vi.fn(), error: vi.fn(), info: vi.fn(), warning: vi.fn() }),
+vi.mock("vue3-toastify", () => ({
+    toast: { success: vi.fn(), error: vi.fn(), info: vi.fn(), warn: vi.fn() },
 }));
 
 vi.mock("@/commons/services/AnimeService");
@@ -37,15 +37,14 @@ describe("useWatchingStore extended actions", () => {
         mockUpdateEpisodeProgress = vi.fn().mockResolvedValue({ success: true, message: "ok" });
         mockStopWatching = vi.fn().mockResolvedValue({ success: true, message: "removed" });
         mockStartWatching = vi.fn().mockResolvedValue({ success: true, message: "started" });
-        vi.mocked(AnimeService).mockImplementation(
-            () =>
-                ({
-                    getAllAnime: mockGetAllAnime,
-                    updateEpisodeProgress: mockUpdateEpisodeProgress,
-                    stopWatching: mockStopWatching,
-                    startWatching: mockStartWatching,
-                }) as any,
-        );
+        vi.mocked(AnimeService).mockImplementation(function () {
+            return {
+                getAllAnime: mockGetAllAnime,
+                updateEpisodeProgress: mockUpdateEpisodeProgress,
+                stopWatching: mockStopWatching,
+                startWatching: mockStartWatching,
+            } as any;
+        });
         const store = useWatchingStore();
         return store;
     }

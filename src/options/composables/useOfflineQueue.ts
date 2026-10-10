@@ -162,7 +162,7 @@ export function useOfflineQueue() {
                     processedCount.value += 1;
                     queue.value.shift();
                     schedulePersist();
-                } catch (err) {
+                } catch {
                     action.retries += 1;
                     if (action.retries > action.maxRetries) {
                         droppedCount.value += 1;

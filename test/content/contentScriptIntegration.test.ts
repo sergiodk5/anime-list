@@ -13,7 +13,9 @@ const mockAnimeService = {
 
 // Mock the AnimeService
 vi.mock("@/commons/services", () => ({
-    AnimeService: vi.fn().mockImplementation(() => mockAnimeService),
+    AnimeService: vi.fn().mockImplementation(function () {
+        return mockAnimeService;
+    }),
 }));
 
 describe("Content Script Integration", () => {

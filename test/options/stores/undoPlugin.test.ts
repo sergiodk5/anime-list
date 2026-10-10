@@ -4,20 +4,24 @@ import { useWatchingStore } from "@/options/stores/watchingStore";
 import { setActivePinia } from "pinia";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("vue-toastification", () => ({ useToast: () => ({ success: vi.fn(), error: vi.fn() }) }));
+vi.mock("vue3-toastify", () => ({
+    toast: { success: vi.fn(), error: vi.fn() },
+}));
 
 vi.mock("@/commons/services/AnimeService", () => {
     return {
-        AnimeService: vi.fn().mockImplementation(() => ({
-            getAllAnime: vi.fn().mockResolvedValue({
-                currentlyWatching: [],
-                planToWatch: [],
-                hiddenAnime: [],
-            }),
-            updateEpisodeProgress: vi.fn().mockResolvedValue({ success: true, message: "ok" }),
-            startWatching: vi.fn().mockResolvedValue({ success: true, message: "started" }),
-            stopWatching: vi.fn().mockResolvedValue({ success: true, message: "stopped" }),
-        })),
+        AnimeService: vi.fn().mockImplementation(function () {
+            return {
+                getAllAnime: vi.fn().mockResolvedValue({
+                    currentlyWatching: [],
+                    planToWatch: [],
+                    hiddenAnime: [],
+                }),
+                updateEpisodeProgress: vi.fn().mockResolvedValue({ success: true, message: "ok" }),
+                startWatching: vi.fn().mockResolvedValue({ success: true, message: "started" }),
+                stopWatching: vi.fn().mockResolvedValue({ success: true, message: "stopped" }),
+            };
+        }),
     };
 });
 

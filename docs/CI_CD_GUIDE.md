@@ -19,15 +19,15 @@ This document explains the Continuous Integration and Continuous Deployment (CI/
 #### 1. **Tests Job**
 
 - Runs on Ubuntu latest
-- Installs Node.js 20 and dependencies
+- Installs Node.js 24 and dependencies
 - Executes unit tests with coverage (`npm run test:unit:coverage`)
 - Uploads coverage reports to Codecov (requires `CODECOV_TOKEN` secret)
 
 #### 2. **Code Quality Job** (depends on tests)
 
 - TypeScript type checking (`npm run type-check`)
-- ESLint linting check (`npm run lint:check`)
-- Prettier formatting check (`npm run format:check`)
+- oxlint linting check (`npm run lint:check`)
+- oxfmt formatting check (`npm run format:check`)
 
 #### 3. **Build Job** (depends on tests and code-quality)
 
@@ -67,13 +67,13 @@ This document explains the Continuous Integration and Continuous Deployment (CI/
 
 - `npm run test:unit:coverage` - Run tests with coverage reports
 - `npm run type-check` - TypeScript type checking
-- `npm run lint:check` - ESLint without auto-fixing (CI-safe)
-- `npm run format:check` - Prettier formatting check (CI-safe)
+- `npm run lint:check` - oxlint without auto-fixing (CI-safe)
+- `npm run format:check` - oxfmt formatting check (CI-safe)
 
 ### Quality Assurance Scripts
 
-- `npm run lint` - ESLint with auto-fixing (development)
-- `npm run format` - Prettier with auto-formatting (development)
+- `npm run lint` - oxlint with auto-fixing (development)
+- `npm run format` - oxfmt with auto-formatting (development)
 
 ## Setup Requirements
 
@@ -88,7 +88,7 @@ To fully utilize the CI/CD pipeline, add these secrets in GitHub repository sett
 
 ### Node.js Version
 
-The workflows use Node.js 20 (LTS). This is specified in the workflow files and should match the development environment.
+The workflows use Node.js 24 (LTS). This is specified in the workflow files and should match the development environment.
 
 ### Browser Support
 
@@ -167,11 +167,6 @@ npm run test:unit:coverage
 ## Troubleshooting
 
 ### Common Issues
-
-**TypeScript Version Warning:**
-
-- ESLint may show warnings about TypeScript version compatibility
-- This is informational and doesn't block the workflow
 
 **E2E Test Failures:**
 

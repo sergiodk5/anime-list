@@ -8,7 +8,9 @@ vi.mock("@vueuse/core", () => {
 });
 
 // Mock toast
-vi.mock("vue-toastification", () => ({ useToast: () => ({ success: vi.fn(), error: vi.fn() }) }));
+vi.mock("vue3-toastify", () => ({
+    toast: { success: vi.fn(), error: vi.fn() },
+}));
 
 // Mock offline queue composable
 const queueState = {

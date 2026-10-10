@@ -1,6 +1,6 @@
 import { executeWithRetry, toActionFailure } from "@/options/commons/errorHandling";
 import type { StoreActionResult } from "@/options/stores/types";
-import { useToast } from "vue-toastification";
+import { toast } from "vue3-toastify";
 
 export interface StoreActionConfig<TServiceResult = any> {
     run: () => Promise<TServiceResult>;
@@ -31,7 +31,6 @@ export async function runStoreAction<TServiceResult = any>(
         setLastError,
     } = config;
 
-    const toast = useToast();
     setLastError?.(null);
 
     try {

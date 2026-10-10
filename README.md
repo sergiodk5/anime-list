@@ -190,12 +190,12 @@ The extension is production-ready with a solid foundation:
 - **🔧 Build Tool**: Vite with hot-reload development
 - **📝 Language**: TypeScript with strict type checking
 - **🎨 Styling**: Tailwind CSS v4 with glass-morphism utilities
-- **🧭 Routing**: Vue Router for SPA navigation (2 routes currently implemented)
+- **🧭 Routing**: Vue Router for SPA navigation (3 routes)
 - **🏪 State**: Chrome Storage API with service-repository architecture
 - **🔌 Browser API**: Chrome Extension APIs (Manifest V3)
-- **🧪 Testing**: Vitest with V8 coverage (370 tests, 100% coverage)
-- **📏 Linting**: ESLint with Vue and TypeScript rules
-- **💅 Formatting**: Prettier with Tailwind class sorting
+- **🧪 Testing**: Vitest with V8 coverage (974 tests)
+- **📏 Linting**: oxlint with Vue and TypeScript rules
+- **💅 Formatting**: oxfmt with Tailwind class sorting
 
 ## 📁 Project Structure
 

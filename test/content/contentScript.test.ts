@@ -20,7 +20,9 @@ const mockAnimeService = {
 };
 
 vi.mock("@/commons/services", () => ({
-    AnimeService: vi.fn().mockImplementation(() => mockAnimeService),
+    AnimeService: vi.fn().mockImplementation(function () {
+        return mockAnimeService;
+    }),
 }));
 
 // Mock StorageAdapter for drag-and-drop functionality
@@ -430,7 +432,7 @@ describe("Content Script", () => {
                     `;
                     containerElement.appendChild(innerAnimeElement);
 
-                    animeElement.matches = vi.fn().mockReturnValue(true);
+                    vi.spyOn(animeElement, "matches").mockReturnValue(true);
 
                     const addedNodes = [animeElement, containerElement] as any;
                     addedNodes.forEach = Array.prototype.forEach;

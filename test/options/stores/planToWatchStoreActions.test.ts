@@ -4,8 +4,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { AnimeData } from "@/commons/models";
 import { AnimeService } from "@/commons/services/AnimeService";
 import { usePlanToWatchStore } from "@/options/stores/planToWatchStore";
-vi.mock("vue-toastification", () => ({
-    useToast: () => ({ success: vi.fn(), error: vi.fn(), info: vi.fn(), warning: vi.fn() }),
+vi.mock("vue3-toastify", () => ({
+    toast: { success: vi.fn(), error: vi.fn(), info: vi.fn(), warn: vi.fn() },
 }));
 
 // Mock the AnimeService
@@ -50,14 +50,13 @@ describe("usePlanToWatchStore - Actions", () => {
         });
 
         // Mock the AnimeService constructor
-        vi.mocked(AnimeService).mockImplementation(
-            () =>
-                ({
-                    getAllAnime: mockGetAllAnime,
-                    addToPlanToWatch: mockAddToPlanToWatch,
-                    removeFromPlanToWatch: mockRemoveFromPlanToWatch,
-                }) as any,
-        );
+        vi.mocked(AnimeService).mockImplementation(function () {
+            return {
+                getAllAnime: mockGetAllAnime,
+                addToPlanToWatch: mockAddToPlanToWatch,
+                removeFromPlanToWatch: mockRemoveFromPlanToWatch,
+            } as any;
+        });
 
         // Create store instance
         store = usePlanToWatchStore();

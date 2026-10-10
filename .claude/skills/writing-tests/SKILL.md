@@ -73,36 +73,24 @@ expect(chrome.storage.local.set).toHaveBeenCalledTimes(1);
 ## Content Script Testing (JSDOM)
 
 ```typescript
-// @vitest-environment jsdom
-import { JSDOM } from "jsdom";
-import { beforeEach, afterEach, describe, it, vi } from "vitest";
+import { beforeEach, describe, it, vi } from "vitest";
 
+// Vitest already runs in jsdom (see vitest.config.ts); set the page markup on the existing document.
 describe("Content Script", () => {
-    let dom: JSDOM;
-
     beforeEach(() => {
-        dom = new JSDOM(`
-            <!DOCTYPE html>
-            <html><body>
-                <div class="flw-item" data-testid="anime-item">
-                    <a href="/anime-123" class="dynamic-name">Test Anime</a>
-                </div>
-            </body></html>
-        `);
-        global.document = dom.window.document;
-        global.window = dom.window as any;
+        document.body.innerHTML = `
+            <div class="item">
+                <div class="ani poster"><a href="/anime/test-anime-snxwm"><img alt="Test Anime"></a></div>
+                <div class="info"><a class="name d-title" href="/anime/test-anime-snxwm">Test Anime</a></div>
+            </div>
+        `;
 
-        global.MutationObserver = vi.fn(() => ({
-            observe: vi.fn(),
-            disconnect: vi.fn(),
-        })) as any;
+        // Mocks called with `new` must use `function` or `class`, not an arrow function (Vitest 4+).
+        global.MutationObserver = vi.fn(function () {
+            return { observe: vi.fn(), disconnect: vi.fn() };
+        }) as any;
 
         vi.spyOn(console, "log").mockImplementation(() => {});
-        vi.clearAllMocks();
-    });
-
-    afterEach(() => {
-        dom.window.close();
     });
 });
 ```
@@ -180,10 +168,10 @@ vi.useRealTimers();
 
 ## Coverage Requirements
 
-- Statements: 85%+
-- Branches: 80%+
+- Statements: 83%+
+- Branches: 73%+
 - Functions: 85%+
-- Lines: 85%+
+- Lines: 84%+
 
 ### Reading Coverage Reports
 

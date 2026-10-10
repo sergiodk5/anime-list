@@ -7,8 +7,8 @@ import { AnimeService } from "@/commons/services/AnimeService";
 import { useWatchingStore } from "@/options/stores/watchingStore";
 import CurrentlyWatching from "@/options/views/CurrentlyWatching.vue";
 
-vi.mock("vue-toastification", () => ({
-    useToast: () => ({ success: vi.fn(), error: vi.fn(), info: vi.fn(), warning: vi.fn() }),
+vi.mock("vue3-toastify", () => ({
+    toast: { success: vi.fn(), error: vi.fn(), info: vi.fn(), warn: vi.fn() },
 }));
 
 vi.mock("@/commons/services/AnimeService");
@@ -42,19 +42,18 @@ const sampleItems: EpisodeProgress[] = [
 ];
 
 function mockGetAllAnime(currentlyWatching: EpisodeProgress[]): void {
-    vi.mocked(AnimeService).mockImplementation(
-        () =>
-            ({
-                getAllAnime: vi.fn().mockResolvedValue({
-                    currentlyWatching,
-                    planToWatch: [],
-                    hiddenAnime: [],
-                    totalCount: currentlyWatching.length,
-                }),
-                updateEpisodeProgress: vi.fn().mockResolvedValue({ success: true }),
-                stopWatching: vi.fn().mockResolvedValue({ success: true }),
-            }) as any,
-    );
+    vi.mocked(AnimeService).mockImplementation(function () {
+        return {
+            getAllAnime: vi.fn().mockResolvedValue({
+                currentlyWatching,
+                planToWatch: [],
+                hiddenAnime: [],
+                totalCount: currentlyWatching.length,
+            }),
+            updateEpisodeProgress: vi.fn().mockResolvedValue({ success: true }),
+            stopWatching: vi.fn().mockResolvedValue({ success: true }),
+        } as any;
+    });
 }
 
 describe("CurrentlyWatching", () => {
@@ -82,12 +81,11 @@ describe("CurrentlyWatching", () => {
 
     describe("Loading State", () => {
         it("should show skeleton cards while the store is loading", async () => {
-            vi.mocked(AnimeService).mockImplementation(
-                () =>
-                    ({
-                        getAllAnime: vi.fn().mockReturnValue(new Promise(() => {})),
-                    }) as any,
-            );
+            vi.mocked(AnimeService).mockImplementation(function () {
+                return {
+                    getAllAnime: vi.fn().mockReturnValue(new Promise(() => {})),
+                } as any;
+            });
 
             const wrapper = mountView();
             await wrapper.vm.$nextTick();
@@ -111,12 +109,11 @@ describe("CurrentlyWatching", () => {
 
     describe("Error State", () => {
         it("should show the error state when the store fails to load", async () => {
-            vi.mocked(AnimeService).mockImplementation(
-                () =>
-                    ({
-                        getAllAnime: vi.fn().mockRejectedValue(new Error("boom")),
-                    }) as any,
-            );
+            vi.mocked(AnimeService).mockImplementation(function () {
+                return {
+                    getAllAnime: vi.fn().mockRejectedValue(new Error("boom")),
+                } as any;
+            });
 
             const wrapper = mountView();
 
@@ -251,7 +248,12 @@ describe("CurrentlyWatching", () => {
 
         it("should disable the stepper buttons at the episode boundaries", async () => {
             const wrapper = await mountWithGrid([
-                { ...sampleItems[1], currentEpisode: 1, totalEpisodes: 1, episodeId: "attack-on-titan-aaaaa-episode-1" },
+                {
+                    ...sampleItems[1],
+                    currentEpisode: 1,
+                    totalEpisodes: 1,
+                    episodeId: "attack-on-titan-aaaaa-episode-1",
+                },
             ]);
 
             const card = wrapper.find('[data-testid="watching-card"]');

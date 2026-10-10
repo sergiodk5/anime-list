@@ -42,12 +42,11 @@ describe("useWatchingStore", () => {
             totalCount: 2,
         });
 
-        vi.mocked(AnimeService).mockImplementation(
-            () =>
-                ({
-                    getAllAnime: mockGetAllAnime,
-                }) as any,
-        );
+        vi.mocked(AnimeService).mockImplementation(function () {
+            return {
+                getAllAnime: mockGetAllAnime,
+            } as any;
+        });
     });
 
     describe("initial state", () => {
@@ -100,12 +99,11 @@ describe("useWatchingStore", () => {
 
             // Mock AnimeService to throw error
             const mockGetAllAnime = vi.fn().mockRejectedValue(new Error(errorMessage));
-            vi.mocked(AnimeService).mockImplementation(
-                () =>
-                    ({
-                        getAllAnime: mockGetAllAnime,
-                    }) as any,
-            );
+            vi.mocked(AnimeService).mockImplementation(function () {
+                return {
+                    getAllAnime: mockGetAllAnime,
+                } as any;
+            });
 
             const store = useWatchingStore();
             await store.init();
@@ -121,12 +119,11 @@ describe("useWatchingStore", () => {
 
         it("should handle non-Error objects in catch block", async () => {
             const mockGetAllAnime = vi.fn().mockRejectedValue("String error");
-            vi.mocked(AnimeService).mockImplementation(
-                () =>
-                    ({
-                        getAllAnime: mockGetAllAnime,
-                    }) as any,
-            );
+            vi.mocked(AnimeService).mockImplementation(function () {
+                return {
+                    getAllAnime: mockGetAllAnime,
+                } as any;
+            });
 
             const store = useWatchingStore();
             await store.init();
@@ -181,12 +178,11 @@ describe("useWatchingStore", () => {
                 totalCount: 2,
             });
 
-            vi.mocked(AnimeService).mockImplementation(
-                () =>
-                    ({
-                        getAllAnime: mockGetAllAnime,
-                    }) as any,
-            );
+            vi.mocked(AnimeService).mockImplementation(function () {
+                return {
+                    getAllAnime: mockGetAllAnime,
+                } as any;
+            });
 
             // Use a new store instance for this test
             const newStore = useWatchingStore();
@@ -208,12 +204,11 @@ describe("useWatchingStore", () => {
             });
 
             const mockGetAllAnime = vi.fn().mockReturnValue(pendingPromise);
-            vi.mocked(AnimeService).mockImplementation(
-                () =>
-                    ({
-                        getAllAnime: mockGetAllAnime,
-                    }) as any,
-            );
+            vi.mocked(AnimeService).mockImplementation(function () {
+                return {
+                    getAllAnime: mockGetAllAnime,
+                } as any;
+            });
 
             const store = useWatchingStore();
             const initPromise = store.init();

@@ -203,7 +203,7 @@ import { useHiddenStore } from "@/options/stores/hiddenStore";
 import { usePlanToWatchStore } from "@/options/stores/planToWatchStore";
 import { useWatchingStore } from "@/options/stores/watchingStore";
 import { computed, onMounted } from "vue";
-import { useToast } from "vue-toastification";
+import { toast } from "vue3-toastify";
 
 // Enhanced statistics with VueUse integration
 const { stats } = useSmartStats();
@@ -227,8 +227,6 @@ const hasError = computed(
         resolveFlag(hiddenStore.hasError) ||
         resolveFlag(completedStore.hasError),
 );
-
-const toast = useToast();
 
 onMounted(async () => {
     // Initialize stores idempotently

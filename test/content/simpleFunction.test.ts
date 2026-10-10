@@ -19,16 +19,18 @@ const mockChrome = {
 
 // Mock AnimeService
 vi.mock("@/commons/services/AnimeService", () => ({
-    AnimeService: vi.fn().mockImplementation(() => ({
-        getAnimeStatus: vi.fn(),
-        addToPlanToWatch: vi.fn(),
-        removeFromPlanToWatch: vi.fn(),
-        startWatching: vi.fn(),
-        stopWatching: vi.fn(),
-        updateEpisodeProgress: vi.fn(),
-        hideAnime: vi.fn(),
-        unhideAnime: vi.fn(),
-    })),
+    AnimeService: vi.fn().mockImplementation(function () {
+        return {
+            getAnimeStatus: vi.fn(),
+            addToPlanToWatch: vi.fn(),
+            removeFromPlanToWatch: vi.fn(),
+            startWatching: vi.fn(),
+            stopWatching: vi.fn(),
+            updateEpisodeProgress: vi.fn(),
+            hideAnime: vi.fn(),
+            unhideAnime: vi.fn(),
+        };
+    }),
 }));
 
 describe("addClearHiddenButton", () => {
