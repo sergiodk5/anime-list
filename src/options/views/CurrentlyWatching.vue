@@ -96,7 +96,7 @@
 </template>
 
 <script setup lang="ts">
-import { useNow } from "@vueuse/core";
+import { useIntervalFn, useNow } from "@vueuse/core";
 import { computed, onMounted } from "vue";
 import { useToast } from "vue-toastification";
 
@@ -109,7 +109,7 @@ import { useWatchingStore } from "@/options/stores/watchingStore";
 // Store
 const watchingStore = useWatchingStore();
 const metadataStore = useAnimeMetadataStore();
-const now = useNow({ interval: 60_000 });
+const now = useNow({ scheduler: (tick) => useIntervalFn(tick, 60_000) });
 
 function resolveFlag(flag: any): boolean {
     if (typeof flag === "boolean") return flag;

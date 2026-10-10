@@ -28,15 +28,16 @@
     },
     "dependencies": {
         "@tailwindcss/vite": "^4.1.11",
-        "@types/chrome": "^0.0.332",
-        "@vueuse/core": "^13.6.0",
-        "pinia": "^2.3.1",
+        "@types/chrome": "^0.3.5",
+        "@vue/devtools-api": "^8.2.1",
+        "@vueuse/core": "^15.0.0",
+        "pinia": "^4.0.3",
         "vue": "^3.5.17",
-        "vue-router": "^4.5.1",
+        "vue-router": "^5.4.0",
         "vue-toastification": "^2.0.0-rc.5"
     },
     "devDependencies": {
-        "@pinia/testing": "^0.1.7",
+        "@pinia/testing": "^2.0.1",
         "@playwright/test": "^1.54.0",
         "@tsconfig/node24": "^24.0.5",
         "@types/jsdom": "^30.0.0",
