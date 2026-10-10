@@ -369,3 +369,80 @@ describe("anichi adapter — watch page", () => {
         expect(watchPage.extractAnime()?.posterUrl).toBeUndefined();
     });
 });
+
+describe("anichi adapter — page metadata", () => {
+    const watchPage = anichiAdapter.watchPage!;
+
+    const nextEpisodeBlock = `
+        <div class="watch-next-ep" id="watch-next-ep" data-manga-id="9016" data-air-at="1791729000">
+            <div class="watch-next-ep__copy">
+                <span class="watch-next-ep__eyebrow">Next episode</span>
+                <strong class="watch-next-ep__ep"> Episode 3 </strong>
+            </div>
+        </div>`;
+
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    it("reads ids, slug and next episode from the anime page", () => {
+        document.body.innerHTML = `
+            <main class="page page-anime series-page" id="series-page" data-id="9016"
+                data-url="https://anichi.to/watch/overgeared-rah7b" data-mal-id="64340" data-anilist-id="212888">
+                ${nextEpisodeBlock}
+            </main>`;
+
+        expect(watchPage.extractMetadata!()).toEqual({
+            animeId: "overgeared-rah7b",
+            anilistId: 212888,
+            malId: 64340,
+            nextEpisode: { episode: 3, airingAt: 1791729000 },
+        });
+    });
+
+    it("reads ids, slug and next episode from the watch page", () => {
+        document.body.innerHTML = `
+            <div class="watch-wrap" id="watch-main" data-id="9016" data-mal-id="64340" data-anilist-id="212888"
+                data-ep-num="1" data-url="https://anichi.to/watch/overgeared-rah7b">
+                ${nextEpisodeBlock}
+            </div>`;
+
+        expect(watchPage.extractMetadata!()).toEqual({
+            animeId: "overgeared-rah7b",
+            anilistId: 212888,
+            malId: 64340,
+            nextEpisode: { episode: 3, airingAt: 1791729000 },
+        });
+    });
+
+    it("omits the next episode when the show is not airing", () => {
+        document.body.innerHTML = `
+            <main id="series-page" data-url="https://anichi.to/watch/overgeared-rah7b" data-mal-id="64340"
+                data-anilist-id="212888"></main>`;
+
+        expect(watchPage.extractMetadata!()?.nextEpisode).toBeUndefined();
+    });
+
+    it("treats empty or non-numeric ids as missing", () => {
+        document.body.innerHTML = `
+            <main id="series-page" data-url="https://anichi.to/watch/overgeared-rah7b" data-mal-id=""
+                data-anilist-id="-"></main>`;
+
+        const metadata = watchPage.extractMetadata!();
+        expect(metadata?.anilistId).toBeUndefined();
+        expect(metadata?.malId).toBeUndefined();
+    });
+
+    it("falls back to the URL slug when data-url is missing", () => {
+        vi.spyOn(window, "location", "get").mockReturnValue({ pathname: "/anime/overgeared-rah7b" } as Location);
+        document.body.innerHTML = `<main id="series-page" data-anilist-id="212888"></main>`;
+
+        expect(watchPage.extractMetadata!()?.animeId).toBe("overgeared-rah7b");
+    });
+
+    it("returns null on pages without the anime root element", () => {
+        document.body.innerHTML = `<div id="list-items"></div>`;
+
+        expect(watchPage.extractMetadata!()).toBeNull();
+    });
+});

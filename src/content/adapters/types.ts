@@ -1,8 +1,9 @@
-import type { AnimeData } from "@/commons/models";
+import type { AnimeData, PageAnimeMetadata } from "@/commons/models";
 
 export interface WatchPageAdapter {
     matches(url: URL): boolean;
     extractAnime(): AnimeData | null;
+    extractMetadata?(): PageAnimeMetadata | null;
 }
 
 export interface SiteAdapter {
