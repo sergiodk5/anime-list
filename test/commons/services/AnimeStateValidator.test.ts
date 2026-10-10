@@ -9,6 +9,7 @@ describe("AnimeStateValidator", () => {
             isTracked: false,
             isPlanned: false,
             isHidden: false,
+            isCompleted: false,
         };
 
         it("should allow adding to plan", () => {
@@ -51,6 +52,7 @@ describe("AnimeStateValidator", () => {
             isTracked: false,
             isPlanned: true,
             isHidden: false,
+            isCompleted: false,
             plan: {
                 animeId: "123",
                 animeTitle: "Test Anime",
@@ -89,6 +91,7 @@ describe("AnimeStateValidator", () => {
             isTracked: true,
             isPlanned: false,
             isHidden: false,
+            isCompleted: false,
             progress: {
                 animeId: "123",
                 animeTitle: "Test Anime",
@@ -133,6 +136,7 @@ describe("AnimeStateValidator", () => {
             isTracked: false,
             isPlanned: false,
             isHidden: true,
+            isCompleted: false,
         };
 
         it("should allow unhiding", () => {
@@ -159,9 +163,46 @@ describe("AnimeStateValidator", () => {
         });
     });
 
+    describe("validateTransition - Completed State", () => {
+        const completedStatus: AnimeStatus = {
+            isTracked: false,
+            isPlanned: false,
+            isHidden: false,
+            isCompleted: true,
+        };
+
+        it("should allow removing from completed", () => {
+            const result = AnimeStateValidator.validateTransition(completedStatus, AnimeAction.REMOVE_FROM_COMPLETED);
+            expect(result.allowed).toBe(true);
+        });
+
+        it("should allow rewatching and remove from completed", () => {
+            const result = AnimeStateValidator.validateTransition(completedStatus, AnimeAction.ADD_TO_WATCH);
+            expect(result.allowed).toBe(true);
+            expect(result.removesFromCompleted).toBe(true);
+        });
+
+        it.each([AnimeAction.ADD_TO_PLAN, AnimeAction.HIDE, AnimeAction.MARK_COMPLETED, AnimeAction.UPDATE_EPISODE])(
+            "should not allow %s",
+            (action) => {
+                expect(AnimeStateValidator.validateTransition(completedStatus, action).allowed).toBe(false);
+            },
+        );
+
+        it("should only allow marking completed from watch state", () => {
+            const watching: AnimeStatus = { isTracked: true, isPlanned: false, isHidden: false, isCompleted: false };
+            const planned: AnimeStatus = { isTracked: false, isPlanned: true, isHidden: false, isCompleted: false };
+            const clean: AnimeStatus = { isTracked: false, isPlanned: false, isHidden: false, isCompleted: false };
+
+            expect(AnimeStateValidator.validateTransition(watching, AnimeAction.MARK_COMPLETED).allowed).toBe(true);
+            expect(AnimeStateValidator.validateTransition(planned, AnimeAction.MARK_COMPLETED).allowed).toBe(false);
+            expect(AnimeStateValidator.validateTransition(clean, AnimeAction.MARK_COMPLETED).allowed).toBe(false);
+        });
+    });
+
     describe("getAvailableActions", () => {
         it("should return available actions for clean state", () => {
-            const cleanStatus: AnimeStatus = { isTracked: false, isPlanned: false, isHidden: false };
+            const cleanStatus: AnimeStatus = { isTracked: false, isPlanned: false, isHidden: false, isCompleted: false };
             const actions = AnimeStateValidator.getAvailableActions(cleanStatus);
 
             expect(actions).toContain(AnimeAction.ADD_TO_PLAN);
@@ -173,7 +214,7 @@ describe("AnimeStateValidator", () => {
         });
 
         it("should return available actions for plan state", () => {
-            const planStatus: AnimeStatus = { isTracked: false, isPlanned: true, isHidden: false };
+            const planStatus: AnimeStatus = { isTracked: false, isPlanned: true, isHidden: false, isCompleted: false };
             const actions = AnimeStateValidator.getAvailableActions(planStatus);
 
             expect(actions).toContain(AnimeAction.REMOVE_FROM_PLAN);
@@ -183,7 +224,7 @@ describe("AnimeStateValidator", () => {
         });
 
         it("should return available actions for watch state", () => {
-            const watchStatus: AnimeStatus = { isTracked: true, isPlanned: false, isHidden: false };
+            const watchStatus: AnimeStatus = { isTracked: true, isPlanned: false, isHidden: false, isCompleted: false };
             const actions = AnimeStateValidator.getAvailableActions(watchStatus);
 
             expect(actions).toContain(AnimeAction.REMOVE_FROM_WATCH);
@@ -193,7 +234,7 @@ describe("AnimeStateValidator", () => {
         });
 
         it("should return available actions for hidden state", () => {
-            const hiddenStatus: AnimeStatus = { isTracked: false, isPlanned: false, isHidden: true };
+            const hiddenStatus: AnimeStatus = { isTracked: false, isPlanned: false, isHidden: true, isCompleted: false };
             const actions = AnimeStateValidator.getAvailableActions(hiddenStatus);
 
             expect(actions).toContain(AnimeAction.UNHIDE);
@@ -205,7 +246,7 @@ describe("AnimeStateValidator", () => {
 
     describe("getStateDescription", () => {
         it("should describe hidden state", () => {
-            const hiddenStatus: AnimeStatus = { isTracked: false, isPlanned: false, isHidden: true };
+            const hiddenStatus: AnimeStatus = { isTracked: false, isPlanned: false, isHidden: true, isCompleted: false };
             const description = AnimeStateValidator.getStateDescription(hiddenStatus);
             expect(description).toBe("Hidden");
         });
@@ -215,6 +256,7 @@ describe("AnimeStateValidator", () => {
                 isTracked: true,
                 isPlanned: false,
                 isHidden: false,
+                isCompleted: false,
                 progress: {
                     animeId: "123",
                     animeTitle: "Test Anime",
@@ -229,19 +271,19 @@ describe("AnimeStateValidator", () => {
         });
 
         it("should describe watching state without episode info", () => {
-            const watchStatus: AnimeStatus = { isTracked: true, isPlanned: false, isHidden: false };
+            const watchStatus: AnimeStatus = { isTracked: true, isPlanned: false, isHidden: false, isCompleted: false };
             const description = AnimeStateValidator.getStateDescription(watchStatus);
             expect(description).toBe("Watching (Episode 1)");
         });
 
         it("should describe planned state", () => {
-            const planStatus: AnimeStatus = { isTracked: false, isPlanned: true, isHidden: false };
+            const planStatus: AnimeStatus = { isTracked: false, isPlanned: true, isHidden: false, isCompleted: false };
             const description = AnimeStateValidator.getStateDescription(planStatus);
             expect(description).toBe("Planned to Watch");
         });
 
         it("should describe clean state", () => {
-            const cleanStatus: AnimeStatus = { isTracked: false, isPlanned: false, isHidden: false };
+            const cleanStatus: AnimeStatus = { isTracked: false, isPlanned: false, isHidden: false, isCompleted: false };
             const description = AnimeStateValidator.getStateDescription(cleanStatus);
             expect(description).toBe("Not in any list");
         });
@@ -249,25 +291,29 @@ describe("AnimeStateValidator", () => {
 
     describe("getRecommendedActions", () => {
         it("should recommend unhide for hidden state", () => {
-            const hiddenStatus: AnimeStatus = { isTracked: false, isPlanned: false, isHidden: true };
+            const hiddenStatus: AnimeStatus = { isTracked: false, isPlanned: false, isHidden: true, isCompleted: false };
             const recommended = AnimeStateValidator.getRecommendedActions(hiddenStatus);
             expect(recommended).toEqual([AnimeAction.UNHIDE]);
         });
 
         it("should recommend episode update and remove for watch state", () => {
-            const watchStatus: AnimeStatus = { isTracked: true, isPlanned: false, isHidden: false };
+            const watchStatus: AnimeStatus = { isTracked: true, isPlanned: false, isHidden: false, isCompleted: false };
             const recommended = AnimeStateValidator.getRecommendedActions(watchStatus);
-            expect(recommended).toEqual([AnimeAction.UPDATE_EPISODE, AnimeAction.REMOVE_FROM_WATCH]);
+            expect(recommended).toEqual([
+                AnimeAction.UPDATE_EPISODE,
+                AnimeAction.MARK_COMPLETED,
+                AnimeAction.REMOVE_FROM_WATCH,
+            ]);
         });
 
         it("should recommend watch and remove for plan state", () => {
-            const planStatus: AnimeStatus = { isTracked: false, isPlanned: true, isHidden: false };
+            const planStatus: AnimeStatus = { isTracked: false, isPlanned: true, isHidden: false, isCompleted: false };
             const recommended = AnimeStateValidator.getRecommendedActions(planStatus);
             expect(recommended).toEqual([AnimeAction.ADD_TO_WATCH, AnimeAction.REMOVE_FROM_PLAN]);
         });
 
         it("should recommend all actions for clean state", () => {
-            const cleanStatus: AnimeStatus = { isTracked: false, isPlanned: false, isHidden: false };
+            const cleanStatus: AnimeStatus = { isTracked: false, isPlanned: false, isHidden: false, isCompleted: false };
             const recommended = AnimeStateValidator.getRecommendedActions(cleanStatus);
             expect(recommended).toEqual([AnimeAction.ADD_TO_PLAN, AnimeAction.ADD_TO_WATCH, AnimeAction.HIDE]);
         });
@@ -275,7 +321,7 @@ describe("AnimeStateValidator", () => {
 
     describe("validateTransition - Edge Cases", () => {
         it("should handle unknown action", () => {
-            const cleanStatus: AnimeStatus = { isTracked: false, isPlanned: false, isHidden: false };
+            const cleanStatus: AnimeStatus = { isTracked: false, isPlanned: false, isHidden: false, isCompleted: false };
             // Create an unknown action by casting a non-existent value
             const unknownAction = "UNKNOWN_ACTION" as AnimeAction;
 

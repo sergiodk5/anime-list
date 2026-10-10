@@ -1,5 +1,10 @@
 import type { AnimeData, EpisodeProgress, PlanToWatch } from "@/commons/models";
-import { EpisodeProgressRepository, HiddenAnimeRepository, PlanToWatchRepository } from "@/commons/repositories";
+import {
+    CompletedAnimeRepository,
+    EpisodeProgressRepository,
+    HiddenAnimeRepository,
+    PlanToWatchRepository,
+} from "@/commons/repositories";
 import { AnimeService } from "@/commons/services/AnimeService";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -43,15 +48,28 @@ const createMockHiddenAnimeRepository = () => ({
     getCount: vi.fn(),
 });
 
+const createMockCompletedAnimeRepository = () => ({
+    findById: vi.fn().mockResolvedValue(null),
+    findAll: vi.fn().mockResolvedValue([]),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn().mockResolvedValue(undefined),
+    exists: vi.fn(),
+    clear: vi.fn(),
+    count: vi.fn(),
+});
+
 type MockEpisodeProgressRepository = ReturnType<typeof createMockEpisodeProgressRepository>;
 type MockPlanToWatchRepository = ReturnType<typeof createMockPlanToWatchRepository>;
 type MockHiddenAnimeRepository = ReturnType<typeof createMockHiddenAnimeRepository>;
+type MockCompletedAnimeRepository = ReturnType<typeof createMockCompletedAnimeRepository>;
 
 describe("AnimeService", () => {
     let animeService: AnimeService;
     let mockEpisodeProgressRepo: MockEpisodeProgressRepository;
     let mockPlanToWatchRepo: MockPlanToWatchRepository;
     let mockHiddenAnimeRepo: MockHiddenAnimeRepository;
+    let mockCompletedAnimeRepo: MockCompletedAnimeRepository;
 
     const sampleAnimeData: AnimeData = {
         animeId: "test-anime-1",
@@ -82,11 +100,13 @@ describe("AnimeService", () => {
         mockEpisodeProgressRepo = createMockEpisodeProgressRepository();
         mockPlanToWatchRepo = createMockPlanToWatchRepository();
         mockHiddenAnimeRepo = createMockHiddenAnimeRepository();
+        mockCompletedAnimeRepo = createMockCompletedAnimeRepository();
 
         animeService = new AnimeService(
             mockEpisodeProgressRepo as unknown as EpisodeProgressRepository,
             mockPlanToWatchRepo as unknown as PlanToWatchRepository,
             mockHiddenAnimeRepo as unknown as HiddenAnimeRepository,
+            mockCompletedAnimeRepo as unknown as CompletedAnimeRepository,
         );
     });
 
@@ -118,6 +138,7 @@ describe("AnimeService", () => {
                 isTracked: false,
                 isPlanned: false,
                 isHidden: false,
+                isCompleted: false,
                 progress: undefined,
                 plan: undefined,
             });
@@ -134,6 +155,7 @@ describe("AnimeService", () => {
                 isTracked: true,
                 isPlanned: false,
                 isHidden: false,
+                isCompleted: false,
                 progress: sampleEpisodeProgress,
                 plan: undefined,
             });
@@ -150,6 +172,7 @@ describe("AnimeService", () => {
                 isTracked: false,
                 isPlanned: true,
                 isHidden: false,
+                isCompleted: false,
                 progress: undefined,
                 plan: samplePlanToWatch,
             });
@@ -166,6 +189,7 @@ describe("AnimeService", () => {
                 isTracked: false,
                 isPlanned: false,
                 isHidden: true,
+                isCompleted: false,
                 progress: undefined,
                 plan: undefined,
             });
@@ -188,6 +212,7 @@ describe("AnimeService", () => {
                 isTracked: false,
                 isPlanned: true,
                 isHidden: false,
+                isCompleted: false,
             });
 
             expect(mockPlanToWatchRepo.create).toHaveBeenCalledWith({
@@ -268,6 +293,7 @@ describe("AnimeService", () => {
                 isTracked: false,
                 isPlanned: false,
                 isHidden: false,
+                isCompleted: false,
             });
 
             expect(mockPlanToWatchRepo.delete).toHaveBeenCalledWith("test-anime-1");
@@ -317,6 +343,7 @@ describe("AnimeService", () => {
                 isTracked: true,
                 isPlanned: false,
                 isHidden: false,
+                isCompleted: false,
             });
 
             expect(mockEpisodeProgressRepo.create).toHaveBeenCalledWith({
@@ -547,6 +574,7 @@ describe("AnimeService", () => {
                 isTracked: true,
                 isPlanned: false,
                 isHidden: false,
+                isCompleted: false,
             });
 
             expect(mockEpisodeProgressRepo.update).toHaveBeenCalledWith("test-anime-1", {
@@ -640,6 +668,7 @@ describe("AnimeService", () => {
                 isTracked: false,
                 isPlanned: false,
                 isHidden: false,
+                isCompleted: false,
             });
 
             expect(mockEpisodeProgressRepo.delete).toHaveBeenCalledWith("test-anime-1");
@@ -689,6 +718,7 @@ describe("AnimeService", () => {
                 isTracked: false,
                 isPlanned: false,
                 isHidden: true,
+                isCompleted: false,
             });
 
             expect(mockHiddenAnimeRepo.add).toHaveBeenCalledWith("test-anime-1");
@@ -824,6 +854,7 @@ describe("AnimeService", () => {
                 isTracked: false,
                 isPlanned: false,
                 isHidden: false,
+                isCompleted: false,
                 progress: undefined,
                 plan: undefined,
             });
@@ -868,6 +899,117 @@ describe("AnimeService", () => {
         });
     });
 
+    describe("markCompleted", () => {
+        it("should move watching anime into completed and drop its episode progress", async () => {
+            mockEpisodeProgressRepo.findById.mockResolvedValue({ ...sampleEpisodeProgress, posterUrl: "https://x/p.jpg" });
+            mockPlanToWatchRepo.findById.mockResolvedValue(null);
+            mockHiddenAnimeRepo.exists.mockResolvedValue(false);
+
+            const result = await animeService.markCompleted("test-anime-1");
+
+            expect(result.success).toBe(true);
+            expect(result.newStatus?.isCompleted).toBe(true);
+            expect(mockCompletedAnimeRepo.create).toHaveBeenCalledWith({
+                animeId: "test-anime-1",
+                animeTitle: "Test Anime",
+                animeSlug: "test-anime",
+                completedAt: "2024-01-15T10:30:00.000Z",
+                totalEpisodes: 12,
+                posterUrl: "https://x/p.jpg",
+            });
+            expect(mockEpisodeProgressRepo.delete).toHaveBeenCalledWith("test-anime-1");
+        });
+
+        it("should fall back to the current episode when total episodes is unknown", async () => {
+            mockEpisodeProgressRepo.findById.mockResolvedValue({ ...sampleEpisodeProgress, totalEpisodes: undefined });
+            mockPlanToWatchRepo.findById.mockResolvedValue(null);
+            mockHiddenAnimeRepo.exists.mockResolvedValue(false);
+
+            await animeService.markCompleted("test-anime-1");
+
+            expect(mockCompletedAnimeRepo.create).toHaveBeenCalledWith(expect.objectContaining({ totalEpisodes: 5 }));
+        });
+
+        it("should refuse when anime is not being watched", async () => {
+            mockEpisodeProgressRepo.findById.mockResolvedValue(null);
+            mockPlanToWatchRepo.findById.mockResolvedValue(samplePlanToWatch);
+            mockHiddenAnimeRepo.exists.mockResolvedValue(false);
+
+            const result = await animeService.markCompleted("test-anime-1");
+
+            expect(result.success).toBe(false);
+            expect(mockCompletedAnimeRepo.create).not.toHaveBeenCalled();
+            expect(mockEpisodeProgressRepo.delete).not.toHaveBeenCalled();
+        });
+
+        it("should report failure when storage write fails", async () => {
+            mockEpisodeProgressRepo.findById.mockResolvedValue(sampleEpisodeProgress);
+            mockPlanToWatchRepo.findById.mockResolvedValue(null);
+            mockHiddenAnimeRepo.exists.mockResolvedValue(false);
+            mockCompletedAnimeRepo.create.mockRejectedValue(new Error("Storage error"));
+
+            const result = await animeService.markCompleted("test-anime-1");
+
+            expect(result.success).toBe(false);
+            expect(result.error).toBe("Storage error");
+            expect(mockEpisodeProgressRepo.delete).not.toHaveBeenCalled();
+        });
+    });
+
+    describe("removeFromCompleted", () => {
+        it("should remove completed anime", async () => {
+            mockEpisodeProgressRepo.findById.mockResolvedValue(null);
+            mockPlanToWatchRepo.findById.mockResolvedValue(null);
+            mockHiddenAnimeRepo.exists.mockResolvedValue(false);
+            mockCompletedAnimeRepo.findById.mockResolvedValue({
+                animeId: "test-anime-1",
+                animeTitle: "Test Anime",
+                animeSlug: "test-anime",
+                completedAt: "2024-01-14T10:30:00.000Z",
+            });
+
+            const result = await animeService.removeFromCompleted("test-anime-1");
+
+            expect(result.success).toBe(true);
+            expect(result.message).toBe('Removed "Test Anime" from completed');
+            expect(mockCompletedAnimeRepo.delete).toHaveBeenCalledWith("test-anime-1");
+        });
+
+        it("should refuse when anime is not completed", async () => {
+            mockEpisodeProgressRepo.findById.mockResolvedValue(null);
+            mockPlanToWatchRepo.findById.mockResolvedValue(null);
+            mockHiddenAnimeRepo.exists.mockResolvedValue(false);
+
+            const result = await animeService.removeFromCompleted("test-anime-1");
+
+            expect(result.success).toBe(false);
+            expect(mockCompletedAnimeRepo.delete).not.toHaveBeenCalled();
+        });
+    });
+
+    describe("startWatching from completed (rewatch)", () => {
+        it("should start from episode 1 and remove the completed entry", async () => {
+            mockEpisodeProgressRepo.findById.mockResolvedValue(null);
+            mockPlanToWatchRepo.findById.mockResolvedValue(null);
+            mockHiddenAnimeRepo.exists.mockResolvedValue(false);
+            mockCompletedAnimeRepo.findById.mockResolvedValue({
+                animeId: "test-anime-1",
+                animeTitle: "Test Anime",
+                animeSlug: "test-anime",
+                completedAt: "2024-01-14T10:30:00.000Z",
+            });
+
+            const result = await animeService.startWatching(sampleAnimeData, 1);
+
+            expect(result.success).toBe(true);
+            expect(mockEpisodeProgressRepo.create).toHaveBeenCalledWith(
+                expect.objectContaining({ animeId: "test-anime-1", currentEpisode: 1 }),
+            );
+            expect(mockCompletedAnimeRepo.delete).toHaveBeenCalledWith("test-anime-1");
+            expect(mockPlanToWatchRepo.delete).not.toHaveBeenCalled();
+        });
+    });
+
     describe("getAnimeDetails", () => {
         it("should return complete anime details", async () => {
             mockEpisodeProgressRepo.findById.mockResolvedValue(sampleEpisodeProgress);
@@ -881,6 +1023,7 @@ describe("AnimeService", () => {
                     isTracked: true,
                     isPlanned: false,
                     isHidden: false,
+                    isCompleted: false,
                     progress: sampleEpisodeProgress,
                     plan: undefined,
                 },
@@ -907,6 +1050,7 @@ describe("AnimeService", () => {
                 currentlyWatching: episodeProgressList,
                 planToWatch: planToWatchList,
                 hiddenAnime: hiddenAnimeList,
+                completedAnime: [],
                 totalCount: 4,
             });
         });
@@ -928,6 +1072,7 @@ describe("AnimeService", () => {
                 isTracked: false,
                 isPlanned: false,
                 isHidden: false,
+                isCompleted: false,
             });
 
             expect(mockEpisodeProgressRepo.delete).toHaveBeenCalledWith("test-anime-1");
@@ -950,6 +1095,7 @@ describe("AnimeService", () => {
                 isTracked: false,
                 isPlanned: false,
                 isHidden: false,
+                isCompleted: false,
             });
 
             expect(mockEpisodeProgressRepo.delete).toHaveBeenCalledWith("test-anime-1");
@@ -1011,6 +1157,7 @@ describe("AnimeService", () => {
                 isTracked: false,
                 isPlanned: false,
                 isHidden: false,
+                isCompleted: false,
             });
 
             expect(mockHiddenAnimeRepo.findAll).toHaveBeenCalled();
@@ -1028,6 +1175,7 @@ describe("AnimeService", () => {
                 isTracked: false,
                 isPlanned: false,
                 isHidden: false,
+                isCompleted: false,
             });
 
             expect(mockHiddenAnimeRepo.findAll).toHaveBeenCalled();

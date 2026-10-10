@@ -2,12 +2,18 @@ import type {
     ActionResult,
     AnimeData,
     AnimeStatus,
+    CompletedAnime,
     EpisodeProgress,
     PlanToWatch,
     ValidationResult,
 } from "@/commons/models";
 import { AnimeAction } from "@/commons/models";
-import { EpisodeProgressRepository, HiddenAnimeRepository, PlanToWatchRepository } from "@/commons/repositories";
+import {
+    CompletedAnimeRepository,
+    EpisodeProgressRepository,
+    HiddenAnimeRepository,
+    PlanToWatchRepository,
+} from "@/commons/repositories";
 import { AnimeStateValidator } from "./AnimeStateValidator";
 
 /**
@@ -18,16 +24,19 @@ export class AnimeService {
     private readonly episodeProgressRepository: EpisodeProgressRepository;
     private readonly planToWatchRepository: PlanToWatchRepository;
     private readonly hiddenAnimeRepository: HiddenAnimeRepository;
+    private readonly completedAnimeRepository: CompletedAnimeRepository;
     private readonly stateValidator: AnimeStateValidator;
 
     constructor(
         episodeProgressRepository?: EpisodeProgressRepository,
         planToWatchRepository?: PlanToWatchRepository,
         hiddenAnimeRepository?: HiddenAnimeRepository,
+        completedAnimeRepository?: CompletedAnimeRepository,
     ) {
         this.episodeProgressRepository = episodeProgressRepository ?? new EpisodeProgressRepository();
         this.planToWatchRepository = planToWatchRepository ?? new PlanToWatchRepository();
         this.hiddenAnimeRepository = hiddenAnimeRepository ?? new HiddenAnimeRepository();
+        this.completedAnimeRepository = completedAnimeRepository ?? new CompletedAnimeRepository();
         this.stateValidator = new AnimeStateValidator();
     }
 
@@ -35,18 +44,21 @@ export class AnimeService {
      * Get the current status of an anime
      */
     async getAnimeStatus(animeId: string): Promise<AnimeStatus> {
-        const [episodeProgress, planToWatch, isHidden] = await Promise.all([
+        const [episodeProgress, planToWatch, isHidden, completed] = await Promise.all([
             this.episodeProgressRepository.findById(animeId),
             this.planToWatchRepository.findById(animeId),
             this.hiddenAnimeRepository.exists(animeId),
+            this.completedAnimeRepository.findById(animeId),
         ]);
 
         return {
             isTracked: !!episodeProgress,
             isPlanned: !!planToWatch,
             isHidden,
+            isCompleted: !!completed,
             progress: episodeProgress || undefined,
             plan: planToWatch || undefined,
+            completed: completed || undefined,
         };
     }
 
@@ -92,6 +104,7 @@ export class AnimeService {
                     isTracked: false,
                     isPlanned: true,
                     isHidden: false,
+                    isCompleted: false,
                 },
             };
         } catch (error) {
@@ -132,6 +145,7 @@ export class AnimeService {
                     isTracked: false,
                     isPlanned: false,
                     isHidden: false,
+                    isCompleted: false,
                 },
             };
         } catch (error) {
@@ -182,6 +196,10 @@ export class AnimeService {
                 await this.planToWatchRepository.delete(animeData.animeId);
             }
 
+            if (validation.removesFromCompleted) {
+                await this.completedAnimeRepository.delete(animeData.animeId);
+            }
+
             return {
                 success: true,
                 message: `Started watching "${animeData.animeTitle}" from episode ${episodeNumber}`,
@@ -189,6 +207,7 @@ export class AnimeService {
                     isTracked: true,
                     isPlanned: false,
                     isHidden: false,
+                    isCompleted: false,
                 },
             };
         } catch (error) {
@@ -245,6 +264,7 @@ export class AnimeService {
                     isTracked: true,
                     isPlanned: false,
                     isHidden: false,
+                    isCompleted: false,
                 },
             };
         } catch (error) {
@@ -328,12 +348,103 @@ export class AnimeService {
                     isTracked: false,
                     isPlanned: false,
                     isHidden: false,
+                    isCompleted: false,
                 },
             };
         } catch (error) {
             return {
                 success: false,
                 message: "Failed to stop watching anime",
+                error: error instanceof Error ? error.message : String(error),
+            };
+        }
+    }
+
+    /**
+     * Mark a currently watching anime as completed (moves it out of episode progress)
+     */
+    async markCompleted(animeId: string): Promise<ActionResult> {
+        try {
+            const currentStatus = await this.getAnimeStatus(animeId);
+            const validation = await this.validateAction(animeId, AnimeAction.MARK_COMPLETED);
+
+            if (!validation.allowed || !currentStatus.progress) {
+                return {
+                    success: false,
+                    message: validation.reason || "Cannot mark anime as completed",
+                    newStatus: currentStatus,
+                };
+            }
+
+            const progress = currentStatus.progress;
+            const completedEntry: CompletedAnime = {
+                animeId: progress.animeId,
+                animeTitle: progress.animeTitle,
+                animeSlug: progress.animeSlug,
+                completedAt: new Date().toISOString(),
+                totalEpisodes: progress.totalEpisodes ?? progress.currentEpisode,
+            };
+
+            if (progress.posterUrl) {
+                completedEntry.posterUrl = progress.posterUrl;
+            }
+
+            await this.completedAnimeRepository.create(completedEntry);
+            await this.episodeProgressRepository.delete(animeId);
+
+            return {
+                success: true,
+                message: `Completed "${progress.animeTitle}"`,
+                newStatus: {
+                    isTracked: false,
+                    isPlanned: false,
+                    isHidden: false,
+                    isCompleted: true,
+                },
+            };
+        } catch (error) {
+            return {
+                success: false,
+                message: "Failed to mark anime as completed",
+                error: error instanceof Error ? error.message : String(error),
+            };
+        }
+    }
+
+    /**
+     * Remove anime from completed list
+     */
+    async removeFromCompleted(animeId: string): Promise<ActionResult> {
+        try {
+            const currentStatus = await this.getAnimeStatus(animeId);
+            const validation = await this.validateAction(animeId, AnimeAction.REMOVE_FROM_COMPLETED);
+
+            if (!validation.allowed) {
+                return {
+                    success: false,
+                    message: validation.reason || "Cannot remove anime from completed",
+                    newStatus: currentStatus,
+                };
+            }
+
+            const animeTitle = currentStatus.completed?.animeTitle || "Unknown anime";
+
+            await this.completedAnimeRepository.delete(animeId);
+
+            return {
+                success: true,
+                message: `Removed "${animeTitle}" from completed`,
+                newStatus: {
+                    isTracked: false,
+                    isPlanned: false,
+                    isHidden: false,
+                    isCompleted: false,
+                },
+            };
+        } catch (error) {
+            return {
+                success: false,
+                message: "Failed to remove anime from completed",
                 error: error instanceof Error ? error.message : String(error),
             };
         }
@@ -375,6 +486,7 @@ export class AnimeService {
                     isTracked: currentStatus.isTracked,
                     isPlanned: currentStatus.isPlanned,
                     isHidden: true,
+                    isCompleted: currentStatus.isCompleted,
                 },
             };
         } catch (error) {
@@ -452,19 +564,22 @@ export class AnimeService {
         currentlyWatching: EpisodeProgress[];
         planToWatch: PlanToWatch[];
         hiddenAnime: string[];
+        completedAnime: CompletedAnime[];
         totalCount: number;
     }> {
-        const [currentlyWatching, planToWatch, hiddenAnime] = await Promise.all([
+        const [currentlyWatching, planToWatch, hiddenAnime, completedAnime] = await Promise.all([
             this.episodeProgressRepository.findAll(),
             this.planToWatchRepository.findAll(),
             this.hiddenAnimeRepository.findAll(),
+            this.completedAnimeRepository.findAll(),
         ]);
 
         return {
             currentlyWatching,
             planToWatch,
             hiddenAnime,
-            totalCount: currentlyWatching.length + planToWatch.length + hiddenAnime.length,
+            completedAnime,
+            totalCount: currentlyWatching.length + planToWatch.length + hiddenAnime.length + completedAnime.length,
         };
     }
 
@@ -477,11 +592,14 @@ export class AnimeService {
             let animeTitle = "Unknown anime";
             const progressEntry = await this.episodeProgressRepository.findById(animeId);
             const planEntry = await this.planToWatchRepository.findById(animeId);
+            const completedEntry = await this.completedAnimeRepository.findById(animeId);
 
             if (progressEntry) {
                 animeTitle = progressEntry.animeTitle;
             } else if (planEntry) {
                 animeTitle = planEntry.animeTitle;
+            } else if (completedEntry) {
+                animeTitle = completedEntry.animeTitle;
             }
 
             // Remove from all repositories
@@ -489,6 +607,7 @@ export class AnimeService {
                 this.episodeProgressRepository.delete(animeId).catch(() => {}), // Ignore errors if not found
                 this.planToWatchRepository.delete(animeId).catch(() => {}),
                 this.hiddenAnimeRepository.remove(animeId).catch(() => {}),
+                this.completedAnimeRepository.delete(animeId).catch(() => {}),
             ]);
 
             return {
@@ -498,6 +617,7 @@ export class AnimeService {
                     isTracked: false,
                     isPlanned: false,
                     isHidden: false,
+                    isCompleted: false,
                 },
             };
         } catch (error) {
@@ -527,6 +647,7 @@ export class AnimeService {
                         isTracked: false,
                         isPlanned: false,
                         isHidden: false,
+                        isCompleted: false,
                     },
                 };
             }
@@ -541,6 +662,7 @@ export class AnimeService {
                     isTracked: false,
                     isPlanned: false,
                     isHidden: false,
+                    isCompleted: false,
                 },
             };
         } catch (error) {

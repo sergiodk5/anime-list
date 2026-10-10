@@ -19,6 +19,13 @@ vi.mock("@/options/stores/planToWatchStore", () => ({
     }),
 }));
 
+vi.mock("@/options/stores/completedStore", () => ({
+    useCompletedStore: () => ({
+        items: [],
+        refreshFromStorage: vi.fn(),
+    }),
+}));
+
 vi.mock("@/options/stores/hiddenStore", () => ({
     useHiddenStore: () => ({
         items: [],

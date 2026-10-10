@@ -11,6 +11,8 @@ export enum AnimeAction {
     UPDATE_EPISODE = "updateEpisode",
     HIDE = "hide",
     UNHIDE = "unhide",
+    MARK_COMPLETED = "markCompleted",
+    REMOVE_FROM_COMPLETED = "removeFromCompleted",
 }
 
 // Validation result for state transitions
@@ -18,6 +20,7 @@ export interface ValidationResult {
     allowed: boolean;
     reason?: string;
     removesFromPlan?: boolean;
+    removesFromCompleted?: boolean;
     requiresEpisodeInput?: boolean;
 }
 
@@ -34,8 +37,10 @@ export interface AnimeStatus {
     isTracked: boolean;
     isPlanned: boolean;
     isHidden: boolean;
+    isCompleted: boolean;
     progress?: EpisodeProgress;
     plan?: PlanToWatch;
+    completed?: CompletedAnime;
 }
 
 // UI Control configuration
@@ -53,6 +58,8 @@ export enum ButtonType {
     EPISODE_CONTROLS = "episodeControls",
     HIDE = "hide",
     UNHIDE = "unhide",
+    MARK_COMPLETED = "markCompleted",
+    REMOVE_FROM_COMPLETED = "removeFromCompleted",
 }
 
 // Toast notification types
@@ -64,7 +71,7 @@ export interface Toast {
 }
 
 // Import existing models
-import type { AnimeData, EpisodeProgress, PlanToWatch } from "./index";
+import type { AnimeData, CompletedAnime, EpisodeProgress, PlanToWatch } from "./index";
 
 // Re-export existing models for convenience
 export type { AnimeData, EpisodeProgress, PlanToWatch };

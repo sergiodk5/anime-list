@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ref } from "vue";
 import { createMemoryHistory, createRouter } from "vue-router";
 
+import { useCompletedStore } from "@/options/stores/completedStore";
 import { useHiddenStore } from "@/options/stores/hiddenStore";
 import { usePlanToWatchStore } from "@/options/stores/planToWatchStore";
 import { useWatchingStore } from "@/options/stores/watchingStore";
@@ -13,6 +14,7 @@ import AllWatchLists from "@/options/views/AllWatchLists.vue";
 vi.mock("@/options/stores/watchingStore");
 vi.mock("@/options/stores/planToWatchStore");
 vi.mock("@/options/stores/hiddenStore");
+vi.mock("@/options/stores/completedStore");
 
 // Mock the useStorageCache composable used by useSmartStats
 vi.mock("@/options/composables/useStorageCache", () => ({
@@ -50,6 +52,12 @@ describe("AllWatchLists - Phase 4 Store Integration", () => {
         init: vi.fn().mockResolvedValue(undefined),
     };
 
+    const mockCompletedStore = {
+        count: ref(4),
+        hasError: false,
+        init: vi.fn().mockResolvedValue(undefined),
+    };
+
     beforeEach(() => {
         pinia = createPinia();
         setActivePinia(pinia);
@@ -73,6 +81,7 @@ describe("AllWatchLists - Phase 4 Store Integration", () => {
         // Mock store implementations
         vi.mocked(useWatchingStore).mockReturnValue(mockWatchingStore as any);
         vi.mocked(usePlanToWatchStore).mockReturnValue(mockPlanToWatchStore as any);
+        vi.mocked(useCompletedStore).mockReturnValue(mockCompletedStore as any);
         vi.mocked(useHiddenStore).mockReturnValue(mockHiddenStore as any);
     });
 
@@ -223,6 +232,21 @@ describe("AllWatchLists - Phase 4 Store Integration", () => {
         });
     });
 
+    describe("Completed Store Integration", () => {
+        it("should display completed count from completed store", async () => {
+            const wrapper = mount(AllWatchLists, {
+                global: {
+                    plugins: [pinia],
+                },
+            });
+
+            await wrapper.vm.$nextTick();
+
+            expect(wrapper.find('[data-testid="completed-count"]').text()).toBe("4 series");
+            expect(mockCompletedStore.init).toHaveBeenCalled();
+        });
+    });
+
     describe("Static Content Preservation", () => {
         it("should maintain hardcoded values for non-store managed lists", async () => {
             const wrapper = mount(AllWatchLists, {
@@ -234,7 +258,6 @@ describe("AllWatchLists - Phase 4 Store Integration", () => {
             await wrapper.vm.$nextTick();
 
             // These should remain hardcoded until Phase 6 stats store
-            expect(wrapper.find('[data-testid="completed-count"]').text()).toContain("87 series");
             expect(wrapper.find('[data-testid="on-hold-count"]').text()).toContain("5 series");
             expect(wrapper.find('[data-testid="dropped-count"]').text()).toContain("8 series");
         });

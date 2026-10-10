@@ -58,6 +58,14 @@ function handleStorageChanges(stores: Map<string, any>): void {
                 break;
             }
 
+            case StorageKeys.COMPLETED_ANIME: {
+                const completedStore = stores.get("completed");
+                if (completedStore && completedStore.refreshFromStorage) {
+                    completedStore.refreshFromStorage();
+                }
+                break;
+            }
+
             default:
                 console.log(`[StorageSyncPlugin] Ignoring unknown storage key: ${storageKey}`);
                 break;

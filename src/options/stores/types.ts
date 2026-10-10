@@ -1,4 +1,4 @@
-import type { AnimeData, EpisodeProgress, PlanToWatch } from "@/commons/models";
+import type { AnimeData, CompletedAnime, EpisodeProgress, PlanToWatch } from "@/commons/models";
 
 /**
  * Generic async state wrapper for store data
@@ -49,6 +49,16 @@ export interface PlanToWatchState extends Omit<AnimeListState, "items" | "itemsM
     items: PlanToWatch[];
     /** Map for O(1) lookup by animeId */
     itemsMap: Record<string, PlanToWatch>;
+}
+
+/**
+ * Completed anime specific state extending AnimeListState
+ */
+export interface CompletedAnimeState extends Omit<AnimeListState, "items" | "itemsMap"> {
+    /** Array of completed anime items */
+    items: CompletedAnime[];
+    /** Map for O(1) lookup by animeId */
+    itemsMap: Record<string, CompletedAnime>;
 }
 
 /**

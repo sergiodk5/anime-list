@@ -5,11 +5,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ref } from "vue";
 
 // Mock the stores
+import { useCompletedStore } from "@/options/stores/completedStore";
 import { usePlanToWatchStore } from "@/options/stores/planToWatchStore";
 import { useWatchingStore } from "@/options/stores/watchingStore";
 
 vi.mock("@/options/stores/watchingStore");
 vi.mock("@/options/stores/planToWatchStore");
+vi.mock("@/options/stores/completedStore");
 
 describe("AllWatchLists", () => {
     let pinia: ReturnType<typeof createPinia>;
@@ -24,6 +26,12 @@ describe("AllWatchLists", () => {
     const mockPlanToWatchStore = {
         count: ref(7),
         isLoading: ref(false),
+        hasError: false,
+        init: vi.fn().mockResolvedValue(undefined),
+    };
+
+    const mockCompletedStore = {
+        count: ref(4),
         hasError: false,
         init: vi.fn().mockResolvedValue(undefined),
     };
@@ -47,6 +55,7 @@ describe("AllWatchLists", () => {
         // Mock store implementations
         vi.mocked(useWatchingStore).mockReturnValue(mockWatchingStore as any);
         vi.mocked(usePlanToWatchStore).mockReturnValue(mockPlanToWatchStore as any);
+        vi.mocked(useCompletedStore).mockReturnValue(mockCompletedStore as any);
     });
 
     const createWrapper = () => {
@@ -166,7 +175,7 @@ describe("AllWatchLists", () => {
             expect(completedIcon.text()).toBe("✅");
             expect(completedTitle.text()).toBe("Completed");
             expect(completedDescription.text()).toBe("Anime you've finished watching");
-            expect(completedCount.text()).toBe("87 series");
+            expect(completedCount.text()).toBe("4 series");
             expect(completedCount.classes()).toContain("text-green-200");
             expect(viewButton.text()).toBe("View →");
         });
@@ -374,7 +383,7 @@ describe("AllWatchLists", () => {
 
             const counts = [
                 { testid: "watching-count", expected: "3 series" },
-                { testid: "completed-count", expected: "87 series" },
+                { testid: "completed-count", expected: "4 series" },
                 { testid: "planned-count", expected: "7 series" },
                 { testid: "on-hold-count", expected: "5 series" },
                 { testid: "dropped-count", expected: "8 series" },

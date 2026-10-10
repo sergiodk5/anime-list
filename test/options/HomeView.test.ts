@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ref } from "vue";
 
 // Mock the stores
+import { useCompletedStore } from "@/options/stores/completedStore";
 import { useHiddenStore } from "@/options/stores/hiddenStore";
 import { usePlanToWatchStore } from "@/options/stores/planToWatchStore";
 import { useWatchingStore } from "@/options/stores/watchingStore";
@@ -12,6 +13,7 @@ import { useWatchingStore } from "@/options/stores/watchingStore";
 vi.mock("@/options/stores/watchingStore");
 vi.mock("@/options/stores/planToWatchStore");
 vi.mock("@/options/stores/hiddenStore");
+vi.mock("@/options/stores/completedStore");
 
 describe("HomeView", () => {
     let pinia: ReturnType<typeof createPinia>;
@@ -31,6 +33,12 @@ describe("HomeView", () => {
     };
 
     const mockHiddenStore = {
+        hasError: false,
+        init: vi.fn().mockResolvedValue(undefined),
+    };
+
+    const mockCompletedStore = {
+        count: ref(4),
         hasError: false,
         init: vi.fn().mockResolvedValue(undefined),
     };
@@ -57,6 +65,7 @@ describe("HomeView", () => {
         vi.mocked(useWatchingStore).mockReturnValue(mockWatchingStore as any);
         vi.mocked(usePlanToWatchStore).mockReturnValue(mockPlanToWatchStore as any);
         vi.mocked(useHiddenStore).mockReturnValue(mockHiddenStore as any);
+        vi.mocked(useCompletedStore).mockReturnValue(mockCompletedStore as any);
     });
 
     const createWrapper = () => {
@@ -170,7 +179,7 @@ describe("HomeView", () => {
             expect(completedCard.exists()).toBe(true);
             expect(completedIcon.text()).toBe("✅");
             expect(completedTitle.text()).toBe("Completed");
-            expect(completedCount.text()).toBe("87");
+            expect(completedCount.text()).toBe("4");
             expect(completedCount.classes()).toContain("text-green-200");
         });
 

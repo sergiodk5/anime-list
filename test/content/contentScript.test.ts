@@ -480,6 +480,29 @@ describe("Content Script", () => {
         });
     });
 
+    describe("Completed tiles", () => {
+        it("should show completed badge and remove button instead of plan/hide controls", async () => {
+            mockAnimeService.getAnimeStatus.mockResolvedValue({
+                isTracked: false,
+                isPlanned: false,
+                isHidden: false,
+                isCompleted: true,
+            });
+
+            Object.defineProperty(document, "readyState", { value: "complete", configurable: true });
+
+            const { initializeControls } = await import("@/content/index");
+            await initializeControls();
+
+            expect(document.querySelectorAll('[data-testid="anime-completed-badge"]').length).toBeGreaterThan(0);
+            expect(document.querySelectorAll('[data-testid="anime-remove-completed-button"]').length).toBeGreaterThan(
+                0,
+            );
+            expect(document.querySelectorAll('[data-testid="anime-plan-button"]').length).toBe(0);
+            expect(document.querySelectorAll('[data-testid="anime-hide-button"]').length).toBe(0);
+        });
+    });
+
     describe("Poster Backfill", () => {
         function buildTrackedItem(slug: string, imgSrc?: string): HTMLElement {
             const item = document.createElement("div");
