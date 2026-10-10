@@ -10,6 +10,7 @@ interface CachedStats {
     watching: number;
     planned: number;
     hidden: number;
+    completed: number;
     totalEpisodes: number;
     averageProgress: number;
     lastUpdated: number;
@@ -41,6 +42,7 @@ export function useStorageCache() {
             watching: 0,
             planned: 0,
             hidden: 0,
+            completed: 0,
             totalEpisodes: 0,
             averageProgress: 0,
             lastUpdated: 0,
@@ -57,6 +59,7 @@ export function useStorageCache() {
                             watching: 0,
                             planned: 0,
                             hidden: 0,
+                            completed: 0,
                             totalEpisodes: 0,
                             averageProgress: 0,
                             lastUpdated: 0,
@@ -145,6 +148,7 @@ export function useStorageCache() {
             watching: 0,
             planned: 0,
             hidden: 0,
+            completed: 0,
             totalEpisodes: 0,
             averageProgress: 0,
             lastUpdated: 0,

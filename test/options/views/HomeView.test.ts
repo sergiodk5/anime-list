@@ -3,6 +3,7 @@ import { createPinia, setActivePinia } from "pinia";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ref } from "vue";
 
+import { useCompletedStore } from "@/options/stores/completedStore";
 import { useHiddenStore } from "@/options/stores/hiddenStore";
 import { usePlanToWatchStore } from "@/options/stores/planToWatchStore";
 import { useWatchingStore } from "@/options/stores/watchingStore";
@@ -12,6 +13,7 @@ import HomeView from "@/options/views/HomeView.vue";
 vi.mock("@/options/stores/watchingStore");
 vi.mock("@/options/stores/planToWatchStore");
 vi.mock("@/options/stores/hiddenStore");
+vi.mock("@/options/stores/completedStore");
 
 describe("HomeView - Phase 4 Store Integration", () => {
     let pinia: ReturnType<typeof createPinia>;
@@ -31,6 +33,12 @@ describe("HomeView - Phase 4 Store Integration", () => {
     };
 
     const mockHiddenStore = {
+        hasError: false,
+        init: vi.fn().mockResolvedValue(undefined),
+    };
+
+    const mockCompletedStore = {
+        count: ref(4),
         hasError: false,
         init: vi.fn().mockResolvedValue(undefined),
     };
@@ -56,6 +64,7 @@ describe("HomeView - Phase 4 Store Integration", () => {
         // Mock store implementations
         vi.mocked(useWatchingStore).mockReturnValue(mockWatchingStore as any);
         vi.mocked(usePlanToWatchStore).mockReturnValue(mockPlanToWatchStore as any);
+        vi.mocked(useCompletedStore).mockReturnValue(mockCompletedStore as any);
         vi.mocked(useHiddenStore).mockReturnValue(mockHiddenStore as any);
     });
 
@@ -249,7 +258,7 @@ describe("HomeView - Phase 4 Store Integration", () => {
             expect(wrapper.find('[data-testid="action-view-lists"]').exists()).toBe(true);
         });
 
-        it("should preserve hardcoded values for non-store data", async () => {
+        it("should display completed count from completed store", async () => {
             const wrapper = mount(HomeView, {
                 global: {
                     plugins: [pinia],
@@ -258,9 +267,9 @@ describe("HomeView - Phase 4 Store Integration", () => {
 
             await wrapper.vm.$nextTick();
 
-            // Completed count should remain hardcoded
             const completedCount = wrapper.find('[data-testid="completed-count"]');
-            expect(completedCount.text()).toBe("87");
+            expect(completedCount.text()).toBe("4");
+            expect(mockCompletedStore.init).toHaveBeenCalled();
         });
     });
 });

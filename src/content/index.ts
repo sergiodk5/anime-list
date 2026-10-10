@@ -109,10 +109,10 @@ const activeToasts = new Map<string, Toast>();
 
 /**
  * Check if anime can be added to plan list
- * Only if not planned, not watching, and not hidden
+ * Only if not planned, not watching, not hidden, and not completed
  */
 export function canAddToPlan(status: AnimeStatus): boolean {
-    return !status.isPlanned && !status.isTracked && !status.isHidden;
+    return !status.isPlanned && !status.isTracked && !status.isHidden && !status.isCompleted;
 }
 
 /**
@@ -125,10 +125,10 @@ export function canStartWatching(status: AnimeStatus): boolean {
 
 /**
  * Check if anime can be hidden
- * Only if not planned and not watching
+ * Only if not planned, not watching, and not completed
  */
 export function canHide(status: AnimeStatus): boolean {
-    return !status.isPlanned && !status.isTracked;
+    return !status.isPlanned && !status.isTracked && !status.isCompleted;
 }
 
 /**
@@ -145,6 +145,22 @@ export function canRemoveFromPlan(status: AnimeStatus): boolean {
  */
 export function canStopWatching(status: AnimeStatus): boolean {
     return status.isTracked;
+}
+
+/**
+ * Check if anime can be marked completed
+ * Only if currently watching
+ */
+export function canMarkCompleted(status: AnimeStatus): boolean {
+    return status.isTracked;
+}
+
+/**
+ * Check if anime can be removed from completed
+ * Only if currently completed
+ */
+export function canRemoveFromCompleted(status: AnimeStatus): boolean {
+    return status.isCompleted;
 }
 
 /**
@@ -379,10 +395,16 @@ export function createCombinedWatchingControls(animeData: AnimeData, currentEpis
             <input type="number" class="episode-current" min="1" max="999" value="${currentEpisode}" title="Current episode">
             <button class="episode-btn episode-increment" data-testid="episode-increment" title="Next episode">+</button>
         </div>
-        <button class="stop-watching-btn" data-testid="combined-stop-watching-button" title="Stop watching ${animeData.animeTitle}">
-            <span class="button-icon">⏹️</span>
-            <span class="button-text">Stop</span>
-        </button>
+        <div class="watching-actions">
+            <button class="complete-btn" data-testid="combined-complete-button" title="Mark ${animeData.animeTitle} as completed">
+                <span class="button-icon">✅</span>
+                <span class="button-text">Complete</span>
+            </button>
+            <button class="stop-watching-btn" data-testid="combined-stop-watching-button" title="Stop watching ${animeData.animeTitle}">
+                <span class="button-icon">⏹️</span>
+                <span class="button-text">Stop</span>
+            </button>
+        </div>
     `;
 
     // Add episode control event handlers
@@ -390,6 +412,7 @@ export function createCombinedWatchingControls(animeData: AnimeData, currentEpis
     const incrementBtn = container.querySelector(".episode-increment") as HTMLButtonElement;
     const episodeInput = container.querySelector(".episode-current") as HTMLInputElement;
     const stopBtn = container.querySelector(".stop-watching-btn") as HTMLButtonElement;
+    const completeBtn = container.querySelector(".complete-btn") as HTMLButtonElement;
 
     decrementBtn.addEventListener("click", async (e) => {
         e.preventDefault();
@@ -413,6 +436,12 @@ export function createCombinedWatchingControls(animeData: AnimeData, currentEpis
         e.preventDefault();
         e.stopPropagation();
         await handleStopWatchingClick(animeData);
+    });
+
+    completeBtn.addEventListener("click", async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        await handleMarkCompletedClick(animeData);
     });
 
     // Prevent input from triggering parent click
@@ -440,6 +469,43 @@ export function createRemovePlanButton(animeData: AnimeData): HTMLButtonElement 
         e.preventDefault();
         e.stopPropagation();
         await handleRemovePlanClick(animeData);
+    });
+
+    return button;
+}
+
+/**
+ * Create Completed badge
+ */
+export function createCompletedBadge(): HTMLSpanElement {
+    const badge = document.createElement("span");
+    badge.className = "anime-list-completed-badge";
+    badge.setAttribute("data-testid", "anime-completed-badge");
+    badge.innerHTML = `
+        <span class="button-icon">✅</span>
+        <span class="button-text">Completed</span>
+    `;
+    return badge;
+}
+
+/**
+ * Create Remove Completed button
+ */
+export function createRemoveCompletedButton(animeData: AnimeData): HTMLButtonElement {
+    const button = document.createElement("button");
+    button.className = "anime-list-remove-completed-btn";
+    button.setAttribute("data-testid", "anime-remove-completed-button");
+    button.setAttribute("data-anime-id", animeData.animeId);
+    button.setAttribute("title", `Remove "${animeData.animeTitle}" from completed`);
+    button.innerHTML = `
+        <span class="button-icon">❌</span>
+        <span class="button-text">Remove</span>
+    `;
+
+    button.addEventListener("click", async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        await handleRemoveCompletedClick(animeData);
     });
 
     return button;
@@ -714,6 +780,60 @@ export async function handleRemovePlanClick(animeData: AnimeData): Promise<void>
 }
 
 /**
+ * Handle Complete button click
+ */
+export async function handleMarkCompletedClick(animeData: AnimeData): Promise<void> {
+    try {
+        const status = await animeService.getAnimeStatus(animeData.animeId);
+
+        if (!canMarkCompleted(status)) {
+            showToast("Only anime being watched can be completed", "error");
+            return;
+        }
+
+        const result = await animeService.markCompleted(animeData.animeId);
+
+        if (result.success) {
+            showToast(`Completed "${animeData.animeTitle}"`, "success");
+            notifyAnimeStateChange(StorageKeys.COMPLETED_ANIME, animeData.animeId);
+            await refreshAnimeControls(animeData.animeId);
+        } else {
+            showToast(result.message, "error");
+        }
+    } catch (error) {
+        console.error("Error handling mark completed click:", error);
+        showToast("Error occurred while marking as completed", "error");
+    }
+}
+
+/**
+ * Handle Remove Completed button click
+ */
+export async function handleRemoveCompletedClick(animeData: AnimeData): Promise<void> {
+    try {
+        const status = await animeService.getAnimeStatus(animeData.animeId);
+
+        if (!canRemoveFromCompleted(status)) {
+            showToast("Anime is not in completed list", "error");
+            return;
+        }
+
+        const result = await animeService.removeFromCompleted(animeData.animeId);
+
+        if (result.success) {
+            showToast(`Removed "${animeData.animeTitle}" from completed`, "info");
+            notifyAnimeStateChange(StorageKeys.COMPLETED_ANIME, animeData.animeId);
+            await refreshAnimeControls(animeData.animeId);
+        } else {
+            showToast(result.message, "error");
+        }
+    } catch (error) {
+        console.error("Error handling remove completed click:", error);
+        showToast("Error occurred while removing from completed", "error");
+    }
+}
+
+/**
  * Refresh anime controls after state change
  */
 async function refreshAnimeControls(animeId: string): Promise<void> {
@@ -766,6 +886,8 @@ export async function handlePlanClick(animeData: AnimeData): Promise<void> {
                     showToast("Cannot plan hidden anime", "error");
                 } else if (status.isTracked) {
                     showToast("Cannot plan anime that is being watched", "error");
+                } else if (status.isCompleted) {
+                    showToast("Cannot plan completed anime", "error");
                 } else {
                     showToast("Cannot add to plan", "error");
                 }
@@ -802,6 +924,8 @@ export async function handleHideClick(animeData: AnimeData, button: HTMLButtonEl
                 showToast("Cannot hide planned anime", "error");
             } else if (status.isTracked) {
                 showToast("Cannot hide anime that is being watched", "error");
+            } else if (status.isCompleted) {
+                showToast("Cannot hide completed anime", "error");
             } else {
                 showToast("Cannot hide this anime", "error");
             }
@@ -909,7 +1033,11 @@ export async function addControlsToItem(element: Element): Promise<void> {
         controlsContainer.setAttribute("data-testid", "anime-controls");
 
         // Add state-based controls per business requirements
-        if (status.isTracked) {
+        if (status.isCompleted) {
+            controlsContainer.appendChild(createCompletedBadge());
+            controlsContainer.appendChild(createRemoveCompletedButton(animeData));
+            controlsContainer.classList.add("completed-state");
+        } else if (status.isTracked) {
             // Watching: Combined episode controls with stop button on hover
             const episodeProgress = status.progress;
             if (episodeProgress) {
@@ -1107,12 +1235,18 @@ function injectStyles(): void {
             border-left: 3px solid transparent;
         }
 
+        .anime-list-controls.completed-state {
+            border-left: 3px solid #a855f7; /* Purple for completed */
+        }
+
         /* Base button styles */
         .anime-list-plan-btn,
         .anime-list-hide-btn,
         .anime-list-start-watching-btn,
         .anime-list-stop-watching-btn,
-        .anime-list-remove-plan-btn {
+        .anime-list-remove-plan-btn,
+        .anime-list-remove-completed-btn,
+        .anime-list-completed-badge {
             display: flex;
             align-items: center;
             gap: 4px;
@@ -1178,6 +1312,27 @@ function injectStyles(): void {
         }
 
         .anime-list-remove-plan-btn:hover {
+            background: rgba(251, 146, 60, 0.3);
+            border-color: rgba(251, 146, 60, 0.5);
+            color: white;
+        }
+
+        /* Completed badge */
+        .anime-list-completed-badge {
+            background: rgba(168, 85, 247, 0.25);
+            border-color: rgba(168, 85, 247, 0.4);
+            color: rgb(233, 213, 255);
+            cursor: default;
+        }
+
+        /* Remove Completed button */
+        .anime-list-remove-completed-btn {
+            background: rgba(251, 146, 60, 0.2);
+            border-color: rgba(251, 146, 60, 0.3);
+            color: rgb(254, 215, 170);
+        }
+
+        .anime-list-remove-completed-btn:hover {
             background: rgba(251, 146, 60, 0.3);
             border-color: rgba(251, 146, 60, 0.5);
             color: white;
@@ -1320,7 +1475,13 @@ function injectStyles(): void {
             background: rgba(255, 255, 255, 0.2);
         }
 
-        /* Stop button - hidden by default, slides down from above on hover */
+        .anime-list-combined-watching-controls .watching-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        /* Action buttons - hidden by default, slide down from above on hover */
+        .anime-list-combined-watching-controls .complete-btn,
         .anime-list-combined-watching-controls .stop-watching-btn {
             display: flex;
             align-items: center;
@@ -1336,17 +1497,15 @@ function injectStyles(): void {
             font-weight: 500;
             transition: all 0.3s ease;
             white-space: nowrap;
+            flex: 1;
             max-height: 0;
             opacity: 0;
             overflow: hidden;
             margin-top: 0;
         }
 
-        .anime-list-combined-watching-controls .stop-watching-btn .button-icon {
-            font-size: 8px;
-        }
-
-        .anime-list-combined-watching-controls .stop-watching-btn .button-text {
+        .anime-list-combined-watching-controls .watching-actions .button-icon,
+        .anime-list-combined-watching-controls .watching-actions .button-text {
             font-size: 8px;
         }
 
@@ -1356,7 +1515,20 @@ function injectStyles(): void {
             color: white;
         }
 
-        /* Show stop button sliding down on hover */
+        .anime-list-combined-watching-controls .complete-btn {
+            background: rgba(168, 85, 247, 0.2);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            color: rgb(233, 213, 255);
+        }
+
+        .anime-list-combined-watching-controls .complete-btn:hover {
+            background: rgba(168, 85, 247, 0.4);
+            border-color: rgba(168, 85, 247, 0.6);
+            color: white;
+        }
+
+        /* Show action buttons sliding down on hover */
+        .anime-list-combined-watching-controls:hover .complete-btn,
         .anime-list-combined-watching-controls:hover .stop-watching-btn {
             max-height: 24px; /* Allow space for button */
             opacity: 1;
@@ -1997,11 +2169,17 @@ async function openSinglePageModal(animeData: AnimeData): Promise<void> {
             !status.isTracked &&
             !status.isPlanned &&
             !status.isHidden &&
+            !status.isCompleted &&
             debug.extractionStrategy === "numeric-suffix" &&
             debug.originalSlug
         ) {
             const alternativeStatus = await getSinglePageAnimeService().getAnimeStatus(debug.originalSlug);
-            if (alternativeStatus.isTracked || alternativeStatus.isPlanned || alternativeStatus.isHidden) {
+            if (
+                alternativeStatus.isTracked ||
+                alternativeStatus.isPlanned ||
+                alternativeStatus.isHidden ||
+                alternativeStatus.isCompleted
+            ) {
                 status = alternativeStatus;
                 // Update the anime data to use the working ID
                 animeData.animeId = debug.originalSlug;
@@ -2266,6 +2444,7 @@ export function showSinglePageModal(animeData: AnimeData, status: AnimeStatus): 
  */
 export function getSinglePageStatusText(status: AnimeStatus): string {
     if (status.isHidden) return "Hidden from lists";
+    if (status.isCompleted) return "Completed";
     if (status.isTracked && status.progress) {
         return `Currently watching - Episode ${status.progress.currentEpisode}`;
     }
@@ -2280,6 +2459,11 @@ export function getSinglePageStatusText(status: AnimeStatus): string {
 export function getSinglePageModalActions(status: AnimeStatus) {
     if (status.isHidden) {
         return [{ type: ButtonType.UNHIDE, label: "Remove from Hidden", style: "success" }];
+    } else if (status.isCompleted) {
+        return [
+            { type: ButtonType.ADD_TO_WATCH, label: "Rewatch", style: "primary" },
+            { type: ButtonType.REMOVE_FROM_COMPLETED, label: "Remove from Completed", style: "danger" },
+        ];
     } else if (status.isPlanned) {
         return [
             { type: ButtonType.REMOVE_FROM_PLAN, label: "Remove from Plan", style: "danger" },
@@ -2288,6 +2472,7 @@ export function getSinglePageModalActions(status: AnimeStatus) {
     } else if (status.isTracked) {
         return [
             { type: ButtonType.EPISODE_CONTROLS, label: "Episode Controls", style: "primary" },
+            { type: ButtonType.MARK_COMPLETED, label: "Mark Completed", style: "success" },
             { type: ButtonType.REMOVE_FROM_WATCH, label: "Stop Watching", style: "danger" },
         ];
     } else {
@@ -2345,6 +2530,14 @@ async function handleSinglePageAction(actionType: ButtonType, animeData: AnimeDa
             case ButtonType.UNHIDE:
                 await getSinglePageAnimeService().unhideAnime(animeData.animeId);
                 showToast("Removed from hidden", "success");
+                break;
+            case ButtonType.MARK_COMPLETED:
+                await getSinglePageAnimeService().markCompleted(animeData.animeId);
+                showToast("Marked as completed", "success");
+                break;
+            case ButtonType.REMOVE_FROM_COMPLETED:
+                await getSinglePageAnimeService().removeFromCompleted(animeData.animeId);
+                showToast("Removed from completed", "info");
                 break;
         }
         closeSinglePageModal();

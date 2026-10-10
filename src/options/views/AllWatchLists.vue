@@ -147,7 +147,7 @@
                             data-testid="completed-count"
                             class="text-2xl font-bold text-green-200 drop-shadow-xs"
                         >
-                            87 series
+                            {{ stats.completed }} series
                         </span>
                         <button
                             data-testid="view-completed"
@@ -320,6 +320,7 @@
 <script setup lang="ts">
 import SkeletonCard from "@/options/components/ui/SkeletonCard.vue";
 import { useSmartStats } from "@/options/composables";
+import { useCompletedStore } from "@/options/stores/completedStore";
 import { useHiddenStore } from "@/options/stores/hiddenStore";
 import { usePlanToWatchStore } from "@/options/stores/planToWatchStore";
 import { useWatchingStore } from "@/options/stores/watchingStore";
@@ -341,6 +342,7 @@ function viewWatching(): void {
 const watchingStore = useWatchingStore();
 const planStore = usePlanToWatchStore();
 const hiddenStore = useHiddenStore();
+const completedStore = useCompletedStore();
 
 function resolveFlag(flag: any): boolean {
     if (typeof flag === "boolean") return flag;
@@ -349,12 +351,16 @@ function resolveFlag(flag: any): boolean {
 }
 const isLoading = computed(() => resolveFlag(watchingStore.isLoading) || resolveFlag(planStore.isLoading));
 const hasError = computed(
-    () => resolveFlag(watchingStore.hasError) || resolveFlag(planStore.hasError) || resolveFlag(hiddenStore.hasError),
+    () =>
+        resolveFlag(watchingStore.hasError) ||
+        resolveFlag(planStore.hasError) ||
+        resolveFlag(hiddenStore.hasError) ||
+        resolveFlag(completedStore.hasError),
 );
 
 const toast = useToast();
 onMounted(async () => {
-    await Promise.all([watchingStore.init?.(), planStore.init?.(), hiddenStore.init?.()]);
+    await Promise.all([watchingStore.init?.(), planStore.init?.(), hiddenStore.init?.(), completedStore.init?.()]);
     toast.info("Lists loaded");
 });
 </script>

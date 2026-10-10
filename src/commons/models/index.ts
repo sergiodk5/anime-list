@@ -8,6 +8,7 @@ export enum StorageKeys {
     EPISODE_PROGRESS = "episodeProgress",
     PLAN_TO_WATCH = "planToWatch",
     HIDDEN_ANIME = "hiddenAnime",
+    COMPLETED_ANIME = "completedAnime",
     TILE_ORDER = "tileOrder",
     FOLDER_ORDER = "folderOrder",
 }
@@ -28,6 +29,15 @@ export interface PlanToWatch {
     animeTitle: string;
     animeSlug: string;
     addedAt: string;
+}
+
+export interface CompletedAnime {
+    animeId: string;
+    animeTitle: string;
+    animeSlug: string;
+    completedAt: string;
+    totalEpisodes?: number;
+    posterUrl?: string;
 }
 
 export interface AnimeData {

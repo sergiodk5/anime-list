@@ -1,6 +1,7 @@
 import type { EpisodeProgress } from "@/commons/models";
 import { watchThrottled } from "@vueuse/core";
 import { computed, ref } from "vue";
+import { useCompletedStore } from "../stores/completedStore";
 import { useHiddenStore } from "../stores/hiddenStore";
 import { usePlanToWatchStore } from "../stores/planToWatchStore";
 import { useWatchingStore } from "../stores/watchingStore";
@@ -14,6 +15,7 @@ interface SmartStats {
     watching: number;
     planned: number;
     hidden: number;
+    completed: number;
     totalEpisodes: number;
     averageProgress: number;
     completionRate: number;
@@ -42,6 +44,7 @@ export function useSmartStats() {
     const watchingStore = useWatchingStore();
     const planStore = usePlanToWatchStore();
     const hiddenStore = useHiddenStore();
+    const completedStore = useCompletedStore();
     const { cachedStats, updateStatsCache, hasCache, isStale } = useStorageCache();
 
     // Track if we're currently computing expensive operations
@@ -67,6 +70,7 @@ export function useSmartStats() {
         const watchingItems = resolveItems<EpisodeProgress>(watchingStore.items);
         const plannedItems = resolveItems(planStore.items);
         const hiddenItems = resolveItems(hiddenStore.items);
+        const completedItems = resolveItems(completedStore.items);
 
         // Fallback to store.count ref/computed when items array not yet populated (e.g., mocked stores)
         const resolveCount = (store: any): number => {
@@ -78,13 +82,15 @@ export function useSmartStats() {
         const watchingCount = watchingItems.length > 0 ? watchingItems.length : resolveCount(watchingStore);
         const plannedCount = plannedItems.length > 0 ? plannedItems.length : resolveCount(planStore);
         const hiddenCount = hiddenItems.length > 0 ? hiddenItems.length : resolveCount(hiddenStore);
-        const totalItems = watchingCount + plannedCount;
+        const completedCount = completedItems.length > 0 ? completedItems.length : resolveCount(completedStore);
+        const totalItems = watchingCount + plannedCount + completedCount;
 
         // Quick stats without expensive operations
         return {
             watching: watchingCount,
             planned: plannedCount,
             hidden: hiddenCount,
+            completed: completedCount,
             totalEpisodes: 0, // Will be computed separately if needed
             averageProgress: 0, // Will be computed separately if needed
             completionRate: 0, // Will be computed separately if needed

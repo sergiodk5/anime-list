@@ -186,6 +186,24 @@ describe("storageSyncPlugin", () => {
             vi.useRealTimers();
         });
 
+        it("should handle completedAnime storage changes for completed store", async () => {
+            vi.useFakeTimers();
+            const mockRefresh = vi.fn();
+            const useTestStore = defineStore("completed", () => ({
+                data: [] as any[],
+                refreshFromStorage: mockRefresh,
+            }));
+
+            useTestStore();
+
+            mockStorageListener({ completedAnime: { newValue: {}, oldValue: null } }, "local");
+
+            vi.advanceTimersByTime(600);
+
+            expect(mockRefresh).toHaveBeenCalled();
+            vi.useRealTimers();
+        });
+
         it("should handle planToWatch storage changes", async () => {
             vi.useFakeTimers();
             const mockRefresh = vi.fn();

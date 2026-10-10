@@ -94,6 +94,7 @@ describe("useStorageCache", () => {
                 watching: 5,
                 planned: 10,
                 hidden: 2,
+                completed: 0,
                 totalEpisodes: 150,
                 averageProgress: 75,
             });
@@ -113,6 +114,7 @@ describe("useStorageCache", () => {
                 watching: 1,
                 planned: 1,
                 hidden: 1,
+                completed: 0,
                 totalEpisodes: 10,
                 averageProgress: 50,
             });
@@ -127,6 +129,7 @@ describe("useStorageCache", () => {
                 watching: 1,
                 planned: 0,
                 hidden: 0,
+                completed: 0,
                 totalEpisodes: 0,
                 averageProgress: 0,
             });
@@ -212,6 +215,7 @@ describe("useStorageCache", () => {
                 watching: 1,
                 planned: 0,
                 hidden: 0,
+                completed: 0,
                 totalEpisodes: 0,
                 averageProgress: 0,
             });
@@ -227,6 +231,7 @@ describe("useStorageCache", () => {
                 watching: 1,
                 planned: 0,
                 hidden: 0,
+                completed: 0,
                 totalEpisodes: 0,
                 averageProgress: 0,
             });
@@ -252,6 +257,7 @@ describe("useStorageCache", () => {
                 watching: 1,
                 planned: 0,
                 hidden: 0,
+                completed: 0,
                 totalEpisodes: 0,
                 averageProgress: 0,
             });
@@ -271,6 +277,7 @@ describe("useStorageCache", () => {
                 watching: 10,
                 planned: 5,
                 hidden: 3,
+                completed: 0,
                 totalEpisodes: 100,
                 averageProgress: 80,
             });
@@ -311,6 +318,7 @@ describe("useStorageCache", () => {
                 watching: 1,
                 planned: 0,
                 hidden: 0,
+                completed: 0,
                 totalEpisodes: 0,
                 averageProgress: 0,
             });
