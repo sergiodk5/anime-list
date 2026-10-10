@@ -39,7 +39,7 @@ export default mergeConfig(
             coverage: {
                 provider: "v8",
                 enabled: false, // Enable via CLI flag --coverage
-                reporter: ["text", "json", "html"],
+                reporter: ["text", "json", "html", "lcov"],
                 reportsDirectory: "./coverage",
                 include: [
                     "src/commons/**/*.{js,ts,vue}",
