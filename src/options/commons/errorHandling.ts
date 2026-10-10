@@ -1,7 +1,12 @@
 import type { StoreActionResult } from "@/options/stores/types";
 
 export type ClassifiedErrorCode =
-    "STORAGE_UNAVAILABLE" | "NETWORK_ERROR" | "VALIDATION_ERROR" | "PERMISSION_DENIED" | "NOT_FOUND" | "GENERIC_ERROR";
+    | "STORAGE_UNAVAILABLE"
+    | "NETWORK_ERROR"
+    | "VALIDATION_ERROR"
+    | "PERMISSION_DENIED"
+    | "NOT_FOUND"
+    | "GENERIC_ERROR";
 
 export const ERROR_MESSAGES: Record<ClassifiedErrorCode, string> = {
     STORAGE_UNAVAILABLE: "Storage is temporarily unavailable. Please try again.",

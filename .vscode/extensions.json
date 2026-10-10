@@ -2,7 +2,6 @@
   "recommendations": [
     "Vue.volar",
     "ms-playwright.playwright",
-    "dbaeumer.vscode-eslint",
-    "esbenp.prettier-vscode"
+    "oxc.oxc-vscode"
   ]
 }

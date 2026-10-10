@@ -1,0 +1,13 @@
+{
+    "$schema": "./node_modules/oxfmt/configuration_schema.json",
+    "printWidth": 120,
+    "tabWidth": 4,
+    "trailingComma": "all",
+    "singleAttributePerLine": true,
+    "semi": true,
+    "singleQuote": false,
+    "sortPackageJson": false,
+    "sortTailwindcss": {
+        "stylesheet": "./src/commons/assets/main.css"
+    }
+}

@@ -63,7 +63,7 @@ jobs:
       - name: Run TypeScript type checking
         run: npm run type-check
 
-      - name: Run ESLint
+      - name: Run oxlint
         run: npm run lint:check
 
       - name: Check code formatting

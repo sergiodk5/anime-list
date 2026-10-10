@@ -194,8 +194,8 @@ The extension is production-ready with a solid foundation:
 - **🏪 State**: Chrome Storage API with service-repository architecture
 - **🔌 Browser API**: Chrome Extension APIs (Manifest V3)
 - **🧪 Testing**: Vitest with V8 coverage (370 tests, 100% coverage)
-- **📏 Linting**: ESLint with Vue and TypeScript rules
-- **💅 Formatting**: Prettier with Tailwind class sorting
+- **📏 Linting**: oxlint with Vue and TypeScript rules
+- **💅 Formatting**: oxfmt with Tailwind class sorting
 
 ## 📁 Project Structure
 

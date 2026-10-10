@@ -12,7 +12,7 @@ describe("toast integration", () => {
         const toast = useToast();
         // Attempt to clear existing toasts if API exposed
         // @ts-ignore
-        toast.clearAll && toast.clearAll();
+        toast.clearAll?.();
     });
 
     it("mounts HomeView with toast plugin without errors", async () => {
