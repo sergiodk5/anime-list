@@ -430,7 +430,7 @@ describe("Content Script", () => {
                     `;
                     containerElement.appendChild(innerAnimeElement);
 
-                    animeElement.matches = vi.fn().mockReturnValue(true);
+                    vi.spyOn(animeElement, "matches").mockReturnValue(true);
 
                     const addedNodes = [animeElement, containerElement] as any;
                     addedNodes.forEach = Array.prototype.forEach;

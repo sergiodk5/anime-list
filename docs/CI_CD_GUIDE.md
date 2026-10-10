@@ -19,7 +19,7 @@ This document explains the Continuous Integration and Continuous Deployment (CI/
 #### 1. **Tests Job**
 
 - Runs on Ubuntu latest
-- Installs Node.js 20 and dependencies
+- Installs Node.js 24 and dependencies
 - Executes unit tests with coverage (`npm run test:unit:coverage`)
 - Uploads coverage reports to Codecov (requires `CODECOV_TOKEN` secret)
 
@@ -88,7 +88,7 @@ To fully utilize the CI/CD pipeline, add these secrets in GitHub repository sett
 
 ### Node.js Version
 
-The workflows use Node.js 20 (LTS). This is specified in the workflow files and should match the development environment.
+The workflows use Node.js 24 (LTS). This is specified in the workflow files and should match the development environment.
 
 ### Browser Support
 
