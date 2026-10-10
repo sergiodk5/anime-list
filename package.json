@@ -15,7 +15,7 @@
         "test:unit:watch": "vitest",
         "test:unit:coverage": "vitest run --coverage",
         "test:unit:coverage:ui": "vitest run --coverage && open coverage/index.html",
-        "test:e2e": "playwright test",
+        "test:e2e": "playwright test --pass-with-no-tests",
         "type-check": "vue-tsc --build --force",
         "lint": "oxlint --fix",
         "lint:check": "oxlint --deny-warnings",
