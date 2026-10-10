@@ -20,7 +20,7 @@ export default defineConfig(() => {
             emptyOutDir: false,
             minify: false,
             sourcemap: true,
-            rollupOptions: {
+            rolldownOptions: {
                 input: {
                     popup: fileURLToPath(new URL("./src/popup/index.html", import.meta.url)),
                     options: fileURLToPath(new URL("./src/options/index.html", import.meta.url)),
@@ -35,8 +35,6 @@ export default defineConfig(() => {
                     },
                     chunkFileNames: "assets/[name]-[hash].js",
                     assetFileNames: "assets/[name]-[hash].[ext]",
-                    // Force everything to be bundled with each entry point
-                    manualChunks: () => undefined,
                 },
                 external: [], // Bundle everything inline
             },

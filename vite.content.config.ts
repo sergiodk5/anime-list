@@ -20,7 +20,7 @@ export default defineConfig({
             name: "AnimeListContent",
             fileName: () => "src/content/index.js",
         },
-        rollupOptions: {
+        rolldownOptions: {
             external: [], // Bundle everything
             output: {
                 extend: true,
