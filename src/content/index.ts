@@ -3,6 +3,7 @@ import { ButtonType, StorageKeys } from "@/commons/models";
 import { AnimeService } from "@/commons/services";
 import { StorageAdapter } from "@/commons/adapters/StorageAdapter";
 import { selectAdapter, type SiteAdapter } from "@/content/adapters";
+import { linkCurrentPageMetadata } from "@/content/metadataLink";
 
 /**
  * Content script for anime website integration
@@ -2541,6 +2542,7 @@ async function handleSinglePageAction(actionType: ButtonType, animeData: AnimeDa
                 break;
         }
         closeSinglePageModal();
+        void linkCurrentPageMetadata(activeAdapter);
     } catch (error) {
         console.error(`Error handling action ${actionType}:`, error);
         showToast("An error occurred", "error");
@@ -2592,6 +2594,8 @@ export function initializeSinglePage(): void {
     if (animeData) {
         createSinglePageInfoButton(animeData);
     }
+
+    void linkCurrentPageMetadata(activeAdapter);
 }
 
 // =============================================================================

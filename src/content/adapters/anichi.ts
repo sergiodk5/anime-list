@@ -1,4 +1,4 @@
-import type { AnimeData } from "@/commons/models";
+import type { AnimeData, NextEpisode, PageAnimeMetadata } from "@/commons/models";
 import type { SiteAdapter } from "./types";
 
 const SELECTORS = {
@@ -156,6 +156,43 @@ function extractWatchPageAnime(): AnimeData | null {
     };
 }
 
+// The anime page (#series-page) and watch page (#watch-main) share these data attributes.
+const PAGE_ROOT_SELECTOR = "#series-page, #watch-main";
+const WATCH_URL_PATH_RE = /^\/watch\/(?<slug>[^/]+)\/?$/;
+
+function readPositiveInt(value: string | null | undefined): number | undefined {
+    const parsed = Number.parseInt(value ?? "", 10);
+    return Number.isInteger(parsed) && parsed > 0 ? parsed : undefined;
+}
+
+function readNextEpisode(): NextEpisode | undefined {
+    const block = document.querySelector("#watch-next-ep");
+    const airingAt = readPositiveInt(block?.getAttribute("data-air-at"));
+    const episode = readPositiveInt(block?.querySelector(".watch-next-ep__ep")?.textContent?.match(/\d+/)?.[0]);
+    return airingAt && episode ? { episode, airingAt } : undefined;
+}
+
+function extractPageMetadata(): PageAnimeMetadata | null {
+    const root = document.querySelector(PAGE_ROOT_SELECTOR);
+    if (!root) return null;
+
+    let slug: string | null = null;
+    try {
+        slug = matchSlug(new URL(root.getAttribute("data-url") ?? "", "https://anichi.to").pathname, WATCH_URL_PATH_RE);
+    } catch {
+        slug = null;
+    }
+    slug ??= extractWatchPageAnime()?.animeSlug ?? null;
+    if (!slug) return null;
+
+    return {
+        animeId: slug,
+        anilistId: readPositiveInt(root.getAttribute("data-anilist-id")),
+        malId: readPositiveInt(root.getAttribute("data-mal-id")),
+        nextEpisode: readNextEpisode(),
+    };
+}
+
 function getInjectionTarget(card: Element): Element | null {
     const poster = card.querySelector<HTMLElement>(SELECTORS.POSTER);
     if (!poster) return null;
@@ -181,5 +218,6 @@ export const anichiAdapter: SiteAdapter = {
         matches: (url) =>
             isAnichiHost(url.hostname) && (ANIME_PATH_RE.test(url.pathname) || WATCH_PATH_RE.test(url.pathname)),
         extractAnime: extractWatchPageAnime,
+        extractMetadata: extractPageMetadata,
     },
 };

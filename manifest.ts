@@ -20,6 +20,7 @@ const manifest: any = {
     },
     background: {
         service_worker: "src/background/index.js",
+        type: "module",
     },
     content_scripts: [
         {
@@ -31,7 +32,8 @@ const manifest: any = {
         page: "src/options/index.html",
         open_in_tab: true,
     },
-    permissions: ["activeTab", "storage"],
+    permissions: ["activeTab", "storage", "alarms"],
+    host_permissions: ["https://graphql.anilist.co/*"],
     web_accessible_resources: [
         {
             resources: ["assets/images/*", "assets/*.js"],
