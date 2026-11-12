@@ -1,4 +1,4 @@
-import { getOfflineQueue, registerOfflineAction } from "@/options/composables";
+import { runStoreAction } from "@/options/commons/actionHelpers";
 import { defineStore } from "pinia";
 import { computed, ref } from "vue";
 
@@ -87,28 +87,24 @@ export const usePlanToWatchStore = defineStore("planToWatch", () => {
      * Add an anime to plan to watch list
      */
     async function addToPlan(anime: AnimeData): Promise<StoreActionResult> {
-        const offlineQueue = getOfflineQueue();
-        return offlineQueue.enqueueRunStoreAction(
-            {
-                run: () => animeService.addToPlanToWatch(anime),
-                onSuccessApply: () => {
-                    if (!state.value.itemsMap[anime.animeId]) {
-                        const newPlanItem: PlanToWatch = {
-                            animeId: anime.animeId,
-                            animeTitle: anime.animeTitle,
-                            animeSlug: anime.animeSlug,
-                            addedAt: new Date().toISOString(),
-                        };
-                        state.value.items.push(newPlanItem);
-                        state.value.itemsMap[anime.animeId] = newPlanItem;
-                    }
-                },
-                successToast: (r: any) => r?.message || `Added ${anime.animeTitle}`,
-                errorToast: (m) => m || `Failed to add ${anime.animeTitle}`,
-                setLastError: (m) => (lastError.value = m),
+        return runStoreAction({
+            run: () => animeService.addToPlanToWatch(anime),
+            onSuccessApply: () => {
+                if (!state.value.itemsMap[anime.animeId]) {
+                    const newPlanItem: PlanToWatch = {
+                        animeId: anime.animeId,
+                        animeTitle: anime.animeTitle,
+                        animeSlug: anime.animeSlug,
+                        addedAt: new Date().toISOString(),
+                    };
+                    state.value.items.push(newPlanItem);
+                    state.value.itemsMap[anime.animeId] = newPlanItem;
+                }
             },
-            { type: "plan:add", description: `Add ${anime.animeTitle} to plan`, payload: { anime } },
-        );
+            successToast: (r: any) => r?.message || `Added ${anime.animeTitle}`,
+            errorToast: (m) => m || `Failed to add ${anime.animeTitle}`,
+            setLastError: (m) => (lastError.value = m),
+        });
     }
 
     /**
@@ -122,24 +118,20 @@ export const usePlanToWatchStore = defineStore("planToWatch", () => {
             return { success: false, error: lastError.value };
         }
         const snapshot = { item: currentItem, index: itemIndex };
-        const offlineQueue = getOfflineQueue();
-        return offlineQueue.enqueueRunStoreAction(
-            {
-                run: () => animeService.removeFromPlanToWatch(animeId),
-                onOptimistic: () => {
-                    state.value.items.splice(snapshot.index, 1);
-                    delete state.value.itemsMap[animeId];
-                },
-                onRollback: () => {
-                    state.value.items.splice(snapshot.index, 0, snapshot.item);
-                    state.value.itemsMap[animeId] = snapshot.item;
-                },
-                successToast: (r: any) => r?.message || "Removed from plan",
-                errorToast: (m) => m || "Removal failed",
-                setLastError: (m) => (lastError.value = m),
+        return runStoreAction({
+            run: () => animeService.removeFromPlanToWatch(animeId),
+            onOptimistic: () => {
+                state.value.items.splice(snapshot.index, 1);
+                delete state.value.itemsMap[animeId];
             },
-            { type: "plan:remove", description: `Remove ${animeId} from plan`, payload: { animeId } },
-        );
+            onRollback: () => {
+                state.value.items.splice(snapshot.index, 0, snapshot.item);
+                state.value.itemsMap[animeId] = snapshot.item;
+            },
+            successToast: (r: any) => r?.message || "Removed from plan",
+            errorToast: (m) => m || "Removal failed",
+            setLastError: (m) => (lastError.value = m),
+        });
     }
 
     // Internal helper methods
@@ -207,29 +199,6 @@ export const usePlanToWatchStore = defineStore("planToWatch", () => {
             snap.items.forEach((i: PlanToWatch) => (itemsMap[i.animeId] = { ...i }));
             state.value.items = snap.items.map((i: PlanToWatch) => ({ ...i }));
             state.value.itemsMap = itemsMap;
-        },
-    };
-});
-
-registerOfflineAction("plan:add", (payload: any) => {
-    const anime: AnimeData = payload.anime;
-    const service = new AnimeService();
-    return {
-        config: { run: () => service.addToPlanToWatch(anime), expectSuccessField: true },
-        validate: () => {
-            const store = usePlanToWatchStore();
-            return !store.itemsMap[anime.animeId];
-        },
-    };
-});
-registerOfflineAction("plan:remove", (payload: any) => {
-    const { animeId } = payload;
-    const service = new AnimeService();
-    return {
-        config: { run: () => service.removeFromPlanToWatch(animeId), expectSuccessField: true },
-        validate: () => {
-            const store = usePlanToWatchStore();
-            return Boolean(store.itemsMap[animeId]);
         },
     };
 });

@@ -45,7 +45,6 @@ A modern browser extension to enhance your anime viewing experience with beautif
 - ✅ Pinia store layer (watching / plan / hidden) with actions & optimistic updates
 - ✅ Cross‑context real-time sync (options ↔ content ↔ popup) via storage + runtime messaging
 - ✅ Aggregated smart statistics (throttled, cache-backed)
-- ✅ Offline action queue with persistence, conflict detection & metrics
 - ✅ Visibility / performance optimizations (throttled stats, visibility-aware refresh)
 - ✅ Undo system (bounded stack) for key mutations
 - ✅ Toast notifications, skeleton loaders, unified action helper & retry logic
@@ -67,7 +66,6 @@ A modern browser extension to enhance your anime viewing experience with beautif
 - **🏠 Home Dashboard**: Reactive counts & smart stats (watching / plan / hidden, completion %, trends)
 - **📺 Watch Lists Overview**: Dynamic counts for integrated lists; placeholders remain for future lists
 - **⚡ Real-Time Sync**: Updates within ~150ms after content script actions
-- **📶 Offline Resilience**: Queued actions with conflict avoidance & replay
 - **↩️ Undo Support**: Revert recent mutations (watching / plan / hidden operations)
 - **🎨 Glass-Morphism UI**: Anime-themed branding & gradients
 - **📱 Responsive Design**: Mobile-first across screen sizes
@@ -88,7 +86,7 @@ A modern browser extension to enhance your anime viewing experience with beautif
 - **🧪 100% Test Coverage**: 613 passing tests (services, stores, composables, UI, offline, undo)
 - **🛡️ Type Safety**: Strict TypeScript everywhere
 - **📝 Data-TestId System**: Consistent for deterministic UI tests
-- **🔄 Scenario Coverage**: Cross-context sync, offline queue, undo, error handling
+- **🔄 Scenario Coverage**: Cross-context sync, undo, error handling
 
 #### **Unified Storage System** ✅
 
@@ -114,9 +112,8 @@ A modern browser extension to enhance your anime viewing experience with beautif
 ### � Project Structure (Highlights)
 
 - **🧭 Routing**: Vue Router (core routes active; favorites & others pending)
-- **🏪 State**: Service–repository + Pinia stores (watching / plan / hidden) + composables (stats, cache, offline queue)
+- **🏪 State**: Service–repository + Pinia stores (watching / plan / hidden) + composables (stats, cache)
 - **🛰️ Sync**: Debounced storage + runtime messaging bridge
-- **🛟 Offline**: Persistent action queue with conflict detection & backoff
 - **↩️ Undo**: Bounded snapshot-based undo manager + plugin
 
 ### 🔄 Architecture Overview
@@ -125,7 +122,7 @@ The extension has a **clean service architecture** where:
 
 ### **Backend-Frontend Integration** (Progress Recap)
 
-- ✅ Reactive composables & stores implemented (watching / plan / hidden / stats / offline)
+- ✅ Reactive composables & stores implemented (watching / plan / hidden / stats)
 - ✅ Real-time data replaces static numbers
 - 🔄 Pending interactive detail & editing views
 - 🔄 Episode progress detail UI (beyond increment/decrement) to build
