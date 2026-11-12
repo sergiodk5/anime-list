@@ -48,7 +48,7 @@ describe("Single Page Initialization Functions", () => {
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "/watch/test-anime-aaaaa/ep-1",
-                    href: "https://anichi.to/watch/test-anime-aaaaa/ep-1",
+                    href: "https://anichi.cz/watch/test-anime-aaaaa/ep-1",
                 },
                 writable: true,
             });
@@ -72,7 +72,7 @@ describe("Single Page Initialization Functions", () => {
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "/anime/some-anime-aaaaa",
-                    href: "https://anichi.to/anime/some-anime-aaaaa",
+                    href: "https://anichi.cz/anime/some-anime-aaaaa",
                 },
                 writable: true,
             });
@@ -122,7 +122,7 @@ describe("Single Page Initialization Functions", () => {
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "/watch/positioned-anime-aaaaa/ep-1",
-                    href: "https://anichi.to/watch/positioned-anime-aaaaa/ep-1",
+                    href: "https://anichi.cz/watch/positioned-anime-aaaaa/ep-1",
                 },
                 writable: true,
             });
@@ -142,7 +142,7 @@ describe("Single Page Initialization Functions", () => {
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "/watch/replace-test-anime-aaaaa/ep-1",
-                    href: "https://anichi.to/watch/replace-test-anime-aaaaa/ep-1",
+                    href: "https://anichi.cz/watch/replace-test-anime-aaaaa/ep-1",
                 },
                 writable: true,
             });
@@ -167,7 +167,7 @@ describe("Single Page Initialization Functions", () => {
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "/watch/title-source-aaaaa/ep-1",
-                    href: "https://anichi.to/watch/title-source-aaaaa/ep-1",
+                    href: "https://anichi.cz/watch/title-source-aaaaa/ep-1",
                 },
                 writable: true,
             });

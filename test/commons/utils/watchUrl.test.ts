@@ -7,12 +7,12 @@ describe("getContinueWatchingUrl", () => {
     it("should build the anichi watch URL from slug and current episode", () => {
         const item = { animeSlug: "attack-on-titan", currentEpisode: 5 } as EpisodeProgress;
 
-        expect(getContinueWatchingUrl(item)).toBe("https://anichi.to/watch/attack-on-titan/ep-5");
+        expect(getContinueWatchingUrl(item)).toBe("https://anichi.cz/watch/attack-on-titan/ep-5");
     });
 
     it("should link to the current episode without a trailing slash", () => {
         const item = { animeSlug: "candy-caries-vm1jn", currentEpisode: 1 } as EpisodeProgress;
 
-        expect(getContinueWatchingUrl(item)).toBe("https://anichi.to/watch/candy-caries-vm1jn/ep-1");
+        expect(getContinueWatchingUrl(item)).toBe("https://anichi.cz/watch/candy-caries-vm1jn/ep-1");
     });
 });

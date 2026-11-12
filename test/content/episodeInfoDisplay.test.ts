@@ -92,8 +92,8 @@ describe("tiles", () => {
     function buildTile(): HTMLElement {
         document.body.innerHTML = `
             <div class="item">
-                <div class="ani poster"><a href="https://anichi.to/anime/overgeared-rah7b"><img alt="Overgeared"></a></div>
-                <div class="info"><a class="name d-title" href="https://anichi.to/anime/overgeared-rah7b">Overgeared</a></div>
+                <div class="ani poster"><a href="https://anichi.cz/anime/overgeared-rah7b"><img alt="Overgeared"></a></div>
+                <div class="info"><a class="name d-title" href="https://anichi.cz/anime/overgeared-rah7b">Overgeared</a></div>
             </div>`;
         return document.querySelector(".item") as HTMLElement;
     }

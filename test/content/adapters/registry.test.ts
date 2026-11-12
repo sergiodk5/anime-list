@@ -6,8 +6,8 @@ describe("content/adapters registry", () => {
         expect(adapters).toEqual([anichiAdapter]);
     });
 
-    it("selects the anichi adapter for anichi.to URLs", () => {
-        const adapter = selectAdapter(new URL("https://anichi.to/recent"));
+    it("selects the anichi adapter for anichi.cz URLs", () => {
+        const adapter = selectAdapter(new URL("https://anichi.cz/recent"));
         expect(adapter).toBe(anichiAdapter);
     });
 
