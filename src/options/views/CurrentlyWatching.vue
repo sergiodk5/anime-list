@@ -68,7 +68,7 @@
                     Start watching on
                     <a
                         data-testid="empty-state-link"
-                        href="https://anichi.to/"
+                        :href="`${ANICHI_ORIGIN}/`"
                         target="_blank"
                         rel="noopener noreferrer"
                         class="text-purple-200 underline transition-colors hover:text-white"
@@ -101,6 +101,7 @@ import { computed, onMounted } from "vue";
 import { toast } from "vue3-toastify";
 
 import type { EpisodeProgress } from "@/commons/models";
+import { ANICHI_ORIGIN } from "@/commons/utils/anichiSite";
 import WatchingAnimeCard from "@/options/components/watching/WatchingAnimeCard.vue";
 import SkeletonCard from "@/options/components/ui/SkeletonCard.vue";
 import { useAnimeMetadataStore } from "@/options/stores/animeMetadataStore";

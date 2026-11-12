@@ -1,4 +1,5 @@
 import type { AnimeData, NextEpisode, PageAnimeMetadata } from "@/commons/models";
+import { ANICHI_ORIGIN, isAnichiHost } from "@/commons/utils/anichiSite";
 import type { SiteAdapter } from "./types";
 
 const SELECTORS = {
@@ -8,7 +9,7 @@ const SELECTORS = {
     TITLE_LINK: "a.name.d-title",
 } as const;
 
-// anichi.to has two per-anime URL shapes: a detail page (list/filter cards
+// anichi has two per-anime URL shapes: a detail page (list/filter cards
 // link here) and the episode player (same shape as the old anikototv
 // adapter). Slugs are identical across both and may or may not carry a
 // trailing hash-like suffix (e.g. "tomb-raider-king-91d21" vs
@@ -17,15 +18,6 @@ const SELECTORS = {
 // `/watch/foo/ep-1-extra` don't sneak through.
 const ANIME_PATH_RE = /^\/anime\/(?<slug>[^/]+)\/?$/;
 const WATCH_PATH_RE = /^\/watch\/(?<slug>[^/]+)\/ep-\d+\/?$/;
-
-// anichi host check used to scope this adapter's site-specific handling to
-// anichi hosts, so unrelated pages with similar paths or DOM structures are
-// not treated as anichi pages.
-const ANICHI_HOST = "anichi.to";
-
-function isAnichiHost(hostname: string): boolean {
-    return hostname === ANICHI_HOST || hostname.endsWith(`.${ANICHI_HOST}`);
-}
 
 // Tries a single anchored path pattern and returns its named `slug` group,
 // or null if the pattern doesn't match. Shared by card-href extraction and
@@ -43,7 +35,7 @@ function extractSlugFromHref(href: string): string | null {
     if (!href) return null;
     let pathname = href;
     try {
-        pathname = new URL(href, "https://anichi.to").pathname;
+        pathname = new URL(href, ANICHI_ORIGIN).pathname;
     } catch {
         // Fall through with the raw href; relative paths still work with the
         // regex below.
@@ -178,7 +170,7 @@ function extractPageMetadata(): PageAnimeMetadata | null {
 
     let slug: string | null = null;
     try {
-        slug = matchSlug(new URL(root.getAttribute("data-url") ?? "", "https://anichi.to").pathname, WATCH_URL_PATH_RE);
+        slug = matchSlug(new URL(root.getAttribute("data-url") ?? "", ANICHI_ORIGIN).pathname, WATCH_URL_PATH_RE);
     } catch {
         slug = null;
     }
@@ -206,7 +198,7 @@ function getInjectionTarget(card: Element): Element | null {
 export const anichiAdapter: SiteAdapter = {
     id: "anichi",
     // The content script is loaded on <all_urls> by the manifest, but the
-    // adapter scopes itself to anichi.to so the MutationObserver and other
+    // adapter scopes itself to anichi hosts so the MutationObserver and other
     // page-wide setup don't run on unrelated sites that happen to use generic
     // `.item` / `#list-items` markup.
     matches: (url) => isAnichiHost(url.hostname),

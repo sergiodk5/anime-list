@@ -52,7 +52,7 @@ describe("Single Page Modal Integration", () => {
         originalLocation = window.location;
         delete (window as any).location;
         (window as any).location = {
-            href: "https://anichi.to/watch/test-anime-aaaaa/ep-1",
+            href: "https://anichi.cz/watch/test-anime-aaaaa/ep-1",
             pathname: "/watch/test-anime-aaaaa/ep-1",
         };
 
@@ -120,7 +120,7 @@ describe("Single Page Modal Integration", () => {
             ];
 
             testCases.forEach((testCase) => {
-                (window as any).location.href = `https://anichi.to${testCase.pathname}`;
+                (window as any).location.href = `https://anichi.cz${testCase.pathname}`;
                 (window as any).location.pathname = testCase.pathname;
 
                 // Test actual extractSinglePageAnimeData function
@@ -491,7 +491,7 @@ describe("Single Page Modal Integration", () => {
         });
 
         it("should handle URL without watch pattern in extractSinglePageAnimeData", () => {
-            (window as any).location.href = "https://anichi.to/other/page";
+            (window as any).location.href = "https://anichi.cz/other/page";
             (window as any).location.pathname = "/other/page";
 
             const result = extractSinglePageAnimeData();
@@ -743,7 +743,7 @@ describe("Single Page Modal Integration", () => {
             ];
 
             testCases.forEach((testCase) => {
-                (window as any).location.href = `https://anichi.to${testCase.pathname}`;
+                (window as any).location.href = `https://anichi.cz${testCase.pathname}`;
                 (window as any).location.pathname = testCase.pathname;
                 const result = extractSinglePageAnimeData();
                 expect(result?.animeId).toBe(testCase.expectedId);
@@ -754,7 +754,7 @@ describe("Single Page Modal Integration", () => {
             // Test the anichi adapter's title precedence: data-en attribute on
             // the page's primary title element -> meta og:title (stripped) ->
             // document.title (stripped) -> slug fallback.
-            (window as any).location.href = "https://anichi.to/watch/title-test-aaaaa/ep-1";
+            (window as any).location.href = "https://anichi.cz/watch/title-test-aaaaa/ep-1";
             (window as any).location.pathname = "/watch/title-test-aaaaa/ep-1";
             const originalDocTitle = document.title;
 

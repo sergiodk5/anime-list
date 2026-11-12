@@ -11,7 +11,7 @@ interface CardOptions {
 }
 
 function buildCard({
-    href = "https://anichi.to/anime/the-warrior-princess-and-the-barbaric-king-snxwm",
+    href = "https://anichi.cz/anime/the-warrior-princess-and-the-barbaric-king-snxwm",
     title = "The Warrior Princess and the Barbaric King",
     titleHref,
     imgSrc,
@@ -49,9 +49,16 @@ describe("anichi adapter", () => {
         expect(anichiAdapter.watchPage).not.toBeNull();
     });
 
-    it("matches the anichi host (and subdomains) only", () => {
-        expect(anichiAdapter.matches(new URL("https://anichi.to/recent"))).toBe(true);
-        expect(anichiAdapter.matches(new URL("https://www.anichi.to/browse"))).toBe(true);
+    it.each([
+        ["https://anichi.cz/recent", true],
+        ["https://www.anichi.cz/browse", true],
+        ["https://anichi.to/recent", true],
+        ["https://ANICHI.CZ/recent", true],
+        ["https://notanichi.cz/recent", false],
+        ["https://anichi.cz.evil.com/recent", false],
+        ["https://anichi.fake.com/anime/foo", false],
+    ])("matches(%s) === %s on any anichi TLD", (href, expected) => {
+        expect(anichiAdapter.matches(new URL(href))).toBe(expected);
     });
 
     it("does not match unrelated hosts even though the script runs on <all_urls>", () => {
@@ -83,7 +90,7 @@ describe("anichi adapter", () => {
     });
 
     it("extracts slug from a hash-suffixed /anime/{slug} card href", () => {
-        const card = buildCard({ href: "https://anichi.to/anime/tomb-raider-king-91d21" });
+        const card = buildCard({ href: "https://anichi.cz/anime/tomb-raider-king-91d21" });
         expect(anichiAdapter.extractAnime(card)?.animeSlug).toBe("tomb-raider-king-91d21");
     });
 
@@ -93,7 +100,7 @@ describe("anichi adapter", () => {
     });
 
     it("returns null when the card links to the player instead of the detail page", () => {
-        const card = buildCard({ href: "https://anichi.to/watch/tomb-raider-king-91d21/ep-1" });
+        const card = buildCard({ href: "https://anichi.cz/watch/tomb-raider-king-91d21/ep-1" });
         expect(anichiAdapter.extractAnime(card)).toBeNull();
     });
 
@@ -112,7 +119,7 @@ describe("anichi adapter", () => {
     });
 
     it("returns null for unrelated paths", () => {
-        const card = buildCard({ href: "https://anichi.to/genre/fantasy" });
+        const card = buildCard({ href: "https://anichi.cz/genre/fantasy" });
         expect(anichiAdapter.extractAnime(card)).toBeNull();
     });
 
@@ -167,7 +174,7 @@ describe("anichi adapter", () => {
     });
 
     it("omits posterUrl when the data-src fallback uses a blob: scheme", () => {
-        const card = buildCard({ imgDataSrc: "blob:https://anichi.to/8f6f3b1c" });
+        const card = buildCard({ imgDataSrc: "blob:https://anichi.cz/8f6f3b1c" });
         expect(anichiAdapter.extractAnime(card)?.posterUrl).toBeUndefined();
     });
 
@@ -248,30 +255,30 @@ describe("anichi adapter — watch page", () => {
     }
 
     it.each([
-        ["https://anichi.to/anime/tomb-raider-king-91d21", true],
-        ["https://anichi.to/watch/tomb-raider-king-91d21/ep-1", true],
-        ["https://anichi.to/anime/", false],
-        ["https://anichi.to/anime/foo/bar", false],
-        ["https://anichi.to/watch/foo/ep-1-extra", false],
+        ["https://anichi.cz/anime/tomb-raider-king-91d21", true],
+        ["https://anichi.cz/watch/tomb-raider-king-91d21/ep-1", true],
+        ["https://anichi.cz/anime/", false],
+        ["https://anichi.cz/anime/foo/bar", false],
+        ["https://anichi.cz/watch/foo/ep-1-extra", false],
         ["https://example.com/anime/tomb-raider-king-91d21", false],
     ])("watchPage.matches(%s) === %s", (href, expected) => {
         expect(watchPage.matches(new URL(href))).toBe(expected);
     });
 
     it("does not match list, root, or watch-prefix-only URLs", () => {
-        expect(watchPage.matches(new URL("https://anichi.to/"))).toBe(false);
-        expect(watchPage.matches(new URL("https://anichi.to/recent"))).toBe(false);
-        expect(watchPage.matches(new URL("https://anichi.to/watch/foo"))).toBe(false);
-        expect(watchPage.matches(new URL("https://anichi.to/genre/fantasy"))).toBe(false);
+        expect(watchPage.matches(new URL("https://anichi.cz/"))).toBe(false);
+        expect(watchPage.matches(new URL("https://anichi.cz/recent"))).toBe(false);
+        expect(watchPage.matches(new URL("https://anichi.cz/watch/foo"))).toBe(false);
+        expect(watchPage.matches(new URL("https://anichi.cz/genre/fantasy"))).toBe(false);
     });
 
     it("does not match watch paths with trailing extra segments or text", () => {
         // Anchoring guard: `/ep-1-extra` and `/ep-1/other` must NOT be treated
         // as the player URL, otherwise unrelated routes would activate the
         // single-page modal.
-        expect(watchPage.matches(new URL("https://anichi.to/watch/foo/ep-1-extra"))).toBe(false);
-        expect(watchPage.matches(new URL("https://anichi.to/watch/foo/ep-1/other"))).toBe(false);
-        expect(watchPage.matches(new URL("https://anichi.to/watch/foo/ep-1-bonus"))).toBe(false);
+        expect(watchPage.matches(new URL("https://anichi.cz/watch/foo/ep-1-extra"))).toBe(false);
+        expect(watchPage.matches(new URL("https://anichi.cz/watch/foo/ep-1/other"))).toBe(false);
+        expect(watchPage.matches(new URL("https://anichi.cz/watch/foo/ep-1-bonus"))).toBe(false);
     });
 
     it("does not match a valid watch path on a non-anichi host", () => {
@@ -281,54 +288,54 @@ describe("anichi adapter — watch page", () => {
     });
 
     it("matches anichi subdomains as well as the bare host", () => {
-        expect(watchPage.matches(new URL("https://www.anichi.to/watch/foo/ep-1"))).toBe(true);
-        expect(watchPage.matches(new URL("https://www.anichi.to/anime/foo"))).toBe(true);
+        expect(watchPage.matches(new URL("https://www.anichi.cz/watch/foo/ep-1"))).toBe(true);
+        expect(watchPage.matches(new URL("https://www.anichi.cz/anime/foo"))).toBe(true);
     });
 
     it("recovers the slug when on the detail page", () => {
-        setLocation("https://anichi.to/anime/tomb-raider-king-91d21");
+        setLocation("https://anichi.cz/anime/tomb-raider-king-91d21");
         expect(watchPage.extractAnime()?.animeSlug).toBe("tomb-raider-king-91d21");
     });
 
     it("recovers the slug when on the watch/player page", () => {
-        setLocation("https://anichi.to/watch/tomb-raider-king-91d21/ep-3");
+        setLocation("https://anichi.cz/watch/tomb-raider-king-91d21/ep-3");
         expect(watchPage.extractAnime()?.animeSlug).toBe("tomb-raider-king-91d21");
     });
 
     it("returns null when the path does not match either shape", () => {
-        setLocation("https://anichi.to/recent");
+        setLocation("https://anichi.cz/recent");
         expect(watchPage.extractAnime()).toBeNull();
     });
 
     it("prefers data-en on the detail-page title element", () => {
         document.body.innerHTML = `<h1 class="series-title d-title" data-en="Tomb Raider King">Dogulwang</h1>`;
         document.title = "Something else - Anichi";
-        setLocation("https://anichi.to/anime/tomb-raider-king-91d21");
+        setLocation("https://anichi.cz/anime/tomb-raider-king-91d21");
         expect(watchPage.extractAnime()?.animeTitle).toBe("Tomb Raider King");
     });
 
     it("prefers data-en on the inner <a> of the watch-page h1.media-title", () => {
         document.body.innerHTML = `<h1 class="media-title"><a class="d-title" data-en="Tomb Raider King">Dogulwang</a></h1>`;
         document.title = "Watch Tomb Raider King Episode 1 Anime Online | Anichi";
-        setLocation("https://anichi.to/watch/tomb-raider-king-91d21/ep-1");
+        setLocation("https://anichi.cz/watch/tomb-raider-king-91d21/ep-1");
         expect(watchPage.extractAnime()?.animeTitle).toBe("Tomb Raider King");
     });
 
     it("falls back to og:title, stripped, when data-en is absent", () => {
         appendOgTitleMeta("Tomb Raider King - Anichi - Watch Anime Online, Subbed & Dubbed Anime");
-        setLocation("https://anichi.to/anime/tomb-raider-king-91d21");
+        setLocation("https://anichi.cz/anime/tomb-raider-king-91d21");
         expect(watchPage.extractAnime()?.animeTitle).toBe("Tomb Raider King");
     });
 
     it("falls back to document.title, stripped, when data-en and og:title are absent", () => {
         document.title = "Watch Tomb Raider King Episode 1 Anime Online | Anichi";
-        setLocation("https://anichi.to/watch/tomb-raider-king-91d21/ep-1");
+        setLocation("https://anichi.cz/watch/tomb-raider-king-91d21/ep-1");
         expect(watchPage.extractAnime()?.animeTitle).toBe("Tomb Raider King");
     });
 
     it("falls back to the slug when nothing usable is present", () => {
         document.title = "";
-        setLocation("https://anichi.to/watch/tomb-raider-king-91d21/ep-1");
+        setLocation("https://anichi.cz/watch/tomb-raider-king-91d21/ep-1");
         expect(watchPage.extractAnime()?.animeTitle).toBe("tomb-raider-king-91d21");
     });
 
@@ -336,35 +343,35 @@ describe("anichi adapter — watch page", () => {
         document.body.innerHTML = `<h1 class="series-title d-title" data-en="Correct Title">Wrong</h1>`;
         appendOgTitleMeta("Different Title");
         document.title = "Yet Another Title - Anichi";
-        setLocation("https://anichi.to/anime/tomb-raider-king-91d21");
+        setLocation("https://anichi.cz/anime/tomb-raider-king-91d21");
         expect(watchPage.extractAnime()?.animeTitle).toBe("Correct Title");
     });
 
     it("captures the og:image poster URL when the meta tag is present", () => {
-        setLocation("https://anichi.to/watch/some-slug-abcde/ep-1");
+        setLocation("https://anichi.cz/watch/some-slug-abcde/ep-1");
         appendOgImageMeta("https://cdn.anipixcdn.co/poster/some-slug.jpg");
         expect(watchPage.extractAnime()?.posterUrl).toBe("https://cdn.anipixcdn.co/poster/some-slug.jpg");
     });
 
     it("omits posterUrl when no og:image meta tag is present", () => {
-        setLocation("https://anichi.to/watch/some-slug-abcde/ep-1");
+        setLocation("https://anichi.cz/watch/some-slug-abcde/ep-1");
         expect(watchPage.extractAnime()?.posterUrl).toBeUndefined();
     });
 
     it("omits posterUrl when the og:image meta tag has empty content", () => {
-        setLocation("https://anichi.to/watch/some-slug-abcde/ep-1");
+        setLocation("https://anichi.cz/watch/some-slug-abcde/ep-1");
         appendOgImageMeta("");
         expect(watchPage.extractAnime()?.posterUrl).toBeUndefined();
     });
 
     it("omits posterUrl when the og:image content uses a javascript: scheme", () => {
-        setLocation("https://anichi.to/watch/some-slug-abcde/ep-1");
+        setLocation("https://anichi.cz/watch/some-slug-abcde/ep-1");
         appendOgImageMeta("javascript:alert(1)");
         expect(watchPage.extractAnime()?.posterUrl).toBeUndefined();
     });
 
     it("omits posterUrl when the og:image content uses a data: scheme", () => {
-        setLocation("https://anichi.to/watch/some-slug-abcde/ep-1");
+        setLocation("https://anichi.cz/watch/some-slug-abcde/ep-1");
         appendOgImageMeta("data:image/png;base64,iVBORw0KGgo=");
         expect(watchPage.extractAnime()?.posterUrl).toBeUndefined();
     });
@@ -388,7 +395,7 @@ describe("anichi adapter — page metadata", () => {
     it("reads ids, slug and next episode from the anime page", () => {
         document.body.innerHTML = `
             <main class="page page-anime series-page" id="series-page" data-id="9016"
-                data-url="https://anichi.to/watch/overgeared-rah7b" data-mal-id="64340" data-anilist-id="212888">
+                data-url="https://anichi.cz/watch/overgeared-rah7b" data-mal-id="64340" data-anilist-id="212888">
                 ${nextEpisodeBlock}
             </main>`;
 
@@ -403,7 +410,7 @@ describe("anichi adapter — page metadata", () => {
     it("reads ids, slug and next episode from the watch page", () => {
         document.body.innerHTML = `
             <div class="watch-wrap" id="watch-main" data-id="9016" data-mal-id="64340" data-anilist-id="212888"
-                data-ep-num="1" data-url="https://anichi.to/watch/overgeared-rah7b">
+                data-ep-num="1" data-url="https://anichi.cz/watch/overgeared-rah7b">
                 ${nextEpisodeBlock}
             </div>`;
 
@@ -417,7 +424,7 @@ describe("anichi adapter — page metadata", () => {
 
     it("omits the next episode when the show is not airing", () => {
         document.body.innerHTML = `
-            <main id="series-page" data-url="https://anichi.to/watch/overgeared-rah7b" data-mal-id="64340"
+            <main id="series-page" data-url="https://anichi.cz/watch/overgeared-rah7b" data-mal-id="64340"
                 data-anilist-id="212888"></main>`;
 
         expect(watchPage.extractMetadata!()?.nextEpisode).toBeUndefined();
@@ -425,7 +432,7 @@ describe("anichi adapter — page metadata", () => {
 
     it("treats empty or non-numeric ids as missing", () => {
         document.body.innerHTML = `
-            <main id="series-page" data-url="https://anichi.to/watch/overgeared-rah7b" data-mal-id=""
+            <main id="series-page" data-url="https://anichi.cz/watch/overgeared-rah7b" data-mal-id=""
                 data-anilist-id="-"></main>`;
 
         const metadata = watchPage.extractMetadata!();

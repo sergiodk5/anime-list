@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 Object.defineProperty(window, "location", {
     value: {
         pathname: "/",
-        href: "https://anichi.to/",
+        href: "https://anichi.cz/",
     },
     writable: true,
 });
@@ -121,7 +121,7 @@ describe("Content Script Data Extraction Functions", () => {
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "/watch/naruto-abcde/ep-1",
-                    href: "https://anichi.to/watch/naruto-abcde/ep-1",
+                    href: "https://anichi.cz/watch/naruto-abcde/ep-1",
                 },
                 writable: true,
             });
@@ -133,7 +133,7 @@ describe("Content Script Data Extraction Functions", () => {
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "/anime/naruto",
-                    href: "https://anichi.to/anime/naruto",
+                    href: "https://anichi.cz/anime/naruto",
                 },
                 writable: true,
             });
@@ -145,7 +145,7 @@ describe("Content Script Data Extraction Functions", () => {
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "/genre/fantasy",
-                    href: "https://anichi.to/genre/fantasy",
+                    href: "https://anichi.cz/genre/fantasy",
                 },
                 writable: true,
             });
@@ -157,7 +157,7 @@ describe("Content Script Data Extraction Functions", () => {
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "/",
-                    href: "https://anichi.to/",
+                    href: "https://anichi.cz/",
                 },
                 writable: true,
             });
@@ -169,7 +169,7 @@ describe("Content Script Data Extraction Functions", () => {
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "/watch/some-anime",
-                    href: "https://anichi.to/watch/some-anime",
+                    href: "https://anichi.cz/watch/some-anime",
                 },
                 writable: true,
             });
@@ -181,7 +181,7 @@ describe("Content Script Data Extraction Functions", () => {
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "/watch/anime-abcde/ep-3",
-                    href: "https://anichi.to/watch/anime-abcde/ep-3?t=123",
+                    href: "https://anichi.cz/watch/anime-abcde/ep-3?t=123",
                 },
                 writable: true,
             });
@@ -195,7 +195,7 @@ describe("Content Script Data Extraction Functions", () => {
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "/watch/test-anime-abcde/ep-1",
-                    href: "https://anichi.to/watch/test-anime-abcde/ep-1",
+                    href: "https://anichi.cz/watch/test-anime-abcde/ep-1",
                 },
                 writable: true,
             });
@@ -205,7 +205,7 @@ describe("Content Script Data Extraction Functions", () => {
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "/watch/naruto-shippuden-snxwm/ep-100",
-                    href: "https://anichi.to/watch/naruto-shippuden-snxwm/ep-100",
+                    href: "https://anichi.cz/watch/naruto-shippuden-snxwm/ep-100",
                 },
                 writable: true,
             });
@@ -220,7 +220,7 @@ describe("Content Script Data Extraction Functions", () => {
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "/anime/tomb-raider-king-91d21",
-                    href: "https://anichi.to/anime/tomb-raider-king-91d21",
+                    href: "https://anichi.cz/anime/tomb-raider-king-91d21",
                 },
                 writable: true,
             });
@@ -235,7 +235,7 @@ describe("Content Script Data Extraction Functions", () => {
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "/genre/fantasy",
-                    href: "https://anichi.to/genre/fantasy",
+                    href: "https://anichi.cz/genre/fantasy",
                 },
                 writable: true,
             });
@@ -248,7 +248,7 @@ describe("Content Script Data Extraction Functions", () => {
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "/watch/simple-anime-aaaaa/ep-1",
-                    href: "https://anichi.to/watch/simple-anime-aaaaa/ep-1",
+                    href: "https://anichi.cz/watch/simple-anime-aaaaa/ep-1",
                 },
                 writable: true,
             });
@@ -265,7 +265,7 @@ describe("Content Script Data Extraction Functions", () => {
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "/watch/attack-on-titan-aotid/ep-1",
-                    href: "https://anichi.to/watch/attack-on-titan-aotid/ep-1",
+                    href: "https://anichi.cz/watch/attack-on-titan-aotid/ep-1",
                 },
                 writable: true,
             });
@@ -280,7 +280,7 @@ describe("Content Script Data Extraction Functions", () => {
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "/watch/mystery-anime-aaaaa/ep-5",
-                    href: "https://anichi.to/watch/mystery-anime-aaaaa/ep-5",
+                    href: "https://anichi.cz/watch/mystery-anime-aaaaa/ep-5",
                 },
                 writable: true,
             });
@@ -295,7 +295,7 @@ describe("Content Script Data Extraction Functions", () => {
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "/watch/demon-slayer-aaaaa/ep-1",
-                    href: "https://anichi.to/watch/demon-slayer-aaaaa/ep-1",
+                    href: "https://anichi.cz/watch/demon-slayer-aaaaa/ep-1",
                 },
                 writable: true,
             });
@@ -310,7 +310,7 @@ describe("Content Script Data Extraction Functions", () => {
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "/watch/jujutsu-kaisen-season-2-jkid2/ep-15",
-                    href: "https://anichi.to/watch/jujutsu-kaisen-season-2-jkid2/ep-15",
+                    href: "https://anichi.cz/watch/jujutsu-kaisen-season-2-jkid2/ep-15",
                 },
                 writable: true,
             });
@@ -331,7 +331,7 @@ describe("Content Script Data Extraction Functions", () => {
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "",
-                    href: "https://anichi.to/",
+                    href: "https://anichi.cz/",
                 },
                 writable: true,
             });
@@ -343,7 +343,7 @@ describe("Content Script Data Extraction Functions", () => {
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "///watch///",
-                    href: "https://anichi.to///watch///",
+                    href: "https://anichi.cz///watch///",
                 },
                 writable: true,
             });
@@ -358,7 +358,7 @@ describe("Content Script Data Extraction Functions", () => {
             Object.defineProperty(window, "location", {
                 value: {
                     pathname: "/watch/anime-special-chars-aaaaa/ep-1",
-                    href: "https://anichi.to/watch/anime-special-chars-aaaaa/ep-1",
+                    href: "https://anichi.cz/watch/anime-special-chars-aaaaa/ep-1",
                 },
                 writable: true,
             });
