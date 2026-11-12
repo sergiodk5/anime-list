@@ -1,4 +1,4 @@
-import { getOfflineQueue, registerOfflineAction } from "@/options/composables";
+import { runStoreAction } from "@/options/commons/actionHelpers";
 import { defineStore } from "pinia";
 import { computed, ref } from "vue";
 
@@ -81,7 +81,7 @@ export const useWatchingStore = defineStore("watching", () => {
      * Start watching a new anime
      */
     async function startWatching(anime: AnimeData): Promise<StoreActionResult> {
-        // Always apply optimistic addition upfront (works both online & offline)
+        // Always apply optimistic addition upfront
         if (!state.value.itemsMap[anime.animeId]) {
             // Optimistic add (debug log removed)
             const newProgress: EpisodeProgress = {
@@ -97,25 +97,21 @@ export const useWatchingStore = defineStore("watching", () => {
             state.value.items.push(newProgress);
             state.value.itemsMap[anime.animeId] = newProgress;
         }
-        const offlineQueue = getOfflineQueue();
-        return offlineQueue.enqueueRunStoreAction(
-            {
-                run: () => animeService.startWatching(anime),
-                onRollback: () => {
-                    // Rollback optimistic add (debug log removed)
-                    // Remove optimistic entry if service ultimately fails
-                    if (state.value.itemsMap[anime.animeId]) {
-                        const idx = state.value.items.findIndex((i) => i.animeId === anime.animeId);
-                        if (idx !== -1) state.value.items.splice(idx, 1);
-                        delete state.value.itemsMap[anime.animeId];
-                    }
-                },
-                successToast: (r: any) => r?.message || `Started ${anime.animeTitle}`,
-                errorToast: (m) => m || `Failed to start ${anime.animeTitle}`,
-                setLastError: (m) => (lastError.value = m),
+        return runStoreAction({
+            run: () => animeService.startWatching(anime),
+            onRollback: () => {
+                // Rollback optimistic add (debug log removed)
+                // Remove optimistic entry if service ultimately fails
+                if (state.value.itemsMap[anime.animeId]) {
+                    const idx = state.value.items.findIndex((i) => i.animeId === anime.animeId);
+                    if (idx !== -1) state.value.items.splice(idx, 1);
+                    delete state.value.itemsMap[anime.animeId];
+                }
             },
-            { type: "watching:start", description: `Start watching ${anime.animeTitle}`, payload: { anime } },
-        );
+            successToast: (r: any) => r?.message || `Started ${anime.animeTitle}`,
+            errorToast: (m) => m || `Failed to start ${anime.animeTitle}`,
+            setLastError: (m) => (lastError.value = m),
+        });
     }
 
     /**
@@ -133,30 +129,22 @@ export const useWatchingStore = defineStore("watching", () => {
             lastWatched: currentItem.lastWatched,
         };
         const newEpisode = Math.min(currentItem.currentEpisode + 1, currentItem.totalEpisodes || 999);
-        const offlineQueue = getOfflineQueue();
-        return offlineQueue.enqueueRunStoreAction(
-            {
-                run: () => animeService.updateEpisodeProgress(animeId, newEpisode, currentItem.totalEpisodes),
-                onOptimistic: () => {
-                    currentItem.currentEpisode = newEpisode;
-                    currentItem.episodeId = `${currentItem.animeSlug}-episode-${newEpisode}`;
-                    currentItem.lastWatched = new Date().toISOString();
-                },
-                onRollback: () => {
-                    currentItem.currentEpisode = snapshot.episode;
-                    currentItem.episodeId = snapshot.episodeId;
-                    currentItem.lastWatched = snapshot.lastWatched;
-                },
-                successToast: (r: any) => r?.message || "Episode updated",
-                errorToast: (m) => m || "Increment failed",
-                setLastError: (m) => (lastError.value = m),
+        return runStoreAction({
+            run: () => animeService.updateEpisodeProgress(animeId, newEpisode, currentItem.totalEpisodes),
+            onOptimistic: () => {
+                currentItem.currentEpisode = newEpisode;
+                currentItem.episodeId = `${currentItem.animeSlug}-episode-${newEpisode}`;
+                currentItem.lastWatched = new Date().toISOString();
             },
-            {
-                type: "watching:inc",
-                description: `Increment episode for ${animeId}`,
-                payload: { animeId, targetEpisode: newEpisode, total: currentItem.totalEpisodes },
+            onRollback: () => {
+                currentItem.currentEpisode = snapshot.episode;
+                currentItem.episodeId = snapshot.episodeId;
+                currentItem.lastWatched = snapshot.lastWatched;
             },
-        );
+            successToast: (r: any) => r?.message || "Episode updated",
+            errorToast: (m) => m || "Increment failed",
+            setLastError: (m) => (lastError.value = m),
+        });
     }
 
     /**
@@ -174,30 +162,22 @@ export const useWatchingStore = defineStore("watching", () => {
             lastWatched: currentItem.lastWatched,
         };
         const newEpisode = Math.max(currentItem.currentEpisode - 1, 1);
-        const offlineQueue = getOfflineQueue();
-        return offlineQueue.enqueueRunStoreAction(
-            {
-                run: () => animeService.updateEpisodeProgress(animeId, newEpisode, currentItem.totalEpisodes),
-                onOptimistic: () => {
-                    currentItem.currentEpisode = newEpisode;
-                    currentItem.episodeId = `${currentItem.animeSlug}-episode-${newEpisode}`;
-                    currentItem.lastWatched = new Date().toISOString();
-                },
-                onRollback: () => {
-                    currentItem.currentEpisode = snapshot.episode;
-                    currentItem.episodeId = snapshot.episodeId;
-                    currentItem.lastWatched = snapshot.lastWatched;
-                },
-                successToast: (r: any) => r?.message || "Episode updated",
-                errorToast: (m) => m || "Decrement failed",
-                setLastError: (m) => (lastError.value = m),
+        return runStoreAction({
+            run: () => animeService.updateEpisodeProgress(animeId, newEpisode, currentItem.totalEpisodes),
+            onOptimistic: () => {
+                currentItem.currentEpisode = newEpisode;
+                currentItem.episodeId = `${currentItem.animeSlug}-episode-${newEpisode}`;
+                currentItem.lastWatched = new Date().toISOString();
             },
-            {
-                type: "watching:dec",
-                description: `Decrement episode for ${animeId}`,
-                payload: { animeId, targetEpisode: newEpisode, total: currentItem.totalEpisodes },
+            onRollback: () => {
+                currentItem.currentEpisode = snapshot.episode;
+                currentItem.episodeId = snapshot.episodeId;
+                currentItem.lastWatched = snapshot.lastWatched;
             },
-        );
+            successToast: (r: any) => r?.message || "Episode updated",
+            errorToast: (m) => m || "Decrement failed",
+            setLastError: (m) => (lastError.value = m),
+        });
     }
 
     /**
@@ -211,24 +191,20 @@ export const useWatchingStore = defineStore("watching", () => {
             return { success: false, error: lastError.value };
         }
         const snapshot = { item: currentItem, index: itemIndex };
-        const offlineQueue = getOfflineQueue();
-        return offlineQueue.enqueueRunStoreAction(
-            {
-                run: () => animeService.stopWatching(animeId),
-                onOptimistic: () => {
-                    state.value.items.splice(snapshot.index, 1);
-                    delete state.value.itemsMap[animeId];
-                },
-                onRollback: () => {
-                    state.value.items.splice(snapshot.index, 0, snapshot.item);
-                    state.value.itemsMap[animeId] = snapshot.item;
-                },
-                successToast: (r: any) => r?.message || "Removed from watching",
-                errorToast: (m) => m || "Removal failed",
-                setLastError: (m) => (lastError.value = m),
+        return runStoreAction({
+            run: () => animeService.stopWatching(animeId),
+            onOptimistic: () => {
+                state.value.items.splice(snapshot.index, 1);
+                delete state.value.itemsMap[animeId];
             },
-            { type: "watching:stop", description: `Stop watching ${animeId}`, payload: { animeId } },
-        );
+            onRollback: () => {
+                state.value.items.splice(snapshot.index, 0, snapshot.item);
+                state.value.itemsMap[animeId] = snapshot.item;
+            },
+            successToast: (r: any) => r?.message || "Removed from watching",
+            errorToast: (m) => m || "Removal failed",
+            setLastError: (m) => (lastError.value = m),
+        });
     }
 
     // Internal helper methods
@@ -304,62 +280,6 @@ export const useWatchingStore = defineStore("watching", () => {
             items.forEach((i) => (itemsMap[i.animeId] = i));
             state.value.items = items;
             state.value.itemsMap = itemsMap;
-        },
-    };
-});
-
-// Offline action builders for persistence replay
-registerOfflineAction("watching:start", (payload: any) => {
-    const anime: AnimeData = payload.anime;
-    const service = new AnimeService();
-    return {
-        config: {
-            run: () => service.startWatching(anime),
-            expectSuccessField: true,
-        },
-        validate: () => {
-            // Skip if already started locally now
-            const store = useWatchingStore();
-            return !store.itemsMap[anime.animeId];
-        },
-    };
-});
-registerOfflineAction("watching:inc", (payload: any) => {
-    const { animeId, targetEpisode, total } = payload;
-    const service = new AnimeService();
-    return {
-        config: { run: () => service.updateEpisodeProgress(animeId, targetEpisode, total), expectSuccessField: true },
-        validate: () => {
-            const store = useWatchingStore();
-            const item = store.itemsMap[animeId];
-            if (!item) return false; // anime removed -> conflict
-            // If current episode already >= target (another context advanced), skip
-            return item.currentEpisode < targetEpisode;
-        },
-    };
-});
-registerOfflineAction("watching:dec", (payload: any) => {
-    const { animeId, targetEpisode, total } = payload;
-    const service = new AnimeService();
-    return {
-        config: { run: () => service.updateEpisodeProgress(animeId, targetEpisode, total), expectSuccessField: true },
-        validate: () => {
-            const store = useWatchingStore();
-            const item = store.itemsMap[animeId];
-            if (!item) return false; // removed
-            // If local episode already below or equal target (another decrement applied), skip
-            return item.currentEpisode > targetEpisode;
-        },
-    };
-});
-registerOfflineAction("watching:stop", (payload: any) => {
-    const { animeId } = payload;
-    const service = new AnimeService();
-    return {
-        config: { run: () => service.stopWatching(animeId), expectSuccessField: true },
-        validate: () => {
-            const store = useWatchingStore();
-            return Boolean(store.itemsMap[animeId]);
         },
     };
 });

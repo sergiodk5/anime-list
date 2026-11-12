@@ -2,6 +2,7 @@ import "@/commons/assets/main.css";
 
 import { createApp } from "vue";
 
+import { flushLegacyOfflineQueue } from "@/options/commons/legacyOfflineQueue";
 import OptionsPage from "@/options/OptionsPage.vue";
 import router from "@/options/router";
 import { setupPinia } from "@/options/stores";
@@ -31,4 +32,6 @@ const toastOptions: ToastContainerOptions = {
 
 app.use(Vue3Toastify, toastOptions);
 
-app.mount(rootContainer);
+flushLegacyOfflineQueue()
+    .catch((error) => console.warn("[LegacyOfflineQueue] Flush failed", error))
+    .finally(() => app.mount(rootContainer));

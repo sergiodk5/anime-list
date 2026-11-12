@@ -7,7 +7,7 @@
         <!-- Animated background pattern -->
         <div
             data-testid="dashboard-background"
-            class="fixed inset-0 opacity-10"
+            class="pointer-events-none fixed inset-0 opacity-10"
         >
             <div class="absolute top-12 left-8 h-3 w-3 animate-pulse rounded-full bg-white"></div>
             <div class="absolute top-20 right-16 h-2 w-2 animate-ping rounded-full bg-pink-300"></div>

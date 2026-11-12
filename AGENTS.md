@@ -38,7 +38,7 @@ StorageAdapter (commons/adapters/) → chrome.storage.local
 - Stores use dual structure: `items[]` for iteration + `itemsMap{}` for O(1) lookups
 - `storageSyncPlugin` - Cross-context sync via `chrome.storage.onChanged` + runtime messaging
 - `undoPlugin` - Snapshot-based undo via `__snapshot()`/`__restore()` methods
-- Key composables: `useOfflineQueue` (offline-first), `useSmartStats` (throttled stats), `useStorageCache` (instant load)
+- Key composables: `useSmartStats` (throttled stats), `useStorageCache` (instant load)
 
 **State Transitions:** AnimeStateValidator enforces: clean → planned/watching/hidden with validation rules
 

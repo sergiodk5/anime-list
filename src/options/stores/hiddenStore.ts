@@ -1,4 +1,4 @@
-import { getOfflineQueue, registerOfflineAction } from "@/options/composables";
+import { runStoreAction } from "@/options/commons/actionHelpers";
 import { defineStore } from "pinia";
 import { computed, ref } from "vue";
 
@@ -93,22 +93,18 @@ export const useHiddenStore = defineStore("hidden", () => {
      * Hide an anime from all listings
      */
     async function hide(anime: AnimeData): Promise<StoreActionResult> {
-        const offlineQueue = getOfflineQueue();
-        return offlineQueue.enqueueRunStoreAction(
-            {
-                run: () => animeService.hideAnime(anime.animeId),
-                onSuccessApply: () => {
-                    if (!state.value.itemsMap[anime.animeId]) {
-                        state.value.items.push(anime);
-                        state.value.itemsMap[anime.animeId] = anime;
-                    }
-                },
-                successToast: (r: any) => r?.message || `Hidden ${anime.animeTitle}`,
-                errorToast: (m) => m || `Failed to hide ${anime.animeTitle}`,
-                setLastError: (m) => (lastError.value = m),
+        return runStoreAction({
+            run: () => animeService.hideAnime(anime.animeId),
+            onSuccessApply: () => {
+                if (!state.value.itemsMap[anime.animeId]) {
+                    state.value.items.push(anime);
+                    state.value.itemsMap[anime.animeId] = anime;
+                }
             },
-            { type: "hidden:hide", description: `Hide ${anime.animeTitle}`, payload: { anime } },
-        );
+            successToast: (r: any) => r?.message || `Hidden ${anime.animeTitle}`,
+            errorToast: (m) => m || `Failed to hide ${anime.animeTitle}`,
+            setLastError: (m) => (lastError.value = m),
+        });
     }
 
     /**
@@ -122,24 +118,20 @@ export const useHiddenStore = defineStore("hidden", () => {
             return { success: false, error: lastError.value };
         }
         const snapshot = { item: currentItem, index: itemIndex };
-        const offlineQueue = getOfflineQueue();
-        return offlineQueue.enqueueRunStoreAction(
-            {
-                run: () => animeService.unhideAnime(animeId),
-                onOptimistic: () => {
-                    state.value.items.splice(snapshot.index, 1);
-                    delete state.value.itemsMap[animeId];
-                },
-                onRollback: () => {
-                    state.value.items.splice(snapshot.index, 0, snapshot.item);
-                    state.value.itemsMap[animeId] = snapshot.item;
-                },
-                successToast: (r: any) => r?.message || "Unhidden anime",
-                errorToast: (m) => m || "Unhide failed",
-                setLastError: (m) => (lastError.value = m),
+        return runStoreAction({
+            run: () => animeService.unhideAnime(animeId),
+            onOptimistic: () => {
+                state.value.items.splice(snapshot.index, 1);
+                delete state.value.itemsMap[animeId];
             },
-            { type: "hidden:unhide", description: `Unhide ${animeId}`, payload: { animeId } },
-        );
+            onRollback: () => {
+                state.value.items.splice(snapshot.index, 0, snapshot.item);
+                state.value.itemsMap[animeId] = snapshot.item;
+            },
+            successToast: (r: any) => r?.message || "Unhidden anime",
+            errorToast: (m) => m || "Unhide failed",
+            setLastError: (m) => (lastError.value = m),
+        });
     }
 
     /**
@@ -148,24 +140,20 @@ export const useHiddenStore = defineStore("hidden", () => {
     async function clearAllHidden(): Promise<StoreActionResult> {
         const originalItems = [...state.value.items];
         const originalItemsMap = { ...state.value.itemsMap };
-        const offlineQueue = getOfflineQueue();
-        return offlineQueue.enqueueRunStoreAction(
-            {
-                run: () => animeService.clearAllHidden(),
-                onOptimistic: () => {
-                    state.value.items = [];
-                    state.value.itemsMap = {};
-                },
-                onRollback: () => {
-                    state.value.items = originalItems;
-                    state.value.itemsMap = originalItemsMap;
-                },
-                successToast: (r: any) => r?.message || "Cleared hidden list",
-                errorToast: (m) => m || "Clear hidden failed",
-                setLastError: (m) => (lastError.value = m),
+        return runStoreAction({
+            run: () => animeService.clearAllHidden(),
+            onOptimistic: () => {
+                state.value.items = [];
+                state.value.itemsMap = {};
             },
-            { type: "hidden:clearAll", description: "Clear hidden list", payload: {} },
-        );
+            onRollback: () => {
+                state.value.items = originalItems;
+                state.value.itemsMap = originalItemsMap;
+            },
+            successToast: (r: any) => r?.message || "Cleared hidden list",
+            errorToast: (m) => m || "Clear hidden failed",
+            setLastError: (m) => (lastError.value = m),
+        });
     }
 
     // Internal helper methods
@@ -242,39 +230,6 @@ export const useHiddenStore = defineStore("hidden", () => {
             snap.items.forEach((i: AnimeData) => (itemsMap[i.animeId] = { ...i }));
             state.value.items = snap.items.map((i: AnimeData) => ({ ...i }));
             state.value.itemsMap = itemsMap;
-        },
-    };
-});
-
-registerOfflineAction("hidden:hide", (payload: any) => {
-    const anime: AnimeData = payload.anime;
-    const service = new AnimeService();
-    return {
-        config: { run: () => service.hideAnime(anime.animeId), expectSuccessField: true },
-        validate: () => {
-            const store = useHiddenStore();
-            return !store.itemsMap[anime.animeId];
-        },
-    };
-});
-registerOfflineAction("hidden:unhide", (payload: any) => {
-    const { animeId } = payload;
-    const service = new AnimeService();
-    return {
-        config: { run: () => service.unhideAnime(animeId), expectSuccessField: true },
-        validate: () => {
-            const store = useHiddenStore();
-            return Boolean(store.itemsMap[animeId]);
-        },
-    };
-});
-registerOfflineAction("hidden:clearAll", () => {
-    const service = new AnimeService();
-    return {
-        config: { run: () => service.clearAllHidden(), expectSuccessField: true },
-        validate: () => {
-            const store = useHiddenStore();
-            return store.count > 0;
         },
     };
 });

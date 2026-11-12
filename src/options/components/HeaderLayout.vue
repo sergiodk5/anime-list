@@ -1,7 +1,7 @@
 <template>
     <header
         data-testid="header"
-        class="flex h-16 items-center justify-between border-b border-white/20 bg-black/30 px-6 backdrop-blur-xs"
+        class="relative z-20 flex h-16 items-center justify-between border-b border-white/20 bg-black/30 px-6 backdrop-blur-xs"
     >
         <!-- Breadcrumbs -->
         <nav
@@ -34,8 +34,6 @@
             data-testid="user-menu"
             class="flex items-center space-x-4"
         >
-            <!-- Offline Queue Badge -->
-            <OfflineQueueBadge />
             <!-- Undo Button -->
             <UndoButton data-testid="undo-wrapper" />
             <button
@@ -60,7 +58,6 @@
 </template>
 
 <script setup lang="ts">
-import OfflineQueueBadge from "@/options/components/OfflineQueueBadge.vue";
 import UndoButton from "@/options/components/UndoButton.vue";
 import { computed } from "vue";
 import { useRoute } from "vue-router";
